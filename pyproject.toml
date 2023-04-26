@@ -1,6 +1,5 @@
 [project]
 name = "adetailer"
-version = "23.4.0.dev0"
 description = "An object detection and auto-mask extension for stable diffusion webui."
 authors = [
     {name = "dowon", email = "ks2515@naver.com"},
