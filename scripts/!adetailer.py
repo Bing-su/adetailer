@@ -10,7 +10,7 @@ from adetailer.common import dilate_erode, is_all_black, offset
 from modules import devices
 from modules.paths import models_path
 from modules.processing import StableDiffusionProcessingImg2Img, process_images
-from modules.scripts import Script
+from modules.scripts import AlwaysVisible, Script
 from modules.shared import opts, state  # noqa: F401
 
 AFTER_DETAILER = "After Detailer"
@@ -56,7 +56,7 @@ class AfterDetailerScript(Script):
         return AFTER_DETAILER
 
     def show(self, is_img2img):
-        return True
+        return AlwaysVisible
 
     def ui(self, is_img2img):
         model_list = ["None"] + list(model_mapping.keys())
