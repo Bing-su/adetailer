@@ -9,8 +9,10 @@ from adetailer.common import create_mask_from_bbox
 
 
 def mediapipe_predict(
-    model_type: int, image: Image.Image, confidence: float = 0.25
+    model_type: int | str, image: Image.Image, confidence: float = 0.25
 ) -> PredictOutput:
+    if isinstance(model_type, str):
+        model_type = mediapipe_model_name_to_type(model_type)
     img_width, img_height = image.size
 
     mp_face_detection = mp.solutions.face_detection
