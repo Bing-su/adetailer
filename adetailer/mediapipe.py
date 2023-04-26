@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-import numpy as np
 import mediapipe as mp
+import numpy as np
 from PIL import Image
 
 from adetailer import PredictOutput
@@ -26,11 +26,11 @@ def mediapipe_predict(
     if pred.detections is None:
         return PredictOutput()
 
-    example_array = img_array.copy()
+    preview_array = img_array.copy()
 
     bboxes = []
     for detection in pred.detections:
-        draw_util.draw_detection(example_array, detection)
+        draw_util.draw_detection(preview_array, detection)
 
         bbox = detection.location_data.relative_bounding_box
         x1 = bbox.xmin * img_width
@@ -43,6 +43,6 @@ def mediapipe_predict(
         bboxes.append([x1, y1, x2, y2])
 
     masks = create_mask_from_bbox(image, bboxes)
-    example = Image.fromarray(example_array)
+    preview = Image.fromarray(preview_array)
 
-    return PredictOutput(bboxes=bboxes, masks=masks, example=example)
+    return PredictOutput(bboxes=bboxes, masks=masks, preview=preview)

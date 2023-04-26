@@ -23,8 +23,8 @@ def ultralytics_predict(
         return PredictOutput()
 
     masks = create_mask_from_bbox(image, bboxes)
-    example = pred[0].plot()
-    example = cv2.cvtColor(example, cv2.COLOR_BGR2RGB)
-    example = Image.fromarray(example)
+    preview = pred[0].plot()
+    preview = cv2.cvtColor(preview, cv2.COLOR_BGR2RGB)
+    preview = Image.fromarray(preview)
 
-    return PredictOutput(bboxes=bboxes, masks=masks, example=example)
+    return PredictOutput(bboxes=bboxes, masks=masks, preview=preview)

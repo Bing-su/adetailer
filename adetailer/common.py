@@ -12,7 +12,7 @@ from PIL import Image, ImageDraw
 class PredictOutput:
     bboxes: list[list[int]] | None = None
     masks: list[Image.Image] | None = None
-    example: Image.Image | None = None
+    preview: Image.Image | None = None
 
 
 def get_models(model_dir: str | Path) -> OrderedDict[str, str | None]:
