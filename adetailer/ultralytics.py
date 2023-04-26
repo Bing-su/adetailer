@@ -18,9 +18,10 @@ def ultralytics_predict(
     model = YOLO(model_path)
     pred = model(image, conf=confidence, hide_labels=True)
 
-    bboxes = pred[0].xyxy.cpu().numpy().tolist()
-    if len(bboxes) == 0:
+    bboxes = pred[0].xyxy.cpu().numpy()
+    if bboxes.size == 0:
         return PredictOutput()
+    bboxes = bboxes.tolist()
 
     masks = create_mask_from_bbox(image, bboxes)
     preview = pred[0].plot()
