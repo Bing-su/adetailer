@@ -16,7 +16,7 @@ def ultralytics_predict(
     model_path = str(model_path)
 
     model = YOLO(model_path)
-    pred = model(image, conf=confidence, hide_labels=True)
+    pred = model(image, conf=confidence, show_labels=False)
 
     bboxes = pred[0].boxes.xyxy.cpu().numpy()
     if bboxes.size == 0:
