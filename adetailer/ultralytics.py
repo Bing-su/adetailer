@@ -18,7 +18,10 @@ def ultralytics_predict(
     model = YOLO(model_path)
     pred = model(image, conf=confidence, hide_labels=True)
 
-    bboxes = pred[0].xyxy.cpu().numpy()
+    bboxes = pred[0].xyxy.cpu().numpy().tolist()
+    if len(bboxes) == 0:
+        return PredictOutput()
+
     masks = create_mask_from_bbox(image, bboxes)
     example = pred[0].plot()
     example = cv2.cvtColor(example, cv2.COLOR_BGR2RGB)
