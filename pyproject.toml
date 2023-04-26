@@ -18,7 +18,7 @@ known_first_party = ["modules", "launch"]
 
 [tool.ruff]
 select = ["A", "B", "C4", "E", "F", "I001", "ISC", "N", "PIE", "PT", "RET", "SIM", "UP", "W"]
-ignore = ["B008", "B905", "E501"]
+ignore = ["B008", "B905", "E501", "UP007"]
 unfixable = ["F401"]
 
 [tool.ruff.isort]
