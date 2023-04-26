@@ -8,7 +8,7 @@ import torch
 import modules
 from adetailer import __version__, get_models, mediapipe_predict, ultralytics_predict
 from adetailer.common import dilate_erode, is_all_black, offset
-from modules import devices, scripts
+from modules import devices, images, script_callbacks, scripts, shared
 from modules.paths import data_path, models_path
 from modules.processing import StableDiffusionProcessingImg2Img, process_images
 from modules.safe import load, unsafe_torch_load
@@ -367,6 +367,18 @@ class AfterDetailerScript(scripts.Script):
         steps = len(masks)
         processed = None
 
+        if opts.data.get("ad_save_previews", False):
+            images.save_image(
+                pred.preview,
+                p.outpath_samples,
+                "",
+                seed,
+                p.all_prompts[i],
+                opts.samples_format,
+                p=p,
+                suffix="-ad-preview",
+            )
+
         for j in range(steps):
             mask = masks[j]
             mask = dilate_erode(mask, args.ad_dilate_erode)
@@ -387,3 +399,14 @@ class AfterDetailerScript(scripts.Script):
         if original_params:
             with params_txt.open("w", encoding="utf-8") as f:
                 f.write(original_params)
+
+
+def on_ui_settings():
+    section = ("ADetailer", AFTER_DETAILER)
+    shared.opts.add_option(
+        "ad_save_previews",
+        shared.OptionInfo(False, "Save mask previews", section=section),
+    )
+
+
+script_callbacks.on_ui_settings(on_ui_settings)
