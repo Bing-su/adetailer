@@ -24,8 +24,8 @@ class ADetailerArgs(BaseModel):
     ad_negative_prompt: str = ""
     ad_conf: confloat(ge=0.0, le=1.0) = 0.25
     ad_dilate_erode: int = 36
-    ad_x_offset: NonNegativeInt = 0
-    ad_y_offset: NonNegativeInt = 0
+    ad_x_offset: int = 0
+    ad_y_offset: int = 0
     ad_mask_blur: NonNegativeInt = 4
     ad_denoising_strength: confloat(ge=0.0, le=1.0) = 0.4
     ad_inpaint_full_res: bool = True
@@ -102,14 +102,14 @@ class AfterDetailerScript(Script):
                         label="ADetailer erosion (-) / dilation (+)",
                         minimum=-128,
                         maximum=128,
-                        step=1,
+                        step=4,
                         value=36,
                         visible=True,
                     )
 
                 with gr.Row():
                     ad_x_offset = gr.Slider(
-                        label="ADetailer x offset",
+                        label="ADetailer x(→) offset",
                         minimum=-200,
                         maximum=200,
                         step=1,
@@ -117,7 +117,7 @@ class AfterDetailerScript(Script):
                         visible=True,
                     )
                     ad_y_offset = gr.Slider(
-                        label="ADetailer y offset",
+                        label="ADetailer y(↑) offset",
                         minimum=-200,
                         maximum=200,
                         step=1,
@@ -226,7 +226,7 @@ class AfterDetailerScript(Script):
             "ADetailer model": ad_model,
             "ADetailer prompt": ad_prompt,
             "ADetailer negative prompt": ad_negative_prompt,
-            "ADetailer conf": ad_conf,
+            "ADetailer conf": int(ad_conf * 100),
             "ADetailer dilate/erode": ad_dilate_erode,
             "ADetailer x offset": ad_x_offset,
             "ADetailer y offset": ad_y_offset,
@@ -242,17 +242,32 @@ class AfterDetailerScript(Script):
             params.pop("ADetailer prompt")
         if not ad_negative_prompt:
             params.pop("ADetailer negative prompt")
-        if isinstance(params["ADetailer conf"], float):
-            params["ADetailer conf"] = int(params["ADetailer conf"] * 100)
 
         return params
 
+    @staticmethod
+    def args_validation(*args):
+        return ADetailerArgs(
+            ad_model=args[0],
+            ad_prompt=args[1],
+            ad_negative_prompt=args[2],
+            ad_conf=args[3],
+            ad_dilate_erode=args[4],
+            ad_x_offset=args[5],
+            ad_y_offset=args[6],
+            ad_mask_blur=args[7],
+            ad_denoising_strength=args[8],
+            ad_inpaint_full_res=args[9],
+            ad_inpaint_full_res_padding=args[10],
+            ad_cfg_scale=args[11],
+        )
+
     @with_gc
-    def postprocess_image(self, p, pp, *args):
+    def postprocess_image(self, p, pp, *args_):
         if getattr(p, "_disable_adetailer", False):
             return
 
-        args = ADetailerArgs(*args)
+        args = self.args_validation(*args_)
 
         if args.ad_model.lower() == "none":
             return
@@ -320,18 +335,21 @@ class AfterDetailerScript(Script):
         i2i.script_args = p.script_args
         i2i._disable_adetailer = True
 
-        if "mediapipe" in args.ad_model.lower():
-            mask_func = mediapipe_predict
+        if args.ad_model.lower().startswith("mediapipe"):
+            predictor = mediapipe_predict
+            ad_model = args.ad_model
         else:
-            mask_func = ultralytics_predict
+            predictor = ultralytics_predict
+            ad_model = model_mapping[args.ad_model]
 
-        pred = mask_func(args.ad_model, pp.image, args.ad_conf)
+        pred = predictor(ad_model, pp.image, args.ad_conf)
         if pred.masks is None:
             print("ADetailer: nothing detected with current settings")
             return
 
         masks = pred.masks
         steps = len(masks)
+        processed = None
 
         for j in range(steps):
             mask = masks[j]
@@ -343,8 +361,9 @@ class AfterDetailerScript(Script):
             i2i.image_mask = mask
 
             processed = process_images(i2i)
-            i2i.seed += processed.seed + 1
-            i2i.subseed += processed.subseed + 1
+            i2i.seed = seed + j + 1
+            i2i.subseed = subseed + j + 1
             i2i.init_images = processed.images
 
-        pp.image = processed.images[0]
+        if processed is not None:
+            pp.image = processed.images[0]
