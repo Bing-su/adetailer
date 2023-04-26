@@ -46,3 +46,14 @@ def mediapipe_predict(
     preview = Image.fromarray(preview_array)
 
     return PredictOutput(bboxes=bboxes, masks=masks, preview=preview)
+
+
+def mediapipe_model_name_to_type(name: str) -> int:
+    name = name.lower()
+    mapping = {
+        "mediapipe_face_short": 0,
+        "mediapipe_face_full": 1,
+    }
+    if name not in mapping:
+        raise ValueError(f"[-] ADetailer: Invalid model name: {name}")
+    return mapping[name]
