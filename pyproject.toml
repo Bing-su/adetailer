@@ -1,0 +1,25 @@
+[project]
+name = "adetailer"
+version = "23.4.0.dev0"
+description = "An object detection and auto-mask extension for stable diffusion webui."
+authors = [
+    {name = "dowon", email = "ks2515@naver.com"},
+]
+requires-python = ">=3.8,<3.12"
+readme = "README.md"
+license = {text = "AGPL-3.0"}
+
+[project.urls]
+repository = "https://github.com/Bing-su/adetailer"
+
+[tool.isort]
+profile = "black"
+known_first_party = ["modules", "launch"]
+
+[tool.ruff]
+select = ["A", "B", "C4", "E", "F", "I001", "ISC", "N", "PIE", "PT", "RET", "SIM", "UP", "W"]
+ignore = ["B008", "B905", "E501"]
+unfixable = ["F401"]
+
+[tool.ruff.isort]
+known-first-party = ["modules", "launch"]
