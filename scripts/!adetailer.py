@@ -9,7 +9,7 @@ import modules
 from adetailer import __version__, get_models, mediapipe_predict, ultralytics_predict
 from adetailer.common import dilate_erode, is_all_black, offset
 from modules import devices, scripts
-from modules.paths import models_path
+from modules.paths import data_path, models_path
 from modules.processing import StableDiffusionProcessingImg2Img, process_images
 from modules.safe import load, unsafe_torch_load
 from modules.shared import opts, state
@@ -305,6 +305,12 @@ class AfterDetailerScript(scripts.Script):
         if sampler_name in ["PLMS", "UniPC"]:
             sampler_name = "Euler"
 
+        params_txt = Path(data_path, "params.txt")
+        original_params = ""
+        if params_txt.exists():
+            with params_txt.open("r", encoding="utf-8") as f:
+                original_params = f.read()
+
         i2i = StableDiffusionProcessingImg2Img(
             init_images=[pp.image],
             resize_mode=0,
@@ -377,3 +383,7 @@ class AfterDetailerScript(scripts.Script):
 
         if processed is not None:
             pp.image = processed.images[0]
+
+        if original_params:
+            with params_txt.open("w", encoding="utf-8") as f:
+                f.write(original_params)
