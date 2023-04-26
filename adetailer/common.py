@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections import OrderedDict
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 
@@ -8,7 +9,6 @@ import cv2
 import numpy as np
 from huggingface_hub import hf_hub_download
 from PIL import Image, ImageChops, ImageDraw
-from pydantic.dataclasses import dataclass
 
 
 @dataclass
@@ -16,9 +16,6 @@ class PredictOutput:
     bboxes: Optional[list[list[int]]] = None
     masks: Optional[list[Image.Image]] = None
     preview: Optional[Image.Image] = None
-
-    class Config:
-        arbitrary_types_allowed = True
 
 
 def get_models(model_dir: str | Path) -> OrderedDict[str, str | None]:
