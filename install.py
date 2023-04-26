@@ -35,7 +35,6 @@ def install():
         ("ultralytics", "8.0.87"),
         ("mediapipe", "0.9.3.0"),
         ("huggingface_hub", None),
-        ("pydantic", None),  # pydantic >= 2.0.0 compatible
     ]
 
     for name, ver in deps:

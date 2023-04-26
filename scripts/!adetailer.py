@@ -3,38 +3,55 @@ from __future__ import annotations
 from pathlib import Path
 
 import gradio as gr
-from pydantic import BaseModel, NonNegativeFloat, NonNegativeInt, confloat, validator
 
+import modules
 from adetailer import __version__, get_models, mediapipe_predict, ultralytics_predict
 from adetailer.common import dilate_erode, is_all_black, offset
-from modules import devices
+from modules import devices, scripts
 from modules.paths import models_path
 from modules.processing import StableDiffusionProcessingImg2Img, process_images
-from modules.scripts import AlwaysVisible, Script
-from modules.shared import opts, state  # noqa: F401
+from modules.shared import opts, state
 
 AFTER_DETAILER = "After Detailer"
 adetailer_dir = Path(models_path, "adetailer")
 model_mapping = get_models(adetailer_dir)
 
 
-class ADetailerArgs(BaseModel):
-    ad_model: str = "None"
-    ad_prompt: str = ""
-    ad_negative_prompt: str = ""
-    ad_conf: confloat(ge=0.0, le=1.0) = 0.25
-    ad_dilate_erode: int = 36
-    ad_x_offset: int = 0
-    ad_y_offset: int = 0
-    ad_mask_blur: NonNegativeInt = 4
-    ad_denoising_strength: confloat(ge=0.0, le=1.0) = 0.4
-    ad_inpaint_full_res: bool = True
-    ad_inpaint_full_res_padding: NonNegativeInt = 0
-    ad_cfg_scale: NonNegativeFloat = 7.0
+class ADetailerArgs:
+    """
+    manualy implemented dataclass for adetailer args, due to some issue...
+    see: https://github.com/mkdocs/mkdocs/issues/3141
+    """
 
-    @validator("ad_conf", pre=True)
-    def check_ad_conf(cls, v):  # noqa: N805
-        return v / 100.0
+    def __init__(self, *args):
+        self.ad_model: str = args[0]
+        self.ad_prompt: str = args[1]
+        self.ad_negative_prompt: str = args[2]
+        self.ad_conf: float = args[3] / 100.0
+        self.ad_dilate_erode: int = args[4]
+        self.ad_x_offset: int = args[5]
+        self.ad_y_offset: int = args[6]
+        self.ad_mask_blur: int = args[7]
+        self.ad_denoising_strength: float = args[8]
+        self.ad_inpaint_full_res: bool = args[9]
+        self.ad_inpaint_full_res_padding: int = args[10]
+        self.ad_cfg_scale: float = args[11]
+
+    def asdict(self):
+        return {
+            "ad_model": self.ad_model,
+            "ad_prompt": self.ad_prompt,
+            "ad_negative_prompt": self.ad_negative_prompt,
+            "ad_conf": self.ad_conf,
+            "ad_dilate_erode": self.ad_dilate_erode,
+            "ad_x_offset": self.ad_x_offset,
+            "ad_y_offset": self.ad_y_offset,
+            "ad_mask_blur": self.ad_mask_blur,
+            "ad_denoising_strength": self.ad_denoising_strength,
+            "ad_inpaint_full_res": self.ad_inpaint_full_res,
+            "ad_inpaint_full_res_padding": self.ad_inpaint_full_res_padding,
+            "ad_cfg_scale": self.ad_cfg_scale,
+        }
 
 
 def with_gc(func):
@@ -51,12 +68,12 @@ def gr_show(visible=True):
     return {"visible": visible, "__type__": "update"}
 
 
-class AfterDetailerScript(Script):
+class AfterDetailerScript(scripts.Script):
     def title(self):
         return AFTER_DETAILER
 
     def show(self, is_img2img):
-        return AlwaysVisible
+        return scripts.AlwaysVisible
 
     def ui(self, is_img2img):
         model_list = ["None"] + list(model_mapping.keys())
@@ -246,33 +263,20 @@ class AfterDetailerScript(Script):
         return params
 
     @staticmethod
-    def args_validation(*args):
-        return ADetailerArgs(
-            ad_model=args[0],
-            ad_prompt=args[1],
-            ad_negative_prompt=args[2],
-            ad_conf=args[3],
-            ad_dilate_erode=args[4],
-            ad_x_offset=args[5],
-            ad_y_offset=args[6],
-            ad_mask_blur=args[7],
-            ad_denoising_strength=args[8],
-            ad_inpaint_full_res=args[9],
-            ad_inpaint_full_res_padding=args[10],
-            ad_cfg_scale=args[11],
-        )
+    def get_args(*args):
+        return ADetailerArgs(*args)
 
     @with_gc
     def postprocess_image(self, p, pp, *args_):
         if getattr(p, "_disable_adetailer", False):
             return
 
-        args = self.args_validation(*args_)
+        args = self.get_args(*args_)
 
         if args.ad_model.lower() == "none":
             return
 
-        extra_params = self.extra_params(**args.dict())
+        extra_params = self.extra_params(**args.asdict())
         p.extra_generation_params.update(extra_params)
         p._idx = getattr(p, "_idx", -1) + 1
         i = p._idx
