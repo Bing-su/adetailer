@@ -285,12 +285,6 @@ class AfterDetailerScript(scripts.Script):
         p._idx = getattr(p, "_idx", -1) + 1
         i = p._idx
 
-        assert hasattr(p, "all_prompts")
-        assert hasattr(p, "all_negative_prompts")
-        assert len(p.all_prompts) == len(p.all_negative_prompts)
-        assert 0 <= i < len(p.all_prompts)
-        assert 0 <= i < len(p.all_negative_prompts)
-
         prompt = args.ad_prompt if args.ad_prompt else p.all_prompts[i]
 
         if args.ad_negative_prompt:
