@@ -10,7 +10,11 @@ from adetailer import __version__, get_models, mediapipe_predict, ultralytics_pr
 from adetailer.common import dilate_erode, is_all_black, offset
 from modules import images, safe, script_callbacks, scripts, shared
 from modules.paths import data_path, models_path
-from modules.processing import StableDiffusionProcessingImg2Img, process_images
+from modules.processing import (
+    StableDiffusionProcessingImg2Img,
+    create_infotext,
+    process_images,
+)
 from modules.shared import opts, state
 
 AFTER_DETAILER = "After Detailer"
@@ -53,26 +57,6 @@ class ADetailerArgs:
             "ad_inpaint_full_res_padding": self.ad_inpaint_full_res_padding,
             "ad_cfg_scale": self.ad_cfg_scale,
         }
-
-
-def with_params_txt(func):
-    params_txt = Path(data_path, "params.txt")
-    original_params = ""
-
-    def wrapper(*args, **kwargs):
-        nonlocal original_params
-
-        if not original_params and params_txt.exists():
-            original_params = params_txt.read_text(encoding="utf-8")
-
-        result = func(*args, **kwargs)
-
-        if original_params:
-            params_txt.write_text(original_params, encoding="utf-8")
-
-        return result
-
-    return wrapper
 
 
 class ChangeTorchLoad:
@@ -286,18 +270,30 @@ class AfterDetailerScript(scripts.Script):
     def get_args(*args):
         return ADetailerArgs(*args)
 
-    @with_params_txt
+    def write_params_txt(self, p):
+        infotext = create_infotext(
+            p, p.all_prompts, p.all_seeds, p.all_subseeds, None, 0, 0
+        )
+        params_txt = Path(data_path, "params.txt")
+        params_txt.write_text(infotext, encoding="utf-8")
+
+    def process(self, p, *args_):
+        self.args = self.get_args(*args_)
+        if self.args.ad_model != "None":
+            extra_params = self.extra_params(**self.args.asdict())
+            p.extra_generation_params.update(extra_params)
+
     def postprocess_image(self, p, pp, *args_):
         if getattr(p, "_disable_adetailer", False):
             return
 
-        args = self.get_args(*args_)
+        if not hasattr(self, "args"):
+            self.args = self.get_args(*args_)
+        args = self.args
 
         if args.ad_model == "None":
             return
 
-        extra_params = self.extra_params(**args.asdict())
-        p.extra_generation_params.update(extra_params)
         p._idx = getattr(p, "_idx", -1) + 1
         i = p._idx
 
@@ -400,6 +396,9 @@ class AfterDetailerScript(scripts.Script):
 
         if processed is not None:
             pp.image = processed.images[0]
+
+        if i == len(p.all_prompts) - 1:
+            self.write_params_txt(p)
 
 
 def on_ui_settings():
