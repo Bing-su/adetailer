@@ -9,7 +9,7 @@ from adetailer.common import create_mask_from_bbox
 
 
 def mediapipe_predict(
-    model_type: int | str, image: Image.Image, confidence: float = 0.25
+    model_type: int | str, image: Image.Image, confidence: float = 0.3
 ) -> PredictOutput:
     if isinstance(model_type, str):
         model_type = mediapipe_model_name_to_type(model_type)

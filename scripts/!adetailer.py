@@ -15,7 +15,7 @@ from modules.processing import (
     create_infotext,
     process_images,
 )
-from modules.shared import opts, state
+from modules.shared import cmd_opts, opts, state
 
 AFTER_DETAILER = "After Detailer"
 adetailer_dir = Path(models_path, "adetailer")
@@ -116,7 +116,7 @@ class AfterDetailerScript(scripts.Script):
                         minimum=0,
                         maximum=100,
                         step=1,
-                        value=25,
+                        value=30,
                         visible=True,
                     )
                     ad_dilate_erode = gr.Slider(
@@ -270,6 +270,13 @@ class AfterDetailerScript(scripts.Script):
     def get_args(*args):
         return ADetailerArgs(*args)
 
+    @staticmethod
+    def get_ultralytics_device():
+        device = ""
+        if getattr(cmd_opts, "lowvram", False) or getattr(cmd_opts, "medvram", False):
+            device = "cpu"
+        return device
+
     def write_params_txt(self, p):
         infotext = create_infotext(
             p, p.all_prompts, p.all_seeds, p.all_subseeds, None, 0, 0
@@ -278,18 +285,16 @@ class AfterDetailerScript(scripts.Script):
         params_txt.write_text(infotext, encoding="utf-8")
 
     def process(self, p, *args_):
-        self.args = self.get_args(*args_)
-        if self.args.ad_model != "None":
-            extra_params = self.extra_params(**self.args.asdict())
+        args = self.get_args(*args_)
+        if args.ad_model != "None":
+            extra_params = self.extra_params(**args.asdict())
             p.extra_generation_params.update(extra_params)
 
     def postprocess_image(self, p, pp, *args_):
         if getattr(p, "_disable_adetailer", False):
             return
 
-        if not hasattr(self, "args"):
-            self.args = self.get_args(*args_)
-        args = self.args
+        args = self.get_args(*args_)
 
         if args.ad_model == "None":
             return
@@ -349,15 +354,17 @@ class AfterDetailerScript(scripts.Script):
         i2i.script_args = p.script_args
         i2i._disable_adetailer = True
 
+        kwargs = {}
         if args.ad_model.lower().startswith("mediapipe"):
             predictor = mediapipe_predict
             ad_model = args.ad_model
         else:
             predictor = ultralytics_predict
             ad_model = model_mapping[args.ad_model]
+            kwargs["device"] = self.get_ultralytics_device()
 
         with ChangeTorchLoad():
-            pred = predictor(ad_model, pp.image, args.ad_conf)
+            pred = predictor(ad_model, pp.image, args.ad_conf, **kwargs)
 
         if pred.masks is None:
             print("ADetailer: nothing detected with current settings")

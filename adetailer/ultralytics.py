@@ -11,12 +11,15 @@ from adetailer.common import create_mask_from_bbox
 
 
 def ultralytics_predict(
-    model_path: str | Path, image: Image.Image, confidence: float = 0.25
+    model_path: str | Path,
+    image: Image.Image,
+    confidence: float = 0.3,
+    device: str = "",
 ) -> PredictOutput:
     model_path = str(model_path)
 
     model = YOLO(model_path)
-    pred = model(image, conf=confidence, show_labels=False)
+    pred = model(image, conf=confidence, show_labels=False, device=device)
 
     bboxes = pred[0].boxes.xyxy.cpu().numpy()
     if bboxes.size == 0:
