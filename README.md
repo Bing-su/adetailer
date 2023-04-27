@@ -21,3 +21,8 @@ Datasets used for training the yolo models are:
 - [roboflow Anime Face CreateML](https://universe.roboflow.com/my-workspace-mph8o/anime-face-createml)
 - [roboflow xml2txt](https://universe.roboflow.com/0oooooo0/xml2txt-njqx1)
 - [wider face](http://shuoyang1213.me/WIDERFACE/index.html)
+
+## Example
+
+![image](https://i.imgur.com/i74ukgi.png)
+![image](https://i.imgur.com/I5VVkoh.png)
