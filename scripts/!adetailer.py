@@ -8,7 +8,7 @@ import torch
 import modules
 from adetailer import __version__, get_models, mediapipe_predict, ultralytics_predict
 from adetailer.common import dilate_erode, is_all_black, offset
-from modules import devices, images, safe, script_callbacks, scripts, shared
+from modules import images, safe, script_callbacks, scripts, shared
 from modules.paths import data_path, models_path
 from modules.processing import StableDiffusionProcessingImg2Img, process_images
 from modules.shared import opts, state
@@ -293,7 +293,7 @@ class AfterDetailerScript(scripts.Script):
 
         args = self.get_args(*args_)
 
-        if args.ad_model.lower() == "none":
+        if args.ad_model == "None":
             return
 
         extra_params = self.extra_params(**args.asdict())
@@ -362,8 +362,6 @@ class AfterDetailerScript(scripts.Script):
 
         with ChangeTorchLoad():
             pred = predictor(ad_model, pp.image, args.ad_conf)
-
-        devices.torch_gc()
 
         if pred.masks is None:
             print("ADetailer: nothing detected with current settings")
