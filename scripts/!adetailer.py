@@ -277,10 +277,13 @@ class AfterDetailerScript(scripts.Script):
             device = "cpu"
         return device
 
-    def write_params_txt(self, p):
-        infotext = create_infotext(
+    def infotext(self, p):
+        return create_infotext(
             p, p.all_prompts, p.all_seeds, p.all_subseeds, None, 0, 0
         )
+
+    def write_params_txt(self, p):
+        infotext = self.infotext(p)
         params_txt = Path(data_path, "params.txt")
         params_txt.write_text(infotext, encoding="utf-8")
 
@@ -372,12 +375,13 @@ class AfterDetailerScript(scripts.Script):
 
         if opts.data.get("ad_save_previews", False):
             images.save_image(
-                pred.preview,
-                p.outpath_samples,
-                "",
-                seed,
-                p.all_prompts[i],
-                opts.samples_format,
+                image=pred.preview,
+                path=p.outpath_samples,
+                basename="",
+                seed=seed,
+                prompt=p.all_prompts[i],
+                extension=opts.samples_format,
+                info=self.infotext(p),
                 p=p,
                 suffix="-ad-preview",
             )
