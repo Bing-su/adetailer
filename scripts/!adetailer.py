@@ -23,6 +23,10 @@ AFTER_DETAILER = "After Detailer"
 adetailer_dir = Path(models_path, "adetailer")
 model_mapping = get_models(adetailer_dir)
 
+print(
+    f"[-] ADetailer initialized. version: {__version__}, num models: {len(model_mapping)}"
+)
+
 
 class ADetailerArgs:
     """
@@ -274,12 +278,14 @@ class AfterDetailerScript(scripts.Script):
 
     @staticmethod
     def get_ultralytics_device():
+        '`device = ""` means autodetect'
         device = ""
-        is_lowvram = any(
-            getattr(cmd_opts, vram, False) for vram in ["lowvram", "medvram"]
-        )
-        if platform.system() != "Darwin" and is_lowvram:
+        if platform.system() == "Darwin":
+            return device
+
+        if any(getattr(cmd_opts, vram, False) for vram in ["lowvram", "medvram"]):
             device = "cpu"
+
         return device
 
     def get_prompt(self, p, args):
@@ -414,7 +420,9 @@ class AfterDetailerScript(scripts.Script):
             pred = predictor(ad_model, pp.image, args.ad_conf, **kwargs)
 
         if pred.masks is None:
-            print("ADetailer: nothing detected with current settings")
+            print(
+                f"[-] ADetailer: nothing detected on image {i + 1} with current settings."
+            )
             return
 
         if opts.data.get("ad_save_previews", False):
@@ -434,23 +442,24 @@ class AfterDetailerScript(scripts.Script):
         steps = len(masks)
         processed = None
 
+        if args.ad_model.lower().startswith("mediapipe"):
+            print(f"mediapipe: {steps} detected.")
+
         p2 = copy(i2i)
         for j in range(steps):
             mask = masks[j]
-
             mask = dilate_erode(mask, args.ad_dilate_erode)
-            if is_all_black(mask):
-                continue
 
-            mask = offset(mask, args.ad_x_offset, args.ad_y_offset)
-            p2.image_mask = mask
+            if not is_all_black(mask):
+                mask = offset(mask, args.ad_x_offset, args.ad_y_offset)
+                p2.image_mask = mask
+                processed = process_images(p2)
 
-            processed = process_images(p2)
+                p2 = copy(i2i)
+                p2.init_images = processed.images
 
-            p2 = copy(i2i)
             p2.seed = seed + j + 1
             p2.subseed = subseed + j + 1
-            p2.init_images = processed.images
 
         if processed is not None:
             pp.image = processed.images[0]
