@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import platform
+from copy import copy
 from pathlib import Path
 
 import gradio as gr
@@ -273,9 +275,58 @@ class AfterDetailerScript(scripts.Script):
     @staticmethod
     def get_ultralytics_device():
         device = ""
-        if getattr(cmd_opts, "lowvram", False) or getattr(cmd_opts, "medvram", False):
+        is_lowvram = any(
+            getattr(cmd_opts, vram, False) for vram in ["lowvram", "medvram"]
+        )
+        if platform.system() != "Darwin" and is_lowvram:
             device = "cpu"
         return device
+
+    def get_prompt(self, p, args):
+        i = p._idx
+
+        if args.ad_prompt:
+            prompt = args.ad_prompt
+        elif not p.all_prompts:
+            prompt = p.prompt
+        elif i < len(p.all_prompts):
+            prompt = p.all_prompts[i]
+        else:
+            j = i % len(p.all_prompts)
+            prompt = p.all_prompts[j]
+
+        if args.ad_negative_prompt:
+            negative_prompt = args.ad_negative_prompt
+        elif not p.all_negative_prompts:
+            negative_prompt = p.negative_prompt
+        elif i < len(p.all_negative_prompts):
+            negative_prompt = p.all_negative_prompts[i]
+        else:
+            j = i % len(p.all_negative_prompts)
+            negative_prompt = p.all_negative_prompts[j]
+
+        return prompt, negative_prompt
+
+    def get_seed(self, p):
+        i = p._idx
+
+        if not p.all_seeds:
+            seed = p.seed
+        elif i < len(p.all_seeds):
+            seed = p.all_seeds[i]
+        else:
+            j = i % len(p.all_seeds)
+            seed = p.all_seeds[j]
+
+        if not p.all_subseeds:
+            subseed = p.subseed
+        elif i < len(p.all_subseeds):
+            subseed = p.all_subseeds[i]
+        else:
+            j = i % len(p.all_subseeds)
+            subseed = p.all_subseeds[j]
+
+        return seed, subseed
 
     def infotext(self, p):
         return create_infotext(
@@ -305,15 +356,8 @@ class AfterDetailerScript(scripts.Script):
         p._idx = getattr(p, "_idx", -1) + 1
         i = p._idx
 
-        prompt = args.ad_prompt if args.ad_prompt else p.all_prompts[i]
-
-        if args.ad_negative_prompt:
-            negative_prompt = args.ad_negative_prompt
-        else:
-            negative_prompt = p.all_negative_prompts[i]
-
-        seed = p.all_seeds[i]
-        subseed = p.all_subseeds[i]
+        prompt, negative_prompt = self.get_prompt(p, args)
+        seed, subseed = self.get_seed(p)
 
         sampler_name = p.sampler_name
         if sampler_name in ["PLMS", "UniPC"]:
@@ -390,6 +434,7 @@ class AfterDetailerScript(scripts.Script):
         steps = len(masks)
         processed = None
 
+        p2 = copy(i2i)
         for j in range(steps):
             mask = masks[j]
 
@@ -398,18 +443,23 @@ class AfterDetailerScript(scripts.Script):
                 continue
 
             mask = offset(mask, args.ad_x_offset, args.ad_y_offset)
-            i2i.image_mask = mask
+            p2.image_mask = mask
 
-            processed = process_images(i2i)
-            i2i.seed = seed + j + 1
-            i2i.subseed = subseed + j + 1
-            i2i.init_images = processed.images
+            processed = process_images(p2)
+
+            p2 = copy(i2i)
+            p2.seed = seed + j + 1
+            p2.subseed = subseed + j + 1
+            p2.init_images = processed.images
 
         if processed is not None:
             pp.image = processed.images[0]
 
-        if i == len(p.all_prompts) - 1:
-            self.write_params_txt(p)
+        try:
+            if i == len(p.all_prompts) - 1:
+                self.write_params_txt(p)
+        except Exception:
+            pass
 
 
 def on_ui_settings():
