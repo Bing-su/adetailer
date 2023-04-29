@@ -29,46 +29,60 @@ print(
     f"[-] ADetailer initialized. version: {__version__}, num models: {len(model_mapping)}"
 )
 
+all_args = [
+    ("ad_model", "ADetailer model"),
+    ("ad_prompt", "ADetailer prompt"),
+    ("ad_negative_prompt", "ADetailer negative prompt"),
+    ("ad_conf", "ADetailer conf"),
+    ("ad_dilate_erode", "ADetailer dilate/erode"),
+    ("ad_x_offset", "ADetailer x offset"),
+    ("ad_y_offset", "ADetailer y offset"),
+    ("ad_mask_blur", "ADetailer mask blur"),
+    ("ad_denoising_strength", "ADetailer denoising strength"),
+    ("ad_inpaint_full_res", "ADetailer inpaint full"),
+    ("ad_inpaint_full_res_padding", "ADetailer inpaint padding"),
+    ("ad_use_inpaint_width_height", "ADetailer use inpaint width/height"),
+    ("ad_inpaint_width", "ADetailer inpaint width"),
+    ("ad_inpaint_height", "ADetailer inpaint height"),
+    ("ad_cfg_scale", "ADetailer CFG scale"),
+    ("ad_controlnet_model", "ADetailer ControlNet model"),
+    ("ad_controlnet_weight", "ADetailer ControlNet weight"),
+]
+
 
 class ADetailerArgs:
-    """
-    manualy implemented dataclass for adetailer args, due to some issue...
-    see: https://github.com/mkdocs/mkdocs/issues/3141
-    """
+    ad_model: str
+    ad_prompt: str
+    ad_negative_prompt: str
+    ad_conf: float
+    ad_dilate_erode: int
+    ad_x_offset: int
+    ad_y_offset: int
+    ad_mask_blur: int
+    ad_denoising_strength: float
+    ad_inpaint_full_res: bool
+    ad_inpaint_full_res_padding: int
+    ad_use_inpaint_width_height: bool
+    ad_inpaint_width: int
+    ad_inpaint_height: int
+    ad_cfg_scale: float
+    ad_controlnet_model: str
+    ad_controlnet_weight: float
 
     def __init__(self, *args):
-        self.ad_model: str = args[0]
-        self.ad_prompt: str = args[1]
-        self.ad_negative_prompt: str = args[2]
-        self.ad_conf: float = args[3] / 100.0
-        self.ad_dilate_erode: int = args[4]
-        self.ad_x_offset: int = args[5]
-        self.ad_y_offset: int = args[6]
-        self.ad_mask_blur: int = args[7]
-        self.ad_denoising_strength: float = args[8]
-        self.ad_inpaint_full_res: bool = args[9]
-        self.ad_inpaint_full_res_padding: int = args[10]
-        self.ad_cfg_scale: float = args[11]
-        self.ad_controlnet_model: str = args[12]
-        self.ad_controlnet_weight: float = args[13]
+        for i, (attr, _) in enumerate(all_args):
+            if i == 3:  # ad_conf
+                setattr(self, attr, args[i] / 100.0)
+            else:
+                setattr(self, attr, args[i])
 
     def asdict(self):
-        return {
-            "ad_model": self.ad_model,
-            "ad_prompt": self.ad_prompt,
-            "ad_negative_prompt": self.ad_negative_prompt,
-            "ad_conf": self.ad_conf,
-            "ad_dilate_erode": self.ad_dilate_erode,
-            "ad_x_offset": self.ad_x_offset,
-            "ad_y_offset": self.ad_y_offset,
-            "ad_mask_blur": self.ad_mask_blur,
-            "ad_denoising_strength": self.ad_denoising_strength,
-            "ad_inpaint_full_res": self.ad_inpaint_full_res,
-            "ad_inpaint_full_res_padding": self.ad_inpaint_full_res_padding,
-            "ad_cfg_scale": self.ad_cfg_scale,
-            "ad_controlnet_model": self.ad_controlnet_model,
-            "ad_controlnet_weight": self.ad_controlnet_weight,
-        }
+        return self.__dict__
+
+
+class Widgets:
+    def tolist(self):
+        return [getattr(self, attr) for attr, _ in all_args]
 
 
 class ChangeTorchLoad:
@@ -98,10 +112,12 @@ class AfterDetailerScript(scripts.Script):
     def ui(self, is_img2img):
         model_list = ["None"] + list(model_mapping.keys())
 
+        w = Widgets()
+
         with gr.Accordion(AFTER_DETAILER, open=False, elem_id="AD_main_acc"):
             with gr.Group():
                 with gr.Row():
-                    ad_model = gr.Dropdown(
+                    w.ad_model = gr.Dropdown(
                         label="ADetailer model",
                         choices=model_list,
                         value="None",
@@ -110,7 +126,7 @@ class AfterDetailerScript(scripts.Script):
                     )
 
                 with gr.Row():
-                    ad_prompt = gr.Textbox(
+                    w.ad_prompt = gr.Textbox(
                         label="ad_prompt",
                         show_label=False,
                         lines=3,
@@ -118,7 +134,7 @@ class AfterDetailerScript(scripts.Script):
                     )
 
                 with gr.Row():
-                    ad_negative_prompt = gr.Textbox(
+                    w.ad_negative_prompt = gr.Textbox(
                         label="ad_negative_prompt",
                         show_label=False,
                         lines=2,
@@ -127,7 +143,7 @@ class AfterDetailerScript(scripts.Script):
 
             with gr.Group():
                 with gr.Row():
-                    ad_conf = gr.Slider(
+                    w.ad_conf = gr.Slider(
                         label="ADetailer confidence threshold %",
                         minimum=0,
                         maximum=100,
@@ -135,7 +151,7 @@ class AfterDetailerScript(scripts.Script):
                         value=30,
                         visible=True,
                     )
-                    ad_dilate_erode = gr.Slider(
+                    w.ad_dilate_erode = gr.Slider(
                         label="ADetailer erosion (-) / dilation (+)",
                         minimum=-128,
                         maximum=128,
@@ -145,7 +161,7 @@ class AfterDetailerScript(scripts.Script):
                     )
 
                 with gr.Row():
-                    ad_x_offset = gr.Slider(
+                    w.ad_x_offset = gr.Slider(
                         label="ADetailer x(→) offset",
                         minimum=-200,
                         maximum=200,
@@ -153,7 +169,7 @@ class AfterDetailerScript(scripts.Script):
                         value=0,
                         visible=True,
                     )
-                    ad_y_offset = gr.Slider(
+                    w.ad_y_offset = gr.Slider(
                         label="ADetailer y(↑) offset",
                         minimum=-200,
                         maximum=200,
@@ -163,7 +179,7 @@ class AfterDetailerScript(scripts.Script):
                     )
 
                 with gr.Row():
-                    ad_mask_blur = gr.Slider(
+                    w.ad_mask_blur = gr.Slider(
                         label="ADetailer mask blur",
                         minimum=0,
                         maximum=64,
@@ -172,7 +188,7 @@ class AfterDetailerScript(scripts.Script):
                         visible=True,
                     )
 
-                    ad_denoising_strength = gr.Slider(
+                    w.ad_denoising_strength = gr.Slider(
                         label="ADetailer denoising strength",
                         minimum=0.0,
                         maximum=1.0,
@@ -182,12 +198,12 @@ class AfterDetailerScript(scripts.Script):
                     )
 
                 with gr.Row():
-                    ad_inpaint_full_res = gr.Checkbox(
+                    w.ad_inpaint_full_res = gr.Checkbox(
                         label="Inpaint at full resolution ",
                         value=True,
                         visible=True,
                     )
-                    ad_inpaint_full_res_padding = gr.Slider(
+                    w.ad_inpaint_full_res_padding = gr.Slider(
                         label="Inpaint at full resolution padding, pixels ",
                         minimum=0,
                         maximum=256,
@@ -197,7 +213,32 @@ class AfterDetailerScript(scripts.Script):
                     )
 
                 with gr.Row():
-                    ad_cfg_scale = gr.Slider(
+                    w.ad_use_inpaint_width_height = gr.Checkbox(
+                        label="Use inpaint width/height",
+                        value=False,
+                        visible=True,
+                    )
+
+                    w.ad_inpaint_width = gr.Slider(
+                        label="inpaint width",
+                        minimum=4,
+                        maximum=1024,
+                        step=4,
+                        value=512,
+                        visible=True,
+                    )
+
+                    w.ad_inpaint_height = gr.Slider(
+                        label="inpaint height",
+                        minimum=4,
+                        maximum=1024,
+                        step=4,
+                        value=512,
+                        visible=True,
+                    )
+
+                with gr.Row():
+                    w.ad_cfg_scale = gr.Slider(
                         label="ADetailer CFG scale",
                         minimum=0.0,
                         maximum=30.0,
@@ -210,59 +251,29 @@ class AfterDetailerScript(scripts.Script):
 
                 with gr.Group():
                     with gr.Row():
-                        ad_controlnet_model = gr.Dropdown(
+                        w.ad_controlnet_model = gr.Dropdown(
                             label="ControlNet model",
                             choices=cn_inpaint_models,
                             value="None",
-                            visible=controlnet_exists,
+                            visible=True,
                             type="value",
+                            interactive=controlnet_exists,
                         )
 
                     with gr.Row():
-                        ad_controlnet_weight = gr.Slider(
+                        w.ad_controlnet_weight = gr.Slider(
                             label="ControlNet weight",
                             minimum=0.0,
                             maximum=1.0,
                             step=0.05,
                             value=1.0,
-                            visible=controlnet_exists,
+                            visible=True,
+                            interactive=controlnet_exists,
                         )
 
-        all_widgets = [
-            ad_model,
-            ad_prompt,
-            ad_negative_prompt,
-            ad_conf,
-            ad_dilate_erode,
-            ad_x_offset,
-            ad_y_offset,
-            ad_mask_blur,
-            ad_denoising_strength,
-            ad_inpaint_full_res,
-            ad_inpaint_full_res_padding,
-            ad_cfg_scale,
-            ad_controlnet_model,
-            ad_controlnet_weight,
-        ]
+        self.infotext_fields = [(getattr(w, attr), name) for attr, name in all_args]
 
-        self.infotext_fields = [
-            (ad_model, "ADetailer model"),
-            (ad_prompt, "ADetailer prompt"),
-            (ad_negative_prompt, "ADetailer negative prompt"),
-            (ad_conf, "ADetailer conf"),
-            (ad_dilate_erode, "ADetailer dilate/erode"),
-            (ad_x_offset, "ADetailer x offset"),
-            (ad_y_offset, "ADetailer y offset"),
-            (ad_mask_blur, "ADetailer mask blur"),
-            (ad_denoising_strength, "ADetailer denoising strength"),
-            (ad_inpaint_full_res, "ADetailer inpaint full"),
-            (ad_inpaint_full_res_padding, "ADetailer inpaint padding"),
-            (ad_cfg_scale, "ADetailer CFG scale"),
-            (ad_controlnet_model, "ADetailer ControlNet model"),
-            (ad_controlnet_weight, "ADetailer ControlNet weight"),
-        ]
-
-        return all_widgets
+        return w.tolist()
 
     def init_controlnet_ext(self):
         if self.controlnet_ext is None:
@@ -271,46 +282,15 @@ class AfterDetailerScript(scripts.Script):
             if not success:
                 print("[-] ADetailer: ControlNetExt init failed.", file=sys.stderr)
 
-    def extra_params(
-        self,
-        ad_model,
-        ad_prompt,
-        ad_negative_prompt,
-        ad_conf,
-        ad_dilate_erode,
-        ad_x_offset,
-        ad_y_offset,
-        ad_mask_blur,
-        ad_denoising_strength,
-        ad_inpaint_full_res,
-        ad_inpaint_full_res_padding,
-        ad_cfg_scale,
-        ad_controlnet_model,
-        ad_controlnet_weight,
-    ):
-        params = {
-            "ADetailer model": ad_model,
-            "ADetailer prompt": ad_prompt,
-            "ADetailer negative prompt": ad_negative_prompt,
-            "ADetailer conf": int(ad_conf * 100),
-            "ADetailer dilate/erode": ad_dilate_erode,
-            "ADetailer x offset": ad_x_offset,
-            "ADetailer y offset": ad_y_offset,
-            "ADetailer mask blur": ad_mask_blur,
-            "ADetailer denoising strength": ad_denoising_strength,
-            "ADetailer inpaint full": ad_inpaint_full_res,
-            "ADetailer inpaint padding": ad_inpaint_full_res_padding,
-            "ADetailer CFG scale": ad_cfg_scale,
-            "ADetailer ControlNet model": ad_controlnet_model,
-            "ADetailer ControlNet weight": ad_controlnet_weight,
-            "ADetailer version": __version__,
-        }
+    def extra_params(self, **kwargs):
+        params = {name: kwargs[attr] for attr, name in all_args}
+        params["ADetailer conf"] = int(params["ADetailer conf"] * 100)
 
-        if not ad_prompt:
+        if not params["ADetailer prompt"]:
             params.pop("ADetailer prompt")
-        if not ad_negative_prompt:
+        if not params["ADetailer negative prompt"]:
             params.pop("ADetailer negative prompt")
-        if ad_controlnet_model == "None":
+        if params["ADetailer ControlNet model"] == "None":
             params.pop("ADetailer ControlNet model")
             params.pop("ADetailer ControlNet weight")
 
@@ -332,7 +312,7 @@ class AfterDetailerScript(scripts.Script):
 
         return device
 
-    def get_prompt(self, p, args):
+    def get_prompt(self, p, args: ADetailerArgs):
         i = p._idx
 
         if args.ad_prompt:
@@ -378,6 +358,16 @@ class AfterDetailerScript(scripts.Script):
 
         return seed, subseed
 
+    def get_width_height(self, p, args: ADetailerArgs):
+        if args.ad_use_inpaint_width_height:
+            width = args.ad_inpaint_width
+            height = args.ad_inpaint_height
+        else:
+            width = p.width
+            height = p.height
+
+        return width, height
+
     def infotext(self, p):
         return create_infotext(
             p, p.all_prompts, p.all_seeds, p.all_subseeds, None, 0, 0
@@ -388,45 +378,19 @@ class AfterDetailerScript(scripts.Script):
         params_txt = Path(data_path, "params.txt")
         params_txt.write_text(infotext, encoding="utf-8")
 
-    def update_controlnet_args(self, p, args):
-        if (
-            self.controlnet_ext is not None
-            and self.controlnet_ext.cn_available
-            and args.ad_controlnet_model != "None"
-        ):
-            self.controlnet_ext.update_scripts_args(
-                p, args.ad_controlnet_model, args.ad_controlnet_weight
-            )
-
-    def process(self, p, *args_):
-        args = self.get_args(*args_)
-        if args.ad_model != "None":
-            extra_params = self.extra_params(**args.asdict())
-            p.extra_generation_params.update(extra_params)
-
-    def postprocess_image(self, p, pp, *args_):
-        if getattr(p, "_disable_adetailer", False):
-            return
-
-        args = self.get_args(*args_)
-
-        if args.ad_model == "None":
-            return
-
-        self.init_controlnet_ext()
-
-        p._idx = getattr(p, "_idx", -1) + 1
-        i = p._idx
-
+    def get_i2i_p(self, p, args: ADetailerArgs, image):
         prompt, negative_prompt = self.get_prompt(p, args)
         seed, subseed = self.get_seed(p)
+        width, height = self.get_width_height(p, args)
 
         sampler_name = p.sampler_name
         if sampler_name in ["PLMS", "UniPC"]:
             sampler_name = "Euler"
 
+        self.init_controlnet_ext()
+
         i2i = StableDiffusionProcessingImg2Img(
-            init_images=[pp.image],
+            init_images=[image],
             resize_mode=0,
             denoising_strength=args.ad_denoising_strength,
             mask=None,
@@ -451,8 +415,8 @@ class AfterDetailerScript(scripts.Script):
             n_iter=1,
             steps=p.steps,
             cfg_scale=args.ad_cfg_scale,
-            width=p.width,
-            height=p.height,
+            width=width,
+            height=height,
             tiling=p.tiling,
             extra_generation_params=p.extra_generation_params,
             do_not_save_samples=True,
@@ -464,9 +428,43 @@ class AfterDetailerScript(scripts.Script):
         i2i._disable_adetailer = True
 
         self.update_controlnet_args(i2i, args)
+        return i2i
+
+    def update_controlnet_args(self, p, args: ADetailerArgs):
+        if (
+            self.controlnet_ext is not None
+            and self.controlnet_ext.cn_available
+            and args.ad_controlnet_model != "None"
+        ):
+            self.controlnet_ext.update_scripts_args(
+                p, args.ad_controlnet_model, args.ad_controlnet_weight
+            )
+
+    def process(self, p, *args_):
+        args = self.get_args(*args_)
+        if args.ad_model != "None":
+            extra_params = self.extra_params(**args.asdict())
+            p.extra_generation_params.update(extra_params)
+
+    def postprocess_image(self, p, pp, *args_):
+        if getattr(p, "_disable_adetailer", False):
+            return
+
+        args = self.get_args(*args_)
+
+        if args.ad_model == "None":
+            return
+
+        p._idx = getattr(p, "_idx", -1) + 1
+        i = p._idx
+
+        i2i = self.get_i2i_p(p, args, pp.image)
+        seed, subseed = self.get_seed(p)
+
+        is_mediapipe = args.ad_model.lower().startswith("mediapipe")
 
         kwargs = {}
-        if args.ad_model.lower().startswith("mediapipe"):
+        if is_mediapipe:
             predictor = mediapipe_predict
             ad_model = args.ad_model
         else:
@@ -500,7 +498,7 @@ class AfterDetailerScript(scripts.Script):
         steps = len(masks)
         processed = None
 
-        if args.ad_model.lower().startswith("mediapipe"):
+        if is_mediapipe:
             print(f"mediapipe: {steps} detected.")
 
         p2 = copy(i2i)
