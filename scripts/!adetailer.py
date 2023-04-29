@@ -13,11 +13,36 @@ from adetailer.common import dilate_erode, is_all_black, offset
 from modules import images, safe, script_callbacks, scripts, shared
 from modules.paths import data_path, models_path
 from modules.processing import (
+    StableDiffusionProcessing,
     StableDiffusionProcessingImg2Img,
     create_infotext,
     process_images,
 )
 from modules.shared import cmd_opts, opts, state
+
+cn_models = ['None']
+cn_available = False
+
+try:
+    import importlib
+    external_cn = importlib.import_module('extensions.sd-webui-controlnet.scripts.external_code', 'external_code')
+    cn_available = True
+    models = external_cn.get_models()
+    cn_models += [m for m in models if 'inpaint' in m]
+    def update_script_args(p: StableDiffusionProcessing, model, weight):
+        cn_units = [
+            external_cn.ControlNetUnit(
+                model=model,
+                weight=weight,
+                control_mode=external_cn.ControlMode.BALANCED,
+                module='inpaint_global_harmonious',
+                pixel_perfect=True
+            )
+        ]
+        external_cn.update_cn_script_in_processing(p, cn_units)
+except:
+    def update_script_args(p: StableDiffusionProcessing, model, weight):
+        pass
 
 AFTER_DETAILER = "After Detailer"
 adetailer_dir = Path(models_path, "adetailer")
@@ -47,6 +72,8 @@ class ADetailerArgs:
         self.ad_inpaint_full_res: bool = args[9]
         self.ad_inpaint_full_res_padding: int = args[10]
         self.ad_cfg_scale: float = args[11]
+        self.ad_controlnet_model: str = args[12]
+        self.ad_controlnet_weight: float = args[13]
 
     def asdict(self):
         return {
@@ -62,6 +89,8 @@ class ADetailerArgs:
             "ad_inpaint_full_res": self.ad_inpaint_full_res,
             "ad_inpaint_full_res_padding": self.ad_inpaint_full_res_padding,
             "ad_cfg_scale": self.ad_cfg_scale,
+            "ad_controlnet_model": self.ad_controlnet_model,
+            "ad_controlnet_weight": self.ad_controlnet_weight,
         }
 
 
@@ -195,6 +224,26 @@ class AfterDetailerScript(scripts.Script):
                         value=7.0,
                         visible=True,
                     )
+            
+            with gr.Group():
+                with gr.Row():
+                    ad_controlnet_model = gr.Dropdown(
+                        label="ControlNet model",
+                        choices=cn_models,
+                        value="None",
+                        visible=cn_available,
+                        type="value",
+                    )
+
+                with gr.Row():
+                    ad_controlnet_weight = gr.Slider(
+                        label="ControlNet weight",
+                        minimum=0.0,
+                        maximum=1.0,
+                        step=0.05,
+                        value=1.0,
+                        visible=cn_available,
+                    )
 
         all_widgets = [
             ad_model,
@@ -209,6 +258,8 @@ class AfterDetailerScript(scripts.Script):
             ad_inpaint_full_res,
             ad_inpaint_full_res_padding,
             ad_cfg_scale,
+            ad_controlnet_model,
+            ad_controlnet_weight
         ]
 
         def on_ad_model_change(model_name):
@@ -230,6 +281,8 @@ class AfterDetailerScript(scripts.Script):
             (ad_inpaint_full_res, "ADetailer inpaint full"),
             (ad_inpaint_full_res_padding, "ADetailer inpaint padding"),
             (ad_cfg_scale, "ADetailer CFG scale"),
+            (ad_controlnet_model, "ADetailer ControlNet model"),
+            (ad_controlnet_weight, "ADetailer ControlNet weight"),
         ]
 
         return all_widgets
@@ -248,6 +301,8 @@ class AfterDetailerScript(scripts.Script):
         ad_inpaint_full_res,
         ad_inpaint_full_res_padding,
         ad_cfg_scale,
+        ad_controlnet_model,
+        ad_controlnet_weight,
     ):
         params = {
             "ADetailer model": ad_model,
@@ -262,6 +317,8 @@ class AfterDetailerScript(scripts.Script):
             "ADetailer inpaint full": ad_inpaint_full_res,
             "ADetailer inpaint padding": ad_inpaint_full_res_padding,
             "ADetailer CFG scale": ad_cfg_scale,
+            "ADetailer ControlNet model": ad_controlnet_model,
+            "ADetailer ControlNet weight": ad_controlnet_weight,
             "ADetailer version": __version__,
         }
 
@@ -269,6 +326,9 @@ class AfterDetailerScript(scripts.Script):
             params.pop("ADetailer prompt")
         if not ad_negative_prompt:
             params.pop("ADetailer negative prompt")
+        if not cn_available:
+            params.pop("ADetailer ControlNet model")
+            params.pop("ADetailer ControlNet weight")
 
         return params
 
@@ -406,6 +466,9 @@ class AfterDetailerScript(scripts.Script):
         i2i.scripts = p.scripts
         i2i.script_args = p.script_args
         i2i._disable_adetailer = True
+
+        if cn_available and args.ad_controlnet_model != "None":
+            update_script_args(i2i, args.ad_controlnet_model, args.ad_controlnet_weight)
 
         kwargs = {}
         if args.ad_model.lower().startswith("mediapipe"):
