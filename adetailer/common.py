@@ -26,10 +26,11 @@ def get_models(model_dir: str | Path) -> OrderedDict[str, str | None]:
 
     models = OrderedDict(
         {
-            "face_yolo8n.pt": hf_hub_download("Bingsu/adetailer", "face_yolov8n.pt"),
-            "face_yolo8s.pt": hf_hub_download("Bingsu/adetailer", "face_yolov8s.pt"),
+            "face_yolov8n.pt": hf_hub_download("Bingsu/adetailer", "face_yolov8n.pt"),
+            "face_yolov8s.pt": hf_hub_download("Bingsu/adetailer", "face_yolov8s.pt"),
             "mediapipe_face_full": None,
             "mediapipe_face_short": None,
+            "hand_yolov8n.pt": hf_hub_download("Bingsu/adetailer", "hand_yolov8n.pt"),
         }
     )
 
