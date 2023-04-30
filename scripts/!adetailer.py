@@ -298,6 +298,7 @@ class AfterDetailerScript(scripts.Script):
     def extra_params(self, **kwargs):
         params = {name: kwargs[attr] for attr, name, *_ in ALL_ARGS}
         params["ADetailer conf"] = int(params["ADetailer conf"] * 100)
+        params["ADetailer version"] = __version__
 
         if not params["ADetailer prompt"]:
             params.pop("ADetailer prompt")
