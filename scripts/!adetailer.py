@@ -304,6 +304,11 @@ class AfterDetailerScript(scripts.Script):
             params.pop("ADetailer prompt")
         if not params["ADetailer negative prompt"]:
             params.pop("ADetailer negative prompt")
+
+        if not params["ADetailer use inpaint width/height"]:
+            params.pop("ADetailer inpaint width")
+            params.pop("ADetailer inpaint height")
+
         if params["ADetailer ControlNet model"] == "None":
             params.pop("ADetailer ControlNet model")
             params.pop("ADetailer ControlNet weight")
@@ -444,6 +449,12 @@ class AfterDetailerScript(scripts.Script):
         self.update_controlnet_args(i2i, args)
         return i2i
 
+    def get_ad_model(self, name: str):
+        if name not in model_mapping:
+            msg = f"[-] ADetailer: Model {name!r} not found. Available models: {list(model_mapping.keys())}"
+            raise ValueError(msg)
+        return model_mapping[name]
+
     def update_controlnet_args(self, p, args: ADetailerArgs):
         if (
             self.controlnet_ext is not None
@@ -483,7 +494,7 @@ class AfterDetailerScript(scripts.Script):
             ad_model = args.ad_model
         else:
             predictor = ultralytics_predict
-            ad_model = model_mapping[args.ad_model]
+            ad_model = self.get_ad_model(args.ad_model)
             kwargs["device"] = self.ultralytics_device
 
         with ChangeTorchLoad():

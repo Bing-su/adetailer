@@ -22,13 +22,16 @@ def is_installed(
     if not min_version and not max_version:
         return True
 
-    pkg_version = version(package)
     if not min_version:
         min_version = "0.0.0"
     if not max_version:
         max_version = "99999999.99999999.99999999"
 
+    if package == "google.protobuf":
+        package = "protobuf"
+
     try:
+        pkg_version = version(package)
         return parse(min_version) <= parse(pkg_version) <= parse(max_version)
     except Exception:
         return False
@@ -48,16 +51,19 @@ def install():
         ("protobuf", "3.20.0", "3.20.9999"),
     ]
 
-    for name, low, high in deps:
+    for pkg, low, high in deps:
+        # https://github.com/protocolbuffers/protobuf/tree/main/python
+        name = "google.protobuf" if pkg == "protobuf" else pkg
+
         if not is_installed(name, low, high):
             if low and high:
-                cmd = f"{name}>={low},<={high}"
+                cmd = f"{pkg}>={low},<={high}"
             elif low:
-                cmd = f"{name}>={low}"
+                cmd = f"{pkg}>={low}"
             elif high:
-                cmd = f"{name}<={high}"
+                cmd = f"{pkg}<={high}"
             else:
-                cmd = name
+                cmd = pkg
 
             run_pip("-U", cmd)
 
