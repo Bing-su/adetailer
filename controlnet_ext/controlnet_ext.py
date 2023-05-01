@@ -19,7 +19,9 @@ if ext_path.exists():
 
 if not controlnet_exists and ext_builtin_path.exists():
     controlnet_exists = any(
-        p.name == "sd-webui-controlnet" for p in ext_builtin_path.iterdir()
+        p.name == "sd-webui-controlnet"
+        for p in ext_builtin_path.iterdir()
+        if p.is_dir()
     )
 
     if controlnet_exists:

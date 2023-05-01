@@ -87,7 +87,7 @@ class ADetailerArgs:
                 try:
                     args[i] = dtype(args[i])
                 except ValueError as e:
-                    msg = f"Error converting {attr!r} to {dtype}: {e}"
+                    msg = f"Error converting {args[i]!r}({attr}) to {dtype}: {e}"
                     raise ValueError(msg) from e
         return args
 

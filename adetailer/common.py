@@ -10,6 +10,8 @@ import numpy as np
 from huggingface_hub import hf_hub_download
 from PIL import Image, ImageChops, ImageDraw
 
+repo_id = "Bingsu/adetailer"
+
 
 @dataclass
 class PredictOutput:
@@ -20,17 +22,22 @@ class PredictOutput:
 
 def get_models(model_dir: str | Path) -> OrderedDict[str, str | None]:
     model_dir = Path(model_dir)
-    model_paths = [
-        p for p in model_dir.rglob("*") if p.is_file() and p.suffix in (".pt", ".pth")
-    ]
+    if model_dir.is_dir():
+        model_paths = [
+            p
+            for p in model_dir.rglob("*")
+            if p.is_file() and p.suffix in (".pt", ".pth")
+        ]
+    else:
+        model_paths = []
 
     models = OrderedDict(
         {
-            "face_yolov8n.pt": hf_hub_download("Bingsu/adetailer", "face_yolov8n.pt"),
-            "face_yolov8s.pt": hf_hub_download("Bingsu/adetailer", "face_yolov8s.pt"),
+            "face_yolov8n.pt": hf_hub_download(repo_id, "face_yolov8n.pt"),
+            "face_yolov8s.pt": hf_hub_download(repo_id, "face_yolov8s.pt"),
             "mediapipe_face_full": None,
             "mediapipe_face_short": None,
-            "hand_yolov8n.pt": hf_hub_download("Bingsu/adetailer", "hand_yolov8n.pt"),
+            "hand_yolov8n.pt": hf_hub_download(repo_id, "hand_yolov8n.pt"),
         }
     )
 
