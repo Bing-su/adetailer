@@ -38,3 +38,10 @@ On the ControlNet tab, select a ControlNet inpaint model and set the model weigh
 
 ![image](https://i.imgur.com/i74ukgi.png)
 ![image](https://i.imgur.com/I5VVkoh.png)
+
+## Changelog
+
+### 2023-05-02
+
+- Remove `None` from model list and add `Enable ADetailer` checkbox.
+- install.py `skip_install` fix.

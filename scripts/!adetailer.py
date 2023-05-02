@@ -8,7 +8,7 @@ from pathlib import Path
 import gradio as gr
 import torch
 
-import modules
+import modules  # noqa: F401
 from adetailer import __version__, get_models, mediapipe_predict, ultralytics_predict
 from adetailer.common import dilate_erode, is_all_black, offset
 from controlnet_ext import ControlNetExt, controlnet_exists, get_cn_inpaint_models
@@ -19,7 +19,7 @@ from modules.processing import (
     create_infotext,
     process_images,
 )
-from modules.shared import cmd_opts, opts, state
+from modules.shared import cmd_opts, opts
 
 AFTER_DETAILER = "After Detailer"
 adetailer_dir = Path(models_path, "adetailer")
@@ -30,6 +30,7 @@ print(
 )
 
 ALL_ARGS = [
+    ("ad_enable", "ADetailer enable", bool),
     ("ad_model", "ADetailer model", str),
     ("ad_prompt", "ADetailer prompt", str),
     ("ad_negative_prompt", "ADetailer negative prompt", str),
@@ -51,6 +52,7 @@ ALL_ARGS = [
 
 
 class ADetailerArgs:
+    ad_enable: bool
     ad_model: str
     ad_prompt: str
     ad_negative_prompt: str
@@ -123,11 +125,18 @@ class AfterDetailerScript(scripts.Script):
         return scripts.AlwaysVisible
 
     def ui(self, is_img2img):
-        model_list = ["None"] + list(model_mapping.keys())
+        model_list = list(model_mapping.keys())
 
         w = Widgets()
 
         with gr.Accordion(AFTER_DETAILER, open=False, elem_id="AD_main_acc"):
+            with gr.Row():
+                w.ad_enable = gr.Checkbox(
+                    label="Enable ADetailer",
+                    value=True,
+                    visible=True,
+                )
+
             with gr.Group():
                 with gr.Row():
                     w.ad_model = gr.Dropdown(
@@ -295,8 +304,11 @@ class AfterDetailerScript(scripts.Script):
             if not success:
                 print("[-] ADetailer: ControlNetExt init failed.", file=sys.stderr)
 
-    def extra_params(self, **kwargs):
-        params = {name: kwargs[attr] for attr, name, *_ in ALL_ARGS}
+    def is_ad_enabled(self, args: ADetailerArgs):
+        return args.ad_enable and args.ad_model != "None"
+
+    def extra_params(self, args: ADetailerArgs):
+        params = {name: getattr(args, attr) for attr, name, *_ in ALL_ARGS[1:]}
         params["ADetailer conf"] = int(params["ADetailer conf"] * 100)
         params["ADetailer version"] = __version__
 
@@ -467,8 +479,8 @@ class AfterDetailerScript(scripts.Script):
 
     def process(self, p, *args_):
         args = self.get_args(*args_)
-        if args.ad_model != "None":
-            extra_params = self.extra_params(**args.asdict())
+        if self.is_ad_enabled(args):
+            extra_params = self.extra_params(args)
             p.extra_generation_params.update(extra_params)
 
     def postprocess_image(self, p, pp, *args_):
@@ -477,7 +489,7 @@ class AfterDetailerScript(scripts.Script):
 
         args = self.get_args(*args_)
 
-        if args.ad_model == "None":
+        if not self.is_ad_enabled(args):
             return
 
         p._idx = getattr(p, "_idx", -1) + 1

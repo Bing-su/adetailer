@@ -69,8 +69,10 @@ def install():
 
 
 try:
-    from launch import skip_install
-except ImportError:
+    import launch
+
+    skip_install = launch.args.skip_install
+except Exception:
     skip_install = False
 
 if not skip_install:
