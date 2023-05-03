@@ -452,8 +452,8 @@ class AfterDetailerScript(scripts.Script):
             do_not_save_grid=True,
         )
 
-        i2i.scripts = p.scripts
-        i2i.script_args = p.script_args
+        i2i.scripts = copy(p.scripts)
+        i2i.script_args = copy(p.script_args)
         i2i._disable_adetailer = True
 
         self.update_controlnet_args(i2i, args)
