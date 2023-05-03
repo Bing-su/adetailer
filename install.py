@@ -1,15 +1,14 @@
-from __future__ import annotations
-
 import importlib.util
 import subprocess
 import sys
 from importlib.metadata import version  # python >= 3.8
+from typing import Optional
 
 from packaging.version import parse
 
 
 def is_installed(
-    package: str, min_version: str | None = None, max_version: str | None = None
+    package: str, min_version: Optional[str] = None, max_version: Optional[str] = None
 ):
     try:
         spec = importlib.util.find_spec(package)

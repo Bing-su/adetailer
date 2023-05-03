@@ -1,6 +1,5 @@
-from __future__ import annotations
-
 from pathlib import Path
+from typing import Union
 
 import cv2
 from PIL import Image
@@ -11,7 +10,7 @@ from adetailer.common import create_mask_from_bbox
 
 
 def ultralytics_predict(
-    model_path: str | Path,
+    model_path: Union[str, Path],
     image: Image.Image,
     confidence: float = 0.3,
     device: str = "",

@@ -1,9 +1,7 @@
-from __future__ import annotations
-
 from collections import OrderedDict
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union
 
 import cv2
 import numpy as np
@@ -20,7 +18,7 @@ class PredictOutput:
     preview: Optional[Image.Image] = None
 
 
-def get_models(model_dir: str | Path) -> OrderedDict[str, str | None]:
+def get_models(model_dir: Union[str, Path]) -> OrderedDict[str, Optional[str]]:
     model_dir = Path(model_dir)
     if model_dir.is_dir():
         model_paths = [
