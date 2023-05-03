@@ -47,6 +47,9 @@ On the ControlNet tab, select a ControlNet inpaint model and set the model weigh
 - remove `__future__` imports
 - change to copy scripts and scripts args
 
+- v23.5.3.post1
+- change default ad_model from `None`
+
 ### 2023-05-02
 
 - v23.5.3

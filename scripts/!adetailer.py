@@ -140,7 +140,7 @@ class AfterDetailerScript(scripts.Script):
                     w.ad_model = gr.Dropdown(
                         label="ADetailer model",
                         choices=model_list,
-                        value="None",
+                        value=model_list[0],
                         visible=True,
                         type="value",
                     )
