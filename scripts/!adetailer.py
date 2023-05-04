@@ -4,7 +4,6 @@ import platform
 import sys
 from copy import copy
 from pathlib import Path
-from typing import Any
 
 import gradio as gr
 import torch

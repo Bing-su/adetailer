@@ -61,9 +61,11 @@ class ADetailerArgs(BaseModel):
     ad_controlnet_weight: confloat(ge=0.0, le=1.0) = 1.0
 
     @validator("ad_conf", pre=True)
-    def check_ad_conf(cls, v):  # noqa: N805
-        if isinstance(v, int):
-            v = v / 100.0
+    def check_ad_conf(cls, v: Any):  # noqa: N805
+        if not isinstance(v, (int, float)):
+            v = float(v)
+        if v > 1.0:
+            v /= 100.0
         return v
 
 
