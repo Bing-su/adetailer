@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import importlib
 from functools import lru_cache
 from pathlib import Path

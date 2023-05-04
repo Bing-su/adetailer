@@ -1,7 +1,10 @@
+from __future__ import annotations
+
 import platform
 import sys
 from copy import copy
 from pathlib import Path
+from typing import Any
 
 import gradio as gr
 import torch
@@ -18,6 +21,14 @@ from modules.processing import (
     process_images,
 )
 from modules.shared import cmd_opts, opts
+
+try:
+    from rich import print
+    from rich.traceback import install
+
+    install(show_locals=True)
+except Exception:
+    pass
 
 AFTER_DETAILER = "After Detailer"
 adetailer_dir = Path(models_path, "adetailer")
@@ -85,11 +96,19 @@ class ADetailerArgs:
         for i, (attr, _, dtype) in enumerate(ALL_ARGS):
             if not isinstance(args[i], dtype):
                 try:
-                    args[i] = dtype(args[i])
+                    if dtype is bool:
+                        args[i] = self.is_true(args[i])
+                    else:
+                        args[i] = dtype(args[i])
                 except ValueError as e:
                     msg = f"Error converting {args[i]!r}({attr}) to {dtype}: {e}"
                     raise ValueError(msg) from e
         return args
+
+    def is_true(self, value: Any):
+        if isinstance(value, bool):
+            return value
+        return str(value).lower() == "true"
 
 
 class Widgets:
@@ -123,7 +142,7 @@ class AfterDetailerScript(scripts.Script):
         return scripts.AlwaysVisible
 
     def ui(self, is_img2img):
-        model_list = list(model_mapping.keys())
+        model_list = ["None"] + list(model_mapping.keys())
 
         w = Widgets()
 
@@ -303,7 +322,7 @@ class AfterDetailerScript(scripts.Script):
                 print("[-] ADetailer: ControlNetExt init failed.", file=sys.stderr)
 
     def is_ad_enabled(self, args: ADetailerArgs):
-        return args.ad_enable and args.ad_model != "None"
+        return args.ad_enable is True and args.ad_model != "None"
 
     def extra_params(self, args: ADetailerArgs):
         params = {name: getattr(args, attr) for attr, name, *_ in ALL_ARGS[1:]}
