@@ -3,7 +3,6 @@ from typing import Union
 
 import cv2
 from PIL import Image
-from ultralytics import YOLO
 
 from adetailer import PredictOutput
 from adetailer.common import create_mask_from_bbox
@@ -15,6 +14,8 @@ def ultralytics_predict(
     confidence: float = 0.3,
     device: str = "",
 ) -> PredictOutput:
+    from ultralytics import YOLO
+
     model_path = str(model_path)
 
     model = YOLO(model_path)
