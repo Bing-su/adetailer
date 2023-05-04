@@ -4,6 +4,7 @@ import platform
 import sys
 from copy import copy
 from pathlib import Path
+from textwrap import dedent
 
 import gradio as gr
 import torch
@@ -409,6 +410,21 @@ class AfterDetailerScript(scripts.Script):
         self.update_controlnet_args(i2i, args)
         return i2i
 
+    def save_image(self, p, image, seed, *, condition: str, suffix: str):
+        i = p._idx
+        if opts.data.get(condition, False):
+            images.save_image(
+                image=image,
+                path=p.outpath_samples,
+                basename="",
+                seed=seed,
+                prompt=p.all_prompts[i] if i < len(p.all_prompts) else p.prompt,
+                extension=opts.samples_format,
+                info=self.infotext(p),
+                p=p,
+                suffix=suffix,
+            )
+
     def get_ad_model(self, name: str):
         if name not in model_mapping:
             msg = f"[-] ADetailer: Model {name!r} not found. Available models: {list(model_mapping.keys())}"
@@ -426,6 +442,9 @@ class AfterDetailerScript(scripts.Script):
             )
 
     def process(self, p, *args_):
+        if getattr(p, "_disable_adetailer", False):
+            return
+
         args = get_args(*args_)
         if self.is_ad_enabled(args):
             extra_params = self.extra_params(args)
@@ -433,6 +452,15 @@ class AfterDetailerScript(scripts.Script):
 
     def postprocess_image(self, p, pp, *args_):
         if getattr(p, "_disable_adetailer", False):
+            return
+
+        if len(args_) != len(ALL_ARGS):
+            message = f"""
+            [-] ADetailer: len(args)({len(args_)}) != len(ALL_ARGS)({len(ALL_ARGS)})
+                Something went wrong. Please reload this extension.
+            """
+            print(dedent(message), file=sys.stderr)
+            p._disable_adetailer = True
             return
 
         args = get_args(*args_)
@@ -445,6 +473,10 @@ class AfterDetailerScript(scripts.Script):
 
         i2i = self.get_i2i_p(p, args, pp.image)
         seed, subseed = self.get_seed(p)
+
+        self.save_image(
+            p, pp.image, seed, condition="ad_save_images_before", suffix="-ad-before"
+        )
 
         is_mediapipe = args.ad_model.lower().startswith("mediapipe")
 
@@ -466,18 +498,9 @@ class AfterDetailerScript(scripts.Script):
             )
             return
 
-        if opts.data.get("ad_save_previews", False):
-            images.save_image(
-                image=pred.preview,
-                path=p.outpath_samples,
-                basename="",
-                seed=seed,
-                prompt=p.all_prompts[i],
-                extension=opts.samples_format,
-                info=self.infotext(p),
-                p=p,
-                suffix="-ad-preview",
-            )
+        self.save_image(
+            p, pred.preview, seed, condition="ad_save_previews", suffix="-ad-preview"
+        )
 
         masks = pred.masks
         steps = len(masks)
@@ -517,6 +540,11 @@ def on_ui_settings():
     shared.opts.add_option(
         "ad_save_previews",
         shared.OptionInfo(False, "Save mask previews", section=section),
+    )
+
+    shared.opts.add_option(
+        "ad_save_images_before",
+        shared.OptionInfo(False, "Save images before ADetailer", section=section),
     )
 
 
