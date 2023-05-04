@@ -46,6 +46,7 @@ def install():
         ("ultralytics", "8.0.87", None),
         ("mediapipe", "0.9.3.0", None),
         ("huggingface_hub", None, None),
+        ("pydantic", None, None),
         # mediapipe
         ("protobuf", "3.20.0", "3.20.9999"),
     ]
