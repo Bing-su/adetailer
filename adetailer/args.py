@@ -3,6 +3,7 @@ from typing import Any, NamedTuple
 import pydantic
 from pydantic import (
     BaseModel,
+    Extra,
     NonNegativeFloat,
     NonNegativeInt,
     PositiveInt,
@@ -40,7 +41,7 @@ _all_args = [
 ALL_ARGS = [Arg(*args) for args in _all_args]
 
 
-class ADetailerArgs(BaseModel):
+class ADetailerArgs(BaseModel, extra=Extra.forbid):
     ad_enable: bool = True
     ad_model: str = "None"
     ad_prompt: str = ""
@@ -62,9 +63,13 @@ class ADetailerArgs(BaseModel):
 
     @validator("ad_conf", pre=True)
     def check_ad_conf(cls, v: Any):  # noqa: N805
+        "ad_conf가 문자열로 들어올 경우를 대비"
         if not isinstance(v, (int, float)):
-            v = float(v)
-        if v > 1.0:
+            try:
+                v = int(v)
+            except ValueError:
+                v = float(v)
+        if isinstance(v, int):
             v /= 100.0
         return v
 
