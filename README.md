@@ -13,6 +13,8 @@
 
 The yolo models can be found on huggingface [Bingsu/adetailer](https://huggingface.co/Bingsu/adetailer).
 
+You DON'T need to download models from huggingface.
+
 ### Dataset
 
 Datasets used for training the yolo face detection models are:
@@ -40,6 +42,14 @@ On the ControlNet tab, select a ControlNet inpaint model and set the model weigh
 ![image](https://i.imgur.com/I5VVkoh.png)
 
 ## Changelog
+
+### 2023-05-04
+
+- v23.5.4
+- use pydantic for arguments validation
+- revert: ad_model to `None` as default
+- revert: `__future__` imports
+- lazily import yolo and mediapipe
 
 ### 2023-05-03
 

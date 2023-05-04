@@ -4,7 +4,7 @@ description = "An object detection and auto-mask extension for stable diffusion 
 authors = [
     {name = "dowon", email = "ks2515@naver.com"},
 ]
-requires-python = ">=3.9,<3.12"
+requires-python = ">=3.8,<3.12"
 readme = "README.md"
 license = {text = "AGPL-3.0"}
 
