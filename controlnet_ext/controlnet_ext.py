@@ -34,20 +34,16 @@ class ControlNetExt:
         self.cn_available = False
         self.external_cn = None
 
-    def init_controlnet(self) -> bool:
+    def init_controlnet(self):
         if is_in_builtin:
             import_path = "extensions-builtin.sd-webui-controlnet.scripts.external_code"
         else:
             import_path = "extensions.sd-webui-controlnet.scripts.external_code"
 
-        try:
-            self.external_cn = importlib.import_module(import_path, "external_code")
-            self.cn_available = True
-            models = self.external_cn.get_models()
-            self.cn_models.extend(m for m in models if "inpaint" in m)
-            return True
-        except ImportError:
-            return False
+        self.external_cn = importlib.import_module(import_path, "external_code")
+        self.cn_available = True
+        models = self.external_cn.get_models()
+        self.cn_models.extend(m for m in models if "inpaint" in m)
 
     def _update_scripts_args(self, p, model: str, weight: float):
         cn_units = [

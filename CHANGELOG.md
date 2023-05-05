@@ -13,6 +13,9 @@
 - scripts_args를 딥카피함
 - postprocess_image를 약간 분리함
 
+- v23.5.6.post0
+- `init_controlnet_ext`에서 에러메세지를 자세히 볼 수 있음
+
 ### 2023-05-04
 
 - v23.5.4

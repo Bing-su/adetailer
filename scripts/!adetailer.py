@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import platform
 import sys
+import traceback
 from copy import copy, deepcopy
 from itertools import zip_longest
 from pathlib import Path
@@ -253,9 +254,14 @@ class AfterDetailerScript(scripts.Script):
     def init_controlnet_ext(self):
         if self.controlnet_ext is None:
             self.controlnet_ext = ControlNetExt()
-            success = self.controlnet_ext.init_controlnet()
-            if not success:
-                print("[-] ADetailer: ControlNetExt init failed.", file=sys.stderr)
+            try:
+                self.controlnet_ext.init_controlnet()
+            except ImportError:
+                error = traceback.format_exc()
+                print(
+                    f"[-] ADetailer: ControlNetExt init failed:\n{error}",
+                    file=sys.stderr,
+                )
 
     def is_ad_enabled(self, args: ADetailerArgs):
         return args.ad_enable is True and args.ad_model != "None"
