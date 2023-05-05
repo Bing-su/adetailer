@@ -73,6 +73,25 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
             v /= 100.0
         return v
 
+    def extra_params(self):
+        params = {name: getattr(self, attr) for attr, name in ALL_ARGS[1:]}
+        params["ADetailer conf"] = int(params["ADetailer conf"] * 100)
+
+        if not params["ADetailer prompt"]:
+            params.pop("ADetailer prompt")
+        if not params["ADetailer negative prompt"]:
+            params.pop("ADetailer negative prompt")
+
+        if not params["ADetailer use inpaint width/height"]:
+            params.pop("ADetailer inpaint width")
+            params.pop("ADetailer inpaint height")
+
+        if params["ADetailer ControlNet model"] == "None":
+            params.pop("ADetailer ControlNet model")
+            params.pop("ADetailer ControlNet weight")
+
+        return params
+
 
 def get_args(*args: Any) -> ADetailerArgs:
     arg_dict = {all_args.attr: args[i] for i, all_args in enumerate(ALL_ARGS)}

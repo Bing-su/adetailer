@@ -3,8 +3,8 @@ from __future__ import annotations
 import platform
 import sys
 from copy import copy
+from itertools import zip_longest
 from pathlib import Path
-from textwrap import dedent
 
 import gradio as gr
 import torch
@@ -260,24 +260,22 @@ class AfterDetailerScript(scripts.Script):
     def is_ad_enabled(self, args: ADetailerArgs):
         return args.ad_enable is True and args.ad_model != "None"
 
+    def get_args(self, *args_):
+        try:
+            args = get_args(*args_)
+        except IndexError as e:
+            message = [f"[-] ADetailer: IndexError during get_args: {e}"]
+            for arg, (attr, *_) in zip_longest(args_, ALL_ARGS):
+                dtype = type(arg)
+                arg = "MISSING" if arg is None else repr(arg)
+                message.append(f"    {attr}: {arg} ({dtype})")
+            raise IndexError("\n".join(message)) from e
+
+        return args
+
     def extra_params(self, args: ADetailerArgs):
-        params = {name: getattr(args, attr) for attr, name in ALL_ARGS[1:]}
-        params["ADetailer conf"] = int(params["ADetailer conf"] * 100)
+        params = args.extra_params()
         params["ADetailer version"] = __version__
-
-        if not params["ADetailer prompt"]:
-            params.pop("ADetailer prompt")
-        if not params["ADetailer negative prompt"]:
-            params.pop("ADetailer negative prompt")
-
-        if not params["ADetailer use inpaint width/height"]:
-            params.pop("ADetailer inpaint width")
-            params.pop("ADetailer inpaint height")
-
-        if params["ADetailer ControlNet model"] == "None":
-            params.pop("ADetailer ControlNet model")
-            params.pop("ADetailer ControlNet weight")
-
         return params
 
     @staticmethod
@@ -445,7 +443,7 @@ class AfterDetailerScript(scripts.Script):
         if getattr(p, "_disable_adetailer", False):
             return
 
-        args = get_args(*args_)
+        args = self.get_args(*args_)
         if self.is_ad_enabled(args):
             extra_params = self.extra_params(args)
             p.extra_generation_params.update(extra_params)
@@ -454,16 +452,7 @@ class AfterDetailerScript(scripts.Script):
         if getattr(p, "_disable_adetailer", False):
             return
 
-        if len(args_) != len(ALL_ARGS):
-            message = f"""
-            [-] ADetailer: len(args)({len(args_)}) != len(ALL_ARGS)({len(ALL_ARGS)})
-                Something went wrong. Please reload this extension.
-            """
-            print(dedent(message), file=sys.stderr)
-            p._disable_adetailer = True
-            return
-
-        args = get_args(*args_)
+        args = self.get_args(*args_)
 
         if not self.is_ad_enabled(args):
             return
