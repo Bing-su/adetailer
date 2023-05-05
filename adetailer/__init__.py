@@ -1,5 +1,5 @@
 from .__version__ import __version__
-from .args import ALL_ARGS, ADetailerArgs, get_args
+from .args import ALL_ARGS, ADetailerArgs, EnableChecker, get_args
 from .common import PredictOutput, get_models
 from .mediapipe import mediapipe_predict
 from .ultralytics import ultralytics_predict
@@ -8,6 +8,7 @@ __all__ = [
     "__version__",
     "ADetailerArgs",
     "ALL_ARGS",
+    "EnableChecker",
     "PredictOutput",
     "get_args",
     "get_models",

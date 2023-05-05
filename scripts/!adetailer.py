@@ -14,6 +14,7 @@ import modules  # noqa: F401
 from adetailer import (
     ALL_ARGS,
     ADetailerArgs,
+    EnableChecker,
     __version__,
     get_args,
     get_models,
@@ -269,19 +270,24 @@ class AfterDetailerScript(scripts.Script):
                     file=sys.stderr,
                 )
 
-    def is_ad_enabled(self, args: ADetailerArgs) -> bool:
-        return args.ad_enable is True and args.ad_model != "None"
+    def is_ad_enabled(self, *args_) -> bool:
+        if len(args_) < 2:
+            return False
+        checker = EnableChecker(ad_enable=args_[0], ad_model=args_[1])
+        return checker.is_enabled()
 
     def get_args(self, *args_) -> ADetailerArgs:
         try:
             args = get_args(*args_)
-        except IndexError as e:
-            message = [f"[-] ADetailer: IndexError during get_args: {e}"]
+        except ValueError as e:
+            message = [
+                f"[-] ADetailer: ValidationError when validating arguments: {e}\n"
+            ]
             for arg, (attr, *_) in zip_longest(args_, ALL_ARGS):
                 dtype = type(arg)
                 arg = "MISSING" if arg is None else repr(arg)
                 message.append(f"    {attr}: {arg} ({dtype})")
-            raise IndexError("\n".join(message)) from e
+            raise ValueError("\n".join(message)) from e
 
         return args
 
@@ -461,8 +467,8 @@ class AfterDetailerScript(scripts.Script):
         if getattr(p, "_disable_adetailer", False):
             return
 
-        args = self.get_args(*args_)
-        if self.is_ad_enabled(args):
+        if self.is_ad_enabled(*args_):
+            args = self.get_args(*args_)
             extra_params = self.extra_params(args)
             p.extra_generation_params.update(extra_params)
 
@@ -531,11 +537,10 @@ class AfterDetailerScript(scripts.Script):
         if getattr(p, "_disable_adetailer", False):
             return
 
-        args = self.get_args(*args_)
-
-        if not self.is_ad_enabled(args):
+        if not self.is_ad_enabled(*args_):
             return
 
+        args = self.get_args(*args_)
         self._postprocess_image(p, pp, args)
 
         try:

@@ -98,6 +98,14 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
         return params
 
 
+class EnableChecker(BaseModel):
+    ad_enable: bool = False
+    ad_model: str = "None"
+
+    def is_enabled(self):
+        return self.ad_enable and self.ad_model != "None"
+
+
 def get_args(*args: Any) -> ADetailerArgs:
-    arg_dict = {all_args.attr: args[i] for i, all_args in enumerate(ALL_ARGS)}
+    arg_dict = {attr: arg for arg, (attr, *_) in zip(args, ALL_ARGS)}
     return ADetailerArgs(**arg_dict)
