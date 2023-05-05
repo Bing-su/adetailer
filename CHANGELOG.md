@@ -7,6 +7,12 @@
 - 입력으로 들어온 인자와 ALL_ARGS의 길이가 다르면 에러메세지
 - README.md에 설치방법 추가
 
+- v23.5.6
+- get_args에서 IndexError가 발생하면 자세한 에러메세지를 볼 수 있음
+- AdetailerArgs에 extra_params 내장
+- scripts_args를 딥카피함
+- postprocess_image를 약간 분리함
+
 ### 2023-05-04
 
 - v23.5.4
