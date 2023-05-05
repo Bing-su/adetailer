@@ -33,6 +33,7 @@ _all_args = [
     ("ad_use_inpaint_width_height", "ADetailer use inpaint width/height"),
     ("ad_inpaint_width", "ADetailer inpaint width"),
     ("ad_inpaint_height", "ADetailer inpaint height"),
+    ("ad_use_cfg_scale", "ADetailer use separate CFG scale"),
     ("ad_cfg_scale", "ADetailer CFG scale"),
     ("ad_controlnet_model", "ADetailer ControlNet model"),
     ("ad_controlnet_weight", "ADetailer ControlNet weight"),
@@ -42,7 +43,7 @@ ALL_ARGS = [Arg(*args) for args in _all_args]
 
 
 class ADetailerArgs(BaseModel, extra=Extra.forbid):
-    ad_enable: bool = True
+    ad_enable: bool = False
     ad_model: str = "None"
     ad_prompt: str = ""
     ad_negative_prompt: str = ""
@@ -57,6 +58,7 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
     ad_use_inpaint_width_height: bool = False
     ad_inpaint_width: PositiveInt = 512
     ad_inpaint_height: PositiveInt = 512
+    ad_use_cfg_scale: bool = False
     ad_cfg_scale: NonNegativeFloat = 7.0
     ad_controlnet_model: str = "None"
     ad_controlnet_weight: confloat(ge=0.0, le=1.0) = 1.0
@@ -85,6 +87,9 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
         if not params["ADetailer use inpaint width/height"]:
             params.pop("ADetailer inpaint width")
             params.pop("ADetailer inpaint height")
+
+        if not params["ADetailer use separate CFG scale"]:
+            params.pop("ADetailer CFG scale")
 
         if params["ADetailer ControlNet model"] == "None":
             params.pop("ADetailer ControlNet model")

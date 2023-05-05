@@ -79,7 +79,7 @@ class AfterDetailerScript(scripts.Script):
         return scripts.AlwaysVisible
 
     def ui(self, is_img2img):
-        model_list = ["None"] + list(model_mapping.keys())
+        model_list = list(model_mapping.keys())
 
         w = Widgets()
 
@@ -87,7 +87,7 @@ class AfterDetailerScript(scripts.Script):
             with gr.Row():
                 w.ad_enable = gr.Checkbox(
                     label="Enable ADetailer",
-                    value=True,
+                    value=False,
                     visible=True,
                 )
 
@@ -214,6 +214,12 @@ class AfterDetailerScript(scripts.Script):
                     )
 
                 with gr.Row():
+                    w.ad_use_cfg_scale = gr.Checkbox(
+                        label="Use separate CFG scale",
+                        value=False,
+                        visible=True,
+                    )
+
                     w.ad_cfg_scale = gr.Slider(
                         label="ADetailer CFG scale",
                         minimum=0.0,
@@ -251,7 +257,7 @@ class AfterDetailerScript(scripts.Script):
 
         return w.tolist()
 
-    def init_controlnet_ext(self):
+    def init_controlnet_ext(self) -> None:
         if self.controlnet_ext is None:
             self.controlnet_ext = ControlNetExt()
             try:
@@ -263,10 +269,10 @@ class AfterDetailerScript(scripts.Script):
                     file=sys.stderr,
                 )
 
-    def is_ad_enabled(self, args: ADetailerArgs):
+    def is_ad_enabled(self, args: ADetailerArgs) -> bool:
         return args.ad_enable is True and args.ad_model != "None"
 
-    def get_args(self, *args_):
+    def get_args(self, *args_) -> ADetailerArgs:
         try:
             args = get_args(*args_)
         except IndexError as e:
@@ -279,13 +285,13 @@ class AfterDetailerScript(scripts.Script):
 
         return args
 
-    def extra_params(self, args: ADetailerArgs):
+    def extra_params(self, args: ADetailerArgs) -> dict:
         params = args.extra_params()
         params["ADetailer version"] = __version__
         return params
 
     @staticmethod
-    def get_ultralytics_device():
+    def get_ultralytics_device() -> str:
         '`device = ""` means autodetect'
         device = ""
         if platform.system() == "Darwin":
@@ -296,7 +302,7 @@ class AfterDetailerScript(scripts.Script):
 
         return device
 
-    def get_prompt(self, p, args: ADetailerArgs):
+    def get_prompt(self, p, args: ADetailerArgs) -> tuple[str, str]:
         i = p._idx
 
         if args.ad_prompt:
@@ -321,7 +327,7 @@ class AfterDetailerScript(scripts.Script):
 
         return prompt, negative_prompt
 
-    def get_seed(self, p):
+    def get_seed(self, p) -> tuple[int, int]:
         i = p._idx
 
         if not p.all_seeds:
@@ -342,7 +348,7 @@ class AfterDetailerScript(scripts.Script):
 
         return seed, subseed
 
-    def get_width_height(self, p, args: ADetailerArgs):
+    def get_width_height(self, p, args: ADetailerArgs) -> tuple[int, int]:
         if args.ad_use_inpaint_width_height:
             width = args.ad_inpaint_width
             height = args.ad_inpaint_height
@@ -352,12 +358,17 @@ class AfterDetailerScript(scripts.Script):
 
         return width, height
 
-    def infotext(self, p):
+    def get_cfg_scale(self, p, args: ADetailerArgs) -> float:
+        if args.ad_use_cfg_scale:
+            return args.ad_cfg_scale
+        return p.cfg_scale
+
+    def infotext(self, p) -> str:
         return create_infotext(
             p, p.all_prompts, p.all_seeds, p.all_subseeds, None, 0, 0
         )
 
-    def write_params_txt(self, p):
+    def write_params_txt(self, p) -> None:
         infotext = self.infotext(p)
         params_txt = Path(data_path, "params.txt")
         params_txt.write_text(infotext, encoding="utf-8")
@@ -366,6 +377,7 @@ class AfterDetailerScript(scripts.Script):
         prompt, negative_prompt = self.get_prompt(p, args)
         seed, subseed = self.get_seed(p)
         width, height = self.get_width_height(p, args)
+        cfg_scale = self.get_cfg_scale(p, args)
 
         sampler_name = p.sampler_name
         if sampler_name in ["PLMS", "UniPC"]:
@@ -398,7 +410,7 @@ class AfterDetailerScript(scripts.Script):
             batch_size=1,
             n_iter=1,
             steps=p.steps,
-            cfg_scale=args.ad_cfg_scale,
+            cfg_scale=cfg_scale,
             width=width,
             height=height,
             tiling=p.tiling,
@@ -414,7 +426,7 @@ class AfterDetailerScript(scripts.Script):
         self.update_controlnet_args(i2i, args)
         return i2i
 
-    def save_image(self, p, image, seed, *, condition: str, suffix: str):
+    def save_image(self, p, image, seed, *, condition: str, suffix: str) -> None:
         i = p._idx
         if opts.data.get(condition, False):
             images.save_image(
@@ -435,7 +447,7 @@ class AfterDetailerScript(scripts.Script):
             raise ValueError(msg)
         return model_mapping[name]
 
-    def update_controlnet_args(self, p, args: ADetailerArgs):
+    def update_controlnet_args(self, p, args: ADetailerArgs) -> None:
         if (
             self.controlnet_ext is not None
             and self.controlnet_ext.cn_available
