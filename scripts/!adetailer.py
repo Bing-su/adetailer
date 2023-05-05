@@ -448,15 +448,7 @@ class AfterDetailerScript(scripts.Script):
             extra_params = self.extra_params(args)
             p.extra_generation_params.update(extra_params)
 
-    def postprocess_image(self, p, pp, *args_):
-        if getattr(p, "_disable_adetailer", False):
-            return
-
-        args = self.get_args(*args_)
-
-        if not self.is_ad_enabled(args):
-            return
-
+    def _postprocess_image(self, p, pp, args: ADetailerArgs):
         p._idx = getattr(p, "_idx", -1) + 1
         i = p._idx
 
@@ -517,8 +509,19 @@ class AfterDetailerScript(scripts.Script):
         if processed is not None:
             pp.image = processed.images[0]
 
+    def postprocess_image(self, p, pp, *args_):
+        if getattr(p, "_disable_adetailer", False):
+            return
+
+        args = self.get_args(*args_)
+
+        if not self.is_ad_enabled(args):
+            return
+
+        self._postprocess_image(p, pp, args)
+
         try:
-            if i == len(p.all_prompts) - 1:
+            if p._idx == len(p.all_prompts) - 1:
                 self.write_params_txt(p)
         except Exception:
             pass
