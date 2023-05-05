@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import platform
 import sys
-from copy import copy
+from copy import copy, deepcopy
 from itertools import zip_longest
 from pathlib import Path
 
@@ -402,7 +402,7 @@ class AfterDetailerScript(scripts.Script):
         )
 
         i2i.scripts = copy(p.scripts)
-        i2i.script_args = copy(p.script_args)
+        i2i.script_args = deepcopy(p.script_args)
         i2i._disable_adetailer = True
 
         self.update_controlnet_args(i2i, args)
