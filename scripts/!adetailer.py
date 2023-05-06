@@ -6,6 +6,7 @@ import traceback
 from copy import copy, deepcopy
 from itertools import zip_longest
 from pathlib import Path
+from textwrap import dedent
 
 import gradio as gr
 import torch
@@ -272,7 +273,10 @@ class AfterDetailerScript(scripts.Script):
 
     def is_ad_enabled(self, *args_) -> bool:
         if len(args_) < 2:
-            return False
+            message = f"""[-] ADetailer: Not enough arguments passed to adetailer.
+                              input: {args_!r}
+                       """
+            raise ValueError(dedent(message))
         checker = EnableChecker(ad_enable=args_[0], ad_model=args_[1])
         return checker.is_enabled()
 
