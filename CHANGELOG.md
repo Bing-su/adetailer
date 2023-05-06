@@ -8,6 +8,9 @@
 - `ad_model`의 기본값을 `None`에서 첫번째 모델로 변경
 - 최소 2개의 입력(ad_enable, ad_model)만 들어오면 작동하게 변경.
 
+- v23.5.7.post0
+- `init_controlnet_ext`을 controlnet_exists == True일때에만 실행
+- webui를 C드라이브 바로 밑에 설치한 사람들에게 `ultralytics` 경고 표시
 
 ### 2023-05-05 (어린이날)
 
