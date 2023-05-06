@@ -1,3 +1,4 @@
+import platform
 from pathlib import Path
 from typing import Union
 
@@ -7,6 +8,8 @@ from PIL import Image
 from adetailer import PredictOutput
 from adetailer.common import create_mask_from_bbox
 
+checked = False
+
 
 def ultralytics_predict(
     model_path: Union[str, Path],
@@ -14,6 +17,9 @@ def ultralytics_predict(
     confidence: float = 0.3,
     device: str = "",
 ) -> PredictOutput:
+    if not checked:
+        ultralytics_check()
+
     from ultralytics import YOLO
 
     model_path = str(model_path)
@@ -32,3 +38,16 @@ def ultralytics_predict(
     preview = Image.fromarray(preview)
 
     return PredictOutput(bboxes=bboxes, masks=masks, preview=preview)
+
+
+def ultralytics_check():
+    global checked
+
+    checked = True
+    if platform.system() != "Windows":
+        return
+
+    p = str(Path.cwd().parent)
+    if p == "C:\\":
+        message = "[-] ADetailer: if you get stuck here, try moving the stable-diffusion-webui to a different directory, or try running as administrator."
+        print(message)
