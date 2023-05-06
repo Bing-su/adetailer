@@ -444,8 +444,9 @@ class AfterDetailerScript(scripts.Script):
         i2i.script_args = deepcopy(p.script_args)
         i2i._disable_adetailer = True
 
-        self.init_controlnet_ext()
-        self.update_controlnet_args(i2i, args)
+        if args.ad_controlnet_model != "None":
+            self.init_controlnet_ext()
+            self.update_controlnet_args(i2i, args)
         return i2i
 
     def save_image(self, p, image, seed, *, condition: str, suffix: str) -> None:
