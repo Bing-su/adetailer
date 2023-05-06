@@ -260,8 +260,11 @@ class AfterDetailerScript(scripts.Script):
         return w.tolist()
 
     def init_controlnet_ext(self) -> None:
-        if self.controlnet_ext is None:
-            self.controlnet_ext = ControlNetExt()
+        if self.controlnet_ext is not None:
+            return
+        self.controlnet_ext = ControlNetExt()
+
+        if controlnet_exists:
             try:
                 self.controlnet_ext.init_controlnet()
             except ImportError:
@@ -270,6 +273,16 @@ class AfterDetailerScript(scripts.Script):
                     f"[-] ADetailer: ControlNetExt init failed:\n{error}",
                     file=sys.stderr,
                 )
+
+    def update_controlnet_args(self, p, args: ADetailerArgs) -> None:
+        if (
+            self.controlnet_ext is not None
+            and self.controlnet_ext.cn_available
+            and args.ad_controlnet_model != "None"
+        ):
+            self.controlnet_ext.update_scripts_args(
+                p, args.ad_controlnet_model, args.ad_controlnet_weight
+            )
 
     def is_ad_enabled(self, *args_) -> bool:
         if len(args_) < 2:
@@ -393,8 +406,6 @@ class AfterDetailerScript(scripts.Script):
         if sampler_name in ["PLMS", "UniPC"]:
             sampler_name = "Euler"
 
-        self.init_controlnet_ext()
-
         i2i = StableDiffusionProcessingImg2Img(
             init_images=[image],
             resize_mode=0,
@@ -433,6 +444,7 @@ class AfterDetailerScript(scripts.Script):
         i2i.script_args = deepcopy(p.script_args)
         i2i._disable_adetailer = True
 
+        self.init_controlnet_ext()
         self.update_controlnet_args(i2i, args)
         return i2i
 
@@ -456,16 +468,6 @@ class AfterDetailerScript(scripts.Script):
             msg = f"[-] ADetailer: Model {name!r} not found. Available models: {list(model_mapping.keys())}"
             raise ValueError(msg)
         return model_mapping[name]
-
-    def update_controlnet_args(self, p, args: ADetailerArgs) -> None:
-        if (
-            self.controlnet_ext is not None
-            and self.controlnet_ext.cn_available
-            and args.ad_controlnet_model != "None"
-        ):
-            self.controlnet_ext.update_scripts_args(
-                p, args.ad_controlnet_model, args.ad_controlnet_weight
-            )
 
     def process(self, p, *args_):
         if getattr(p, "_disable_adetailer", False):
