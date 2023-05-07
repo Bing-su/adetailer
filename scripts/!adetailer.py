@@ -535,7 +535,6 @@ class AfterDetailerScript(scripts.Script):
 
             `True` if image was processed, `False` otherwise.
         """
-        p._idx = getattr(p, "_idx", -1) + 1
         i = p._idx
 
         i2i = self.get_i2i_p(p, args, pp.image)
@@ -600,12 +599,14 @@ class AfterDetailerScript(scripts.Script):
         if not self.is_ad_enabled(*args_):
             return
 
+        p._idx = getattr(p, "_idx", -1) + 1
         init_image = copy(pp.image)
-
         arg_list = self.get_args(*args_)
 
         is_processed = False
         for n, args in enumerate(arg_list):
+            if args.ad_model == "None":
+                continue
             is_processed |= self._postprocess_image(p, pp, args, n=n)
 
         if is_processed:
