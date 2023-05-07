@@ -124,7 +124,7 @@ class AfterDetailerScript(scripts.Script):
             with gr.Group():
                 with gr.Row():
                     w.ad_conf = gr.Slider(
-                        label="ADetailer confidence threshold %",
+                        label="Detection model confidence threshold %",
                         minimum=0,
                         maximum=100,
                         step=1,
@@ -132,7 +132,7 @@ class AfterDetailerScript(scripts.Script):
                         visible=True,
                     )
                     w.ad_dilate_erode = gr.Slider(
-                        label="ADetailer erosion (-) / dilation (+)",
+                        label="Mask erosion (-) / dilation (+)",
                         minimum=-128,
                         maximum=128,
                         step=4,
@@ -142,7 +142,7 @@ class AfterDetailerScript(scripts.Script):
 
                 with gr.Row():
                     w.ad_x_offset = gr.Slider(
-                        label="ADetailer x(→) offset",
+                        label="Mask x(→) offset",
                         minimum=-200,
                         maximum=200,
                         step=1,
@@ -150,7 +150,7 @@ class AfterDetailerScript(scripts.Script):
                         visible=True,
                     )
                     w.ad_y_offset = gr.Slider(
-                        label="ADetailer y(↑) offset",
+                        label="Mask y(↑) offset",
                         minimum=-200,
                         maximum=200,
                         step=1,
@@ -160,7 +160,7 @@ class AfterDetailerScript(scripts.Script):
 
                 with gr.Row():
                     w.ad_mask_blur = gr.Slider(
-                        label="ADetailer mask blur",
+                        label="Inpaint mask blur",
                         minimum=0,
                         maximum=64,
                         step=1,
@@ -169,7 +169,7 @@ class AfterDetailerScript(scripts.Script):
                     )
 
                     w.ad_denoising_strength = gr.Slider(
-                        label="ADetailer denoising strength",
+                        label="Inpaint denoising strength",
                         minimum=0.0,
                         maximum=1.0,
                         step=0.01,
@@ -194,7 +194,7 @@ class AfterDetailerScript(scripts.Script):
 
                 with gr.Row():
                     w.ad_use_inpaint_width_height = gr.Checkbox(
-                        label="Use inpaint width/height",
+                        label="Use separate width/height",
                         value=False,
                         visible=True,
                     )
