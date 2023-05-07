@@ -103,20 +103,22 @@ class AfterDetailerScript(scripts.Script):
                         type="value",
                     )
 
-                with gr.Row():
+                with gr.Row(elem_id="AD_toprow_prompt"):
                     w.ad_prompt = gr.Textbox(
                         label="ad_prompt",
                         show_label=False,
                         lines=3,
                         placeholder="ADetailer prompt",
+                        elem_id="AD_prompt",
                     )
 
-                with gr.Row():
+                with gr.Row(elem_id="AD_toprow_negative_prompt"):
                     w.ad_negative_prompt = gr.Textbox(
                         label="ad_negative_prompt",
                         show_label=False,
                         lines=2,
                         placeholder="ADetailer negative prompt",
+                        elem_id="AD_negative_prompt",
                     )
 
             with gr.Group():
