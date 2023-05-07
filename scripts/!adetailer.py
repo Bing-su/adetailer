@@ -556,12 +556,14 @@ class AfterDetailerScript(scripts.Script):
         if not self.is_ad_enabled(*args_):
             return
 
+        init_image = copy(pp.image)
+
         args = self.get_args(*args_)
         is_processed = self._postprocess_image(p, pp, args)
 
         if is_processed:
             self.save_image(
-                p, pp.image, condition="ad_save_images_before", suffix="-ad-before"
+                p, init_image, condition="ad_save_images_before", suffix="-ad-before"
             )
 
         try:
