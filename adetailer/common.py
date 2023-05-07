@@ -137,3 +137,40 @@ def offset(img: Image.Image, x: int = 0, y: int = 0) -> Image.Image:
 def is_all_black(img: Image.Image) -> bool:
     arr = np.array(img)
     return cv2.countNonZero(arr) == 0
+
+
+def mask_preprocess(
+    masks: list[Image.Image] | None,
+    kernel: int = 0,
+    x_offset: int = 0,
+    y_offset: int = 0,
+) -> list[Image.Image]:
+    """
+    The mask_preprocess function takes a list of masks and preprocesses them.
+    It dilates and erodes the masks, and offsets them by x_offset and y_offset.
+
+    Parameters
+    ----------
+        masks: list[Image.Image] | None
+            A list of masks
+        kernel: int
+            kernel size of dilation or erosion
+        x_offset: int
+            →
+        y_offset: int
+            ↑
+
+    Returns
+    -------
+        list[Image.Image]
+            A list of processed masks
+    """
+    if masks is None:
+        return []
+
+    masks = [dilate_erode(m, kernel) for m in masks]
+    masks = [m for m in masks if not is_all_black(m)]
+    if x_offset != 0 or y_offset != 0:
+        masks = [offset(m, x_offset, y_offset) for m in masks]
+
+    return masks

@@ -22,7 +22,7 @@ from adetailer import (
     mediapipe_predict,
     ultralytics_predict,
 )
-from adetailer.common import dilate_erode, is_all_black, offset
+from adetailer.common import mask_preprocess
 from controlnet_ext import ControlNetExt, controlnet_exists, get_cn_inpaint_models
 from modules import images, safe, script_callbacks, scripts, shared
 from modules.paths import data_path, models_path
@@ -277,6 +277,9 @@ class AfterDetailerScript(scripts.Script):
                 )
 
     def update_controlnet_args(self, p, args: ADetailerArgs) -> None:
+        if self.controlnet_ext is None:
+            self.init_controlnet_ext()
+
         if (
             self.controlnet_ext is not None
             and self.controlnet_ext.cn_available
@@ -288,8 +291,9 @@ class AfterDetailerScript(scripts.Script):
 
     def is_ad_enabled(self, *args_) -> bool:
         if len(args_) < 2:
-            message = f"""[-] ADetailer: Not enough arguments passed to adetailer.
-                              input: {args_!r}
+            message = f"""
+                       [-] ADetailer: Not enough arguments passed to adetailer.
+                           input: {args_!r}
                        """
             raise ValueError(dedent(message))
         checker = EnableChecker(ad_enable=args_[0], ad_model=args_[1])
@@ -447,12 +451,13 @@ class AfterDetailerScript(scripts.Script):
         i2i._disable_adetailer = True
 
         if args.ad_controlnet_model != "None":
-            self.init_controlnet_ext()
             self.update_controlnet_args(i2i, args)
         return i2i
 
-    def save_image(self, p, image, seed, *, condition: str, suffix: str) -> None:
+    def save_image(self, p, image, *, condition: str, suffix: str) -> None:
         i = p._idx
+        seed, _ = self.get_seed(p)
+
         if opts.data.get(condition, False):
             images.save_image(
                 image=image,
@@ -481,16 +486,19 @@ class AfterDetailerScript(scripts.Script):
             extra_params = self.extra_params(args)
             p.extra_generation_params.update(extra_params)
 
-    def _postprocess_image(self, p, pp, args: ADetailerArgs):
+    def _postprocess_image(self, p, pp, args: ADetailerArgs) -> bool:
+        """
+        Returns
+        -------
+            bool
+
+            `True` if image was processed, `False` otherwise.
+        """
         p._idx = getattr(p, "_idx", -1) + 1
         i = p._idx
 
         i2i = self.get_i2i_p(p, args, pp.image)
         seed, subseed = self.get_seed(p)
-
-        self.save_image(
-            p, pp.image, seed, condition="ad_save_images_before", suffix="-ad-before"
-        )
 
         is_mediapipe = args.ad_model.lower().startswith("mediapipe")
 
@@ -506,17 +514,18 @@ class AfterDetailerScript(scripts.Script):
         with ChangeTorchLoad():
             pred = predictor(ad_model, pp.image, args.ad_conf, **kwargs)
 
-        if pred.masks is None:
+        masks = mask_preprocess(pred.masks)
+
+        if not masks:
             print(
                 f"[-] ADetailer: nothing detected on image {i + 1} with current settings."
             )
-            return
+            return False
 
         self.save_image(
-            p, pred.preview, seed, condition="ad_save_previews", suffix="-ad-preview"
+            p, pred.preview, condition="ad_save_previews", suffix="-ad-preview"
         )
 
-        masks = pred.masks
         steps = len(masks)
         processed = None
 
@@ -525,22 +534,20 @@ class AfterDetailerScript(scripts.Script):
 
         p2 = copy(i2i)
         for j in range(steps):
-            mask = masks[j]
-            mask = dilate_erode(mask, args.ad_dilate_erode)
+            p2.image_mask = masks[j]
+            processed = process_images(p2)
 
-            if not is_all_black(mask):
-                mask = offset(mask, args.ad_x_offset, args.ad_y_offset)
-                p2.image_mask = mask
-                processed = process_images(p2)
-
-                p2 = copy(i2i)
-                p2.init_images = [processed.images[0]]
+            p2 = copy(i2i)
+            p2.init_images = [processed.images[0]]
 
             p2.seed = seed + j + 1
             p2.subseed = subseed + j + 1
 
         if processed is not None:
             pp.image = processed.images[0]
+            return True
+
+        return False
 
     def postprocess_image(self, p, pp, *args_):
         if getattr(p, "_disable_adetailer", False):
@@ -550,7 +557,12 @@ class AfterDetailerScript(scripts.Script):
             return
 
         args = self.get_args(*args_)
-        self._postprocess_image(p, pp, args)
+        is_processed = self._postprocess_image(p, pp, args)
+
+        if is_processed:
+            self.save_image(
+                p, pp.image, condition="ad_save_images_before", suffix="-ad-before"
+            )
 
         try:
             if p._idx == len(p.all_prompts) - 1:
