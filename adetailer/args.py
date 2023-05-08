@@ -75,7 +75,10 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
             v /= 100.0
         return v
 
-    def extra_params(self):
+    def extra_params(self, suffix: str = ""):
+        if self.ad_model == "None":
+            return {}
+
         params = {name: getattr(self, attr) for attr, name in ALL_ARGS[1:]}
         params["ADetailer conf"] = int(params["ADetailer conf"] * 100)
 
@@ -95,6 +98,9 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
             params.pop("ADetailer ControlNet model")
             params.pop("ADetailer ControlNet weight")
 
+        if suffix:
+            params = {k + suffix: v for k, v in params.items()}
+
         return params
 
 
@@ -106,6 +112,6 @@ class EnableChecker(BaseModel):
         return self.ad_enable and self.ad_model != "None"
 
 
-def get_args(*args: Any) -> ADetailerArgs:
+def get_one_args(*args: Any) -> ADetailerArgs:
     arg_dict = {attr: arg for arg, (attr, *_) in zip(args, ALL_ARGS)}
     return ADetailerArgs(**arg_dict)

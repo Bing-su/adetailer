@@ -32,7 +32,10 @@ def ultralytics_predict(
         return PredictOutput()
     bboxes = bboxes.tolist()
 
-    masks = create_mask_from_bbox(image, bboxes)
+    if pred[0].masks is None:
+        masks = create_mask_from_bbox(image, bboxes)
+    else:
+        masks = mask_to_pil(pred[0].masks.data, image.size)
     preview = pred[0].plot()
     preview = cv2.cvtColor(preview, cv2.COLOR_BGR2RGB)
     preview = Image.fromarray(preview)
@@ -51,3 +54,19 @@ def ultralytics_check():
     if p == "C:\\":
         message = "[-] ADetailer: if you get stuck here, try moving the stable-diffusion-webui to a different directory, or try running as administrator."
         print(message)
+
+
+def mask_to_pil(masks, orig_shape: tuple[int, int]) -> list[Image.Image]:
+    """
+    Parameters
+    ----------
+    masks: torch.Tensor, dtype=torch.float32, shape=(N, H, W).
+        The device can be CUDA, but `to_pil_image` takes care of that.
+
+    orig_shape: tuple[int, int]
+        (width, height) of the original image
+    """
+    from torchvision.transforms.functional import to_pil_image
+
+    n = masks.shape[0]
+    return [to_pil_image(masks[i], mode="L").resize(orig_shape) for i in range(n)]
