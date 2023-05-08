@@ -69,5 +69,5 @@ Datasets used for training the yolo models are:
 
 ## Example
 
-![image](https://i.imgur.com/i74ukgi.png)
-![image](https://i.imgur.com/I5VVkoh.png)
+![image](https://i.imgur.com/38RSxSO.png)
+![image](https://i.imgur.com/2CYgjLx.png)
