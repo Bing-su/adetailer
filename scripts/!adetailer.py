@@ -70,7 +70,7 @@ def gr_show(visible=True):
 
 def ordinal(n: int) -> str:
     d = {1: "st", 2: "nd", 3: "rd"}
-    return str(n) + ("th" if 11 <= n <= 13 else d.get(n % 10, "th"))
+    return str(n) + ("th" if 11 <= n % 100 <= 13 else d.get(n % 10, "th"))
 
 
 def suffix(n: int, c: str = " ") -> str:
@@ -121,10 +121,10 @@ class AfterDetailerScript(scripts.Script):
 
                         with gr.Row(elem_id="AD_toprow_prompt" + suffix(n, "_")):
                             w[n].ad_prompt = gr.Textbox(
-                                label="ad_prompt",
+                                label="ad_prompt" + suffix(n),
                                 show_label=False,
                                 lines=3,
-                                placeholder="ADetailer prompt",
+                                placeholder="ADetailer prompt" + suffix(n),
                                 elem_id="AD_prompt" + suffix(n, "_"),
                             )
 
@@ -132,17 +132,18 @@ class AfterDetailerScript(scripts.Script):
                             elem_id="AD_toprow_negative_prompt" + suffix(n, "_")
                         ):
                             w[n].ad_negative_prompt = gr.Textbox(
-                                label="ad_negative_prompt",
+                                label="ad_negative_prompt" + suffix(n),
                                 show_label=False,
                                 lines=2,
-                                placeholder="ADetailer negative prompt",
+                                placeholder="ADetailer negative prompt" + suffix(n),
                                 elem_id="AD_negative_prompt" + suffix(n, "_"),
                             )
 
                         with gr.Group():
                             with gr.Row():
                                 w[n].ad_conf = gr.Slider(
-                                    label="Detection model confidence threshold %",
+                                    label="Detection model confidence threshold %"
+                                    + suffix(n),
                                     minimum=0,
                                     maximum=100,
                                     step=1,
@@ -150,7 +151,7 @@ class AfterDetailerScript(scripts.Script):
                                     visible=True,
                                 )
                                 w[n].ad_dilate_erode = gr.Slider(
-                                    label="Mask erosion (-) / dilation (+)",
+                                    label="Mask erosion (-) / dilation (+)" + suffix(n),
                                     minimum=-128,
                                     maximum=128,
                                     step=4,
@@ -160,7 +161,7 @@ class AfterDetailerScript(scripts.Script):
 
                             with gr.Row():
                                 w[n].ad_x_offset = gr.Slider(
-                                    label="Mask x(→) offset",
+                                    label="Mask x(→) offset" + suffix(n),
                                     minimum=-200,
                                     maximum=200,
                                     step=1,
@@ -168,7 +169,7 @@ class AfterDetailerScript(scripts.Script):
                                     visible=True,
                                 )
                                 w[n].ad_y_offset = gr.Slider(
-                                    label="Mask y(↑) offset",
+                                    label="Mask y(↑) offset" + suffix(n),
                                     minimum=-200,
                                     maximum=200,
                                     step=1,
@@ -178,7 +179,7 @@ class AfterDetailerScript(scripts.Script):
 
                             with gr.Row():
                                 w[n].ad_mask_blur = gr.Slider(
-                                    label="Inpaint mask blur",
+                                    label="Inpaint mask blur" + suffix(n),
                                     minimum=0,
                                     maximum=64,
                                     step=1,
@@ -187,7 +188,7 @@ class AfterDetailerScript(scripts.Script):
                                 )
 
                                 w[n].ad_denoising_strength = gr.Slider(
-                                    label="Inpaint denoising strength",
+                                    label="Inpaint denoising strength" + suffix(n),
                                     minimum=0.0,
                                     maximum=1.0,
                                     step=0.01,
@@ -197,12 +198,13 @@ class AfterDetailerScript(scripts.Script):
 
                             with gr.Row():
                                 w[n].ad_inpaint_full_res = gr.Checkbox(
-                                    label="Inpaint at full resolution ",
+                                    label="Inpaint at full resolution " + suffix(n),
                                     value=True,
                                     visible=True,
                                 )
                                 w[n].ad_inpaint_full_res_padding = gr.Slider(
-                                    label="Inpaint at full resolution padding, pixels ",
+                                    label="Inpaint at full resolution padding, pixels "
+                                    + suffix(n),
                                     minimum=0,
                                     maximum=256,
                                     step=4,
@@ -212,13 +214,13 @@ class AfterDetailerScript(scripts.Script):
 
                             with gr.Row():
                                 w[n].ad_use_inpaint_width_height = gr.Checkbox(
-                                    label="Use separate width/height",
+                                    label="Use separate width/height" + suffix(n),
                                     value=False,
                                     visible=True,
                                 )
 
                                 w[n].ad_inpaint_width = gr.Slider(
-                                    label="inpaint width",
+                                    label="inpaint width" + suffix(n),
                                     minimum=4,
                                     maximum=1024,
                                     step=4,
@@ -227,7 +229,7 @@ class AfterDetailerScript(scripts.Script):
                                 )
 
                                 w[n].ad_inpaint_height = gr.Slider(
-                                    label="inpaint height",
+                                    label="inpaint height" + suffix(n),
                                     minimum=4,
                                     maximum=1024,
                                     step=4,
@@ -237,13 +239,13 @@ class AfterDetailerScript(scripts.Script):
 
                             with gr.Row():
                                 w[n].ad_use_cfg_scale = gr.Checkbox(
-                                    label="Use separate CFG scale",
+                                    label="Use separate CFG scale" + suffix(n),
                                     value=False,
                                     visible=True,
                                 )
 
                                 w[n].ad_cfg_scale = gr.Slider(
-                                    label="ADetailer CFG scale",
+                                    label="ADetailer CFG scale" + suffix(n),
                                     minimum=0.0,
                                     maximum=30.0,
                                     step=0.5,
@@ -256,7 +258,7 @@ class AfterDetailerScript(scripts.Script):
                             with gr.Group():
                                 with gr.Row():
                                     w[n].ad_controlnet_model = gr.Dropdown(
-                                        label="ControlNet model",
+                                        label="ControlNet model" + suffix(n),
                                         choices=cn_inpaint_models,
                                         value="None",
                                         visible=True,
@@ -266,7 +268,7 @@ class AfterDetailerScript(scripts.Script):
 
                                 with gr.Row():
                                     w[n].ad_controlnet_weight = gr.Slider(
-                                        label="ControlNet weight",
+                                        label="ControlNet weight" + suffix(n),
                                         minimum=0.0,
                                         maximum=1.0,
                                         step=0.05,
@@ -329,6 +331,9 @@ class AfterDetailerScript(scripts.Script):
         return checker.is_enabled()
 
     def get_args(self, *args_) -> list[ADetailerArgs]:
+        """
+        `args_` is at least 2 in length by `is_ad_enabled` immediately above
+        """
         enabled = args_[0]
         rem = args_[1:]
         length = len(ALL_ARGS) - 1
