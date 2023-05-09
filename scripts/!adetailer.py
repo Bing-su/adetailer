@@ -448,6 +448,32 @@ class AfterDetailerScript(scripts.Script):
         params_txt = Path(data_path, "params.txt")
         params_txt.write_text(infotext, encoding="utf-8")
 
+    def script_filter(self, p, args: ADetailerArgs):
+        script_runner = copy(p.scripts)
+
+        ad_only_seleted_scripts = opts.data.get("ad_only_seleted_scripts", True)
+        if not ad_only_seleted_scripts:
+            return script_runner
+
+        ad_script_names = opts.data.get("ad_script_names", "")
+        script_names_set = {
+            name
+            for script_name in ad_script_names.split(",")
+            for name in (script_name, script_name.strip())
+        }
+        if args.ad_controlnet_model != "None":
+            script_names_set.add("controlnet")
+
+        filtered_alwayson = []
+        for script_object in script_runner.alwayson_scripts:
+            filepath = script_object.filename
+            filename = Path(filepath).stem
+            if filename in script_names_set:
+                filtered_alwayson.append(script_object)
+
+        script_runner.alwayson_scripts = filtered_alwayson
+        return script_runner
+
     def get_i2i_p(self, p, args: ADetailerArgs, image):
         prompt, negative_prompt = self.get_prompt(p, args)
         seed, subseed = self.get_seed(p)
@@ -492,7 +518,7 @@ class AfterDetailerScript(scripts.Script):
             do_not_save_grid=True,
         )
 
-        i2i.scripts = copy(p.scripts)
+        i2i.scripts = self.script_filter(p, args)
         i2i.script_args = deepcopy(p.script_args)
         i2i._disable_adetailer = True
 
@@ -631,10 +657,10 @@ def on_ui_settings():
     shared.opts.add_option(
         "ad_max_models",
         shared.OptionInfo(
-            2,
-            "Max models",
-            gr.Slider,
-            {"minimum": 1, "maximum": 5, "step": 1},
+            default=2,
+            label="Max models",
+            component=gr.Slider,
+            component_args={"minimum": 1, "maximum": 5, "step": 1},
             section=section,
         ),
     )
@@ -647,6 +673,29 @@ def on_ui_settings():
     shared.opts.add_option(
         "ad_save_images_before",
         shared.OptionInfo(False, "Save images before ADetailer", section=section),
+    )
+
+    shared.opts.add_option(
+        "ad_only_seleted_scripts",
+        shared.OptionInfo(
+            True, "Apply only selected scripts to ADetailer", section=section
+        ),
+    )
+
+    textbox_args = {
+        "placeholder": "comma-separated list of script names",
+        "interactive": True,
+    }
+
+    shared.opts.add_option(
+        "ad_script_names",
+        shared.OptionInfo(
+            default="dynamic_prompting,dynamic_thresholding,wildcards,wildcard_recursive",
+            label="Script names to apply to ADetailer (separated by comma)",
+            component=gr.Textbox,
+            component_args=textbox_args,
+            section=section,
+        ),
     )
 
 
