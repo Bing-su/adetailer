@@ -45,7 +45,7 @@ def mediapipe_predict(
 
         bboxes.append([x1, y1, x2, y2])
 
-    masks = create_mask_from_bbox(image, bboxes)
+    masks = create_mask_from_bbox(bboxes, image.size)
     preview = Image.fromarray(preview_array)
 
     return PredictOutput(bboxes=bboxes, masks=masks, preview=preview)
