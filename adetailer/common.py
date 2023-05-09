@@ -39,6 +39,7 @@ def get_models(model_dir: Union[str, Path]) -> OrderedDict[str, Optional[str]]:
             "mediapipe_face_short": None,
             "hand_yolov8n.pt": hf_hub_download(repo_id, "hand_yolov8n.pt"),
             "person_yolov8n-seg.pt": hf_hub_download(repo_id, "person_yolov8n-seg.pt"),
+            "person_yolov8s-seg.pt": hf_hub_download(repo_id, "person_yolov8s-seg.pt"),
         }
     )
 
@@ -51,16 +52,16 @@ def get_models(model_dir: Union[str, Path]) -> OrderedDict[str, Optional[str]]:
 
 
 def create_mask_from_bbox(
-    image: Image.Image, bboxes: list[list[float]]
+    bboxes: list[list[float]], shape: tuple[int, int]
 ) -> list[Image.Image]:
     """
     Parameters
     ----------
-        image: Image.Image
-            The image to create the mask from
         bboxes: list[list[float]]
             list of [x1, y1, x2, y2]
             bounding boxes
+        shape: tuple[int, int]
+            shape of the image (width, height)
 
     Returns
     -------
@@ -70,7 +71,7 @@ def create_mask_from_bbox(
     """
     masks = []
     for bbox in bboxes:
-        mask = Image.new("L", image.size, 0)
+        mask = Image.new("L", shape, 0)
         mask_draw = ImageDraw.Draw(mask)
         mask_draw.rectangle(bbox, fill=255)
         masks.append(mask)

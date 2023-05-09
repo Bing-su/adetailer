@@ -36,6 +36,7 @@ On the ControlNet tab, select a ControlNet inpaint model and set the model weigh
 | mediapipe_face_short  | realistic face        | -                             | -                             |
 | hand_yolov8n.pt       | 2D / realistic hand   | 0.767                         | 0.505                         |
 | person_yolov8n-seg.pt | 2D / realistic person | 0.782 (bbox)<br/>0.761 (mask) | 0.555 (bbox)<br/>0.460 (mask) |
+| person_yolov8s-seg.pt | 2D / realistic person | 0.824 (bbox)<br/>0.809 (mask) | 0.605 (bbox)<br/>0.508 (mask) |
 
 The yolo models can be found on huggingface [Bingsu/adetailer](https://huggingface.co/Bingsu/adetailer).
 
