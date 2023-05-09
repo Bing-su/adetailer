@@ -43,7 +43,7 @@ def run_pip(*args):
 def install():
     deps = [
         # requirements
-        ("ultralytics", "8.0.87", None),
+        ("ultralytics", "8.0.97", None),
         ("mediapipe", "0.9.3.0", None),
         ("huggingface_hub", None, None),
         ("pydantic", None, None),
