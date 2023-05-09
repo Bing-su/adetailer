@@ -39,6 +39,7 @@ def get_models(model_dir: Union[str, Path]) -> OrderedDict[str, Optional[str]]:
             "mediapipe_face_short": None,
             "hand_yolov8n.pt": hf_hub_download(repo_id, "hand_yolov8n.pt"),
             "person_yolov8n-seg.pt": hf_hub_download(repo_id, "person_yolov8n-seg.pt"),
+            "person_yolov8s-seg.pt": hf_hub_download(repo_id, "person_yolov8s-seg.pt"),
         }
     )
 
