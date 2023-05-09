@@ -455,7 +455,8 @@ class AfterDetailerScript(scripts.Script):
         if not ad_only_seleted_scripts:
             return script_runner
 
-        ad_script_names = opts.data.get("ad_script_names", "")
+        default = "dynamic_prompting,dynamic_thresholding,wildcards,wildcard_recursive"
+        ad_script_names = opts.data.get("ad_script_names", default)
         script_names_set = {
             name
             for script_name in ad_script_names.split(",")
