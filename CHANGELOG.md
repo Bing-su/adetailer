@@ -1,5 +1,12 @@
 # Changelog
 
+### 2023-05-09
+
+- v23.5.10
+- 선택한 스크립트만 ADetailer에 적용하는 옵션 추가, 기본값 `True`. 설정 탭에서 지정가능.
+  - 기본값: `dynamic_prompting,dynamic_thresholding,wildcards,wildcard_recursive`
+- `person_yolov8s-seg.pt` 모델 추가
+
 ### 2023-05-08
 
 - v23.5.9
