@@ -87,6 +87,11 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
         if not params["ADetailer negative prompt"]:
             params.pop("ADetailer negative prompt")
 
+        if params["ADetailer x offset"] == 0:
+            params.pop("ADetailer x offset")
+        if params["ADetailer y offset"] == 0:
+            params.pop("ADetailer y offset")
+
         if not params["ADetailer use inpaint width/height"]:
             params.pop("ADetailer inpaint width")
             params.pop("ADetailer inpaint height")
