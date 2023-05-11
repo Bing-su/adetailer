@@ -221,8 +221,8 @@ class AfterDetailerScript(scripts.Script):
 
                                 w[n].ad_inpaint_width = gr.Slider(
                                     label="inpaint width" + suffix(n),
-                                    minimum=4,
-                                    maximum=1024,
+                                    minimum=64,
+                                    maximum=2048,
                                     step=4,
                                     value=512,
                                     visible=True,
@@ -230,8 +230,8 @@ class AfterDetailerScript(scripts.Script):
 
                                 w[n].ad_inpaint_height = gr.Slider(
                                     label="inpaint height" + suffix(n),
-                                    minimum=4,
-                                    maximum=1024,
+                                    minimum=64,
+                                    maximum=2048,
                                     step=4,
                                     value=512,
                                     visible=True,
