@@ -119,25 +119,26 @@ class AfterDetailerScript(scripts.Script):
                                 type="value",
                             )
 
-                        with gr.Row(elem_id="AD_toprow_prompt" + suffix(n, "_")):
-                            w[n].ad_prompt = gr.Textbox(
-                                label="ad_prompt" + suffix(n),
-                                show_label=False,
-                                lines=3,
-                                placeholder="ADetailer prompt" + suffix(n),
-                                elem_id="AD_prompt" + suffix(n, "_"),
-                            )
+                        with gr.Group():
+                            with gr.Row(elem_id="AD_toprow_prompt" + suffix(n, "_")):
+                                w[n].ad_prompt = gr.Textbox(
+                                    label="ad_prompt" + suffix(n),
+                                    show_label=False,
+                                    lines=3,
+                                    placeholder="ADetailer prompt" + suffix(n),
+                                    elem_id="AD_prompt" + suffix(n, "_"),
+                                )
 
-                        with gr.Row(
-                            elem_id="AD_toprow_negative_prompt" + suffix(n, "_")
-                        ):
-                            w[n].ad_negative_prompt = gr.Textbox(
-                                label="ad_negative_prompt" + suffix(n),
-                                show_label=False,
-                                lines=2,
-                                placeholder="ADetailer negative prompt" + suffix(n),
-                                elem_id="AD_negative_prompt" + suffix(n, "_"),
-                            )
+                            with gr.Row(
+                                elem_id="AD_toprow_negative_prompt" + suffix(n, "_")
+                            ):
+                                w[n].ad_negative_prompt = gr.Textbox(
+                                    label="ad_negative_prompt" + suffix(n),
+                                    show_label=False,
+                                    lines=2,
+                                    placeholder="ADetailer negative prompt" + suffix(n),
+                                    elem_id="AD_negative_prompt" + suffix(n, "_"),
+                                )
 
                         with gr.Group():
                             with gr.Row():
@@ -196,6 +197,7 @@ class AfterDetailerScript(scripts.Script):
                                     visible=True,
                                 )
 
+                        with gr.Group():
                             with gr.Row():
                                 w[n].ad_inpaint_full_res = gr.Checkbox(
                                     label="Inpaint at full resolution " + suffix(n),
@@ -213,69 +215,68 @@ class AfterDetailerScript(scripts.Script):
                                 )
 
                             with gr.Row():
-                                w[n].ad_use_inpaint_width_height = gr.Checkbox(
-                                    label="Use separate width/height" + suffix(n),
-                                    value=False,
-                                    visible=True,
-                                )
+                                with gr.Column():
+                                    w[n].ad_use_inpaint_width_height = gr.Checkbox(
+                                        label="Use separate width/height" + suffix(n),
+                                        value=False,
+                                        visible=True,
+                                    )
 
-                                w[n].ad_inpaint_width = gr.Slider(
-                                    label="inpaint width" + suffix(n),
-                                    minimum=64,
-                                    maximum=2048,
-                                    step=4,
-                                    value=512,
-                                    visible=True,
-                                )
+                                    w[n].ad_inpaint_width = gr.Slider(
+                                        label="inpaint width" + suffix(n),
+                                        minimum=64,
+                                        maximum=2048,
+                                        step=4,
+                                        value=512,
+                                        visible=True,
+                                    )
 
-                                w[n].ad_inpaint_height = gr.Slider(
-                                    label="inpaint height" + suffix(n),
-                                    minimum=64,
-                                    maximum=2048,
-                                    step=4,
-                                    value=512,
-                                    visible=True,
-                                )
+                                    w[n].ad_inpaint_height = gr.Slider(
+                                        label="inpaint height" + suffix(n),
+                                        minimum=64,
+                                        maximum=2048,
+                                        step=4,
+                                        value=512,
+                                        visible=True,
+                                    )
 
-                            with gr.Row():
-                                w[n].ad_use_cfg_scale = gr.Checkbox(
-                                    label="Use separate CFG scale" + suffix(n),
-                                    value=False,
-                                    visible=True,
-                                )
+                                with gr.Column():
+                                    w[n].ad_use_cfg_scale = gr.Checkbox(
+                                        label="Use separate CFG scale" + suffix(n),
+                                        value=False,
+                                        visible=True,
+                                    )
 
-                                w[n].ad_cfg_scale = gr.Slider(
-                                    label="ADetailer CFG scale" + suffix(n),
-                                    minimum=0.0,
-                                    maximum=30.0,
-                                    step=0.5,
-                                    value=7.0,
-                                    visible=True,
-                                )
+                                    w[n].ad_cfg_scale = gr.Slider(
+                                        label="ADetailer CFG scale" + suffix(n),
+                                        minimum=0.0,
+                                        maximum=30.0,
+                                        step=0.5,
+                                        value=7.0,
+                                        visible=True,
+                                    )
 
+                        with gr.Group(), gr.Row(variant="panel"):
                             cn_inpaint_models = ["None"] + get_cn_inpaint_models()
 
-                            with gr.Group():
-                                with gr.Row():
-                                    w[n].ad_controlnet_model = gr.Dropdown(
-                                        label="ControlNet model" + suffix(n),
-                                        choices=cn_inpaint_models,
-                                        value="None",
-                                        visible=True,
-                                        type="value",
-                                        interactive=controlnet_exists,
-                                    )
+                            w[n].ad_controlnet_model = gr.Dropdown(
+                                label="ControlNet model" + suffix(n),
+                                choices=cn_inpaint_models,
+                                value="None",
+                                visible=True,
+                                type="value",
+                                interactive=controlnet_exists,
+                            )
 
-                                with gr.Row():
-                                    w[n].ad_controlnet_weight = gr.Slider(
-                                        label="ControlNet weight" + suffix(n),
-                                        minimum=0.0,
-                                        maximum=1.0,
-                                        step=0.05,
-                                        value=1.0,
-                                        visible=True,
-                                        interactive=controlnet_exists,
-                                    )
+                            w[n].ad_controlnet_weight = gr.Slider(
+                                label="ControlNet weight" + suffix(n),
+                                minimum=0.0,
+                                maximum=1.0,
+                                step=0.05,
+                                value=1.0,
+                                visible=True,
+                                interactive=controlnet_exists,
+                            )
 
         # Accordion end
 
