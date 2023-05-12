@@ -18,7 +18,21 @@ You **DON'T** need to download any model from huggingface.
 
 ## Usage
 
-TO DO
+It's auto detecting, masking, and inpainting tool.
+
+So some options correspond to options on the inpaint tab.
+
+![image](https://i.imgur.com/f8RFI4w.png)
+
+Other options:
+
+| Option                                 |                                                                                              |                                                                       |
+| -------------------------------------- | -------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| ADetailer model                        | Determine what to detect.                                                                    | `None` = disable                                                      |
+| ADetailer prompt, negative prompt      | Prompts and negative prompts to apply                                                        | If left blank, it will use the same as the input.                     |
+| Detection model confidence threshold % | Only objects with a detection model confidence above this threshold are used for inpainting. |                                                                       |
+| Mask erosion (-) / dilation (+)        | Enlarge or reduce the detected mask.                                                         | https://docs.opencv.org/4.7.0/db/df6/tutorial_erosion_dilatation.html |
+| Mask x, y offset                       | Moves the mask horizontally and vertically by pixels.                                        |                                                                       |
 
 ## ControlNet Inpainting
 
@@ -72,3 +86,5 @@ Datasets used for training the yolo models are:
 
 ![image](https://i.imgur.com/38RSxSO.png)
 ![image](https://i.imgur.com/2CYgjLx.png)
+
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/F1F1L7V2N)
