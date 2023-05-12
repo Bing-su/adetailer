@@ -26,13 +26,13 @@ So some options correspond to options on the inpaint tab.
 
 Other options:
 
-| Option                                 |                                                                                              |                                                                       |
-| -------------------------------------- | -------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| ADetailer model                        | Determine what to detect.                                                                    | `None` = disable                                                      |
-| ADetailer prompt, negative prompt      | Prompts and negative prompts to apply                                                        | If left blank, it will use the same as the input.                     |
-| Detection model confidence threshold % | Only objects with a detection model confidence above this threshold are used for inpainting. |                                                                       |
-| Mask erosion (-) / dilation (+)        | Enlarge or reduce the detected mask.                                                         | https://docs.opencv.org/4.7.0/db/df6/tutorial_erosion_dilatation.html |
-| Mask x, y offset                       | Moves the mask horizontally and vertically by pixels.                                        |                                                                       |
+| Option                                 |                                                                                              |                                                                                         |
+| -------------------------------------- | -------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| ADetailer model                        | Determine what to detect.                                                                    | `None` = disable                                                                        |
+| ADetailer prompt, negative prompt      | Prompts and negative prompts to apply                                                        | If left blank, it will use the same as the input.                                       |
+| Detection model confidence threshold % | Only objects with a detection model confidence above this threshold are used for inpainting. |                                                                                         |
+| Mask erosion (-) / dilation (+)        | Enlarge or reduce the detected mask.                                                         | [opencv example](https://docs.opencv.org/4.7.0/db/df6/tutorial_erosion_dilatation.html) |
+| Mask x, y offset                       | Moves the mask horizontally and vertically by pixels.                                        |                                                                                         |                                                                 |
 
 ## ControlNet Inpainting
 
