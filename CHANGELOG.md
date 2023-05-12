@@ -1,11 +1,20 @@
 # Changelog
 
+### 2023-05-12
+
+- v23.5.11
+- `ultralytics` 알람 제거
+- 필요없는 exif 인자 더 제거함
+- `use separate steps` 옵션 추가
+- ui 배치를 조정함
+
 ### 2023-05-09
 
 - v23.5.10
 - 선택한 스크립트만 ADetailer에 적용하는 옵션 추가, 기본값 `True`. 설정 탭에서 지정가능.
   - 기본값: `dynamic_prompting,dynamic_thresholding,wildcards,wildcard_recursive`
 - `person_yolov8s-seg.pt` 모델 추가
+- `ultralytics`의 최소 버전을 `8.0.97`로 설정 (C:\\ 문제 해결된 버전)
 
 ### 2023-05-08
 
