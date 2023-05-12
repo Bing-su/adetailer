@@ -3,10 +3,12 @@ from __future__ import annotations
 import platform
 import sys
 import traceback
+from collections import UserDict
 from copy import copy, deepcopy
 from itertools import zip_longest
 from pathlib import Path
 from textwrap import dedent
+from typing import Any
 
 import gradio as gr
 import torch
@@ -50,9 +52,18 @@ print(
 )
 
 
-class Widgets:
+class Widgets(UserDict):
+    def __getattribute__(self, __name: str) -> Any:
+        return self.__getitem__(__name)
+
+    def __setattr__(self, __name: str, __value: Any) -> None:
+        self.__setitem__(__name, __value)
+
+    def __delattr__(self, __name: str) -> None:
+        self.__delitem__(__name)
+
     def tolist(self):
-        return [getattr(self, attr) for attr, *_ in ALL_ARGS[1:]]
+        return [self[attr] for attr, *_ in ALL_ARGS[1:]]
 
 
 class ChangeTorchLoad:
@@ -64,7 +75,7 @@ class ChangeTorchLoad:
         torch.load = self.orig
 
 
-def gr_show(visible=True):
+def gr_show(visible: bool = True):
     return {"visible": visible, "__type__": "update"}
 
 
