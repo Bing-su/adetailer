@@ -22,7 +22,7 @@ It's auto detecting, masking, and inpainting tool.
 
 So some options correspond to options on the inpaint tab.
 
-![image](https://i.imgur.com/f8RFI4w.png)
+![image](https://i.imgur.com/Bm7YLEA.png)
 
 Other options:
 
