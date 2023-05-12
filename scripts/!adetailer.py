@@ -210,22 +210,22 @@ class AfterDetailerScript(scripts.Script):
 
                         with gr.Group():
                             with gr.Row():
-                                w[n].ad_inpaint_full_res = gr.Checkbox(
-                                    label="Inpaint at full resolution " + suffix(n),
-                                    value=True,
-                                    visible=True,
-                                )
-                                w[n].ad_inpaint_full_res_padding = gr.Slider(
-                                    label="Inpaint at full resolution padding, pixels "
-                                    + suffix(n),
-                                    minimum=0,
-                                    maximum=256,
-                                    step=4,
-                                    value=0,
-                                    visible=True,
-                                )
+                                with gr.Column():
+                                    w[n].ad_inpaint_full_res = gr.Checkbox(
+                                        label="Inpaint at full resolution " + suffix(n),
+                                        value=True,
+                                        visible=True,
+                                    )
+                                    w[n].ad_inpaint_full_res_padding = gr.Slider(
+                                        label="Inpaint at full resolution padding, pixels "
+                                        + suffix(n),
+                                        minimum=0,
+                                        maximum=256,
+                                        step=4,
+                                        value=0,
+                                        visible=True,
+                                    )
 
-                            with gr.Row():
                                 with gr.Column():
                                     w[n].ad_use_inpaint_width_height = gr.Checkbox(
                                         label="Use separate width/height" + suffix(n),
@@ -248,6 +248,23 @@ class AfterDetailerScript(scripts.Script):
                                         maximum=2048,
                                         step=4,
                                         value=512,
+                                        visible=True,
+                                    )
+
+                            with gr.Row():
+                                with gr.Column():
+                                    w[n].ad_use_steps = gr.Checkbox(
+                                        label="Use separate steps" + suffix(n),
+                                        value=False,
+                                        visible=True,
+                                    )
+
+                                    w[n].ad_steps = gr.Slider(
+                                        label="ADetailer steps" + suffix(n),
+                                        minimum=1,
+                                        maximum=150,
+                                        step=1,
+                                        value=28,
                                         visible=True,
                                     )
 
@@ -445,6 +462,11 @@ class AfterDetailerScript(scripts.Script):
 
         return width, height
 
+    def get_steps(self, p, args: ADetailerArgs) -> int:
+        if args.ad_use_steps:
+            return args.ad_steps
+        return p.steps
+
     def get_cfg_scale(self, p, args: ADetailerArgs) -> float:
         if args.ad_use_cfg_scale:
             return args.ad_cfg_scale
@@ -491,6 +513,7 @@ class AfterDetailerScript(scripts.Script):
         prompt, negative_prompt = self.get_prompt(p, args)
         seed, subseed = self.get_seed(p)
         width, height = self.get_width_height(p, args)
+        steps = self.get_steps(p, args)
         cfg_scale = self.get_cfg_scale(p, args)
 
         sampler_name = p.sampler_name
@@ -521,7 +544,7 @@ class AfterDetailerScript(scripts.Script):
             sampler_name=sampler_name,
             batch_size=1,
             n_iter=1,
-            steps=p.steps,
+            steps=steps,
             cfg_scale=cfg_scale,
             width=width,
             height=height,
