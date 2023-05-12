@@ -3,7 +3,6 @@ from __future__ import annotations
 import platform
 import sys
 import traceback
-from collections import UserDict
 from copy import copy, deepcopy
 from itertools import zip_longest
 from pathlib import Path
@@ -52,18 +51,9 @@ print(
 )
 
 
-class Widgets(UserDict):
-    def __getattribute__(self, __name: str) -> Any:
-        return self.__getitem__(__name)
-
-    def __setattr__(self, __name: str, __value: Any) -> None:
-        self.__setitem__(__name, __value)
-
-    def __delattr__(self, __name: str) -> None:
-        self.__delitem__(__name)
-
+class Widgets:
     def tolist(self):
-        return [self[attr] for attr, *_ in ALL_ARGS[1:]]
+        return [getattr(self, attr) for attr, *_ in ALL_ARGS[1:]]
 
 
 class ChangeTorchLoad:
