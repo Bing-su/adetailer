@@ -200,7 +200,7 @@ class AfterDetailerScript(scripts.Script):
 
                         with gr.Group():
                             with gr.Row():
-                                with gr.Column():
+                                with gr.Column(variant="compact"):
                                     w[n].ad_inpaint_full_res = gr.Checkbox(
                                         label="Inpaint at full resolution " + suffix(n),
                                         value=True,
@@ -216,7 +216,7 @@ class AfterDetailerScript(scripts.Script):
                                         visible=True,
                                     )
 
-                                with gr.Column():
+                                with gr.Column(variant="compact"):
                                     w[n].ad_use_inpaint_width_height = gr.Checkbox(
                                         label="Use separate width/height" + suffix(n),
                                         value=False,
@@ -242,7 +242,7 @@ class AfterDetailerScript(scripts.Script):
                                     )
 
                             with gr.Row():
-                                with gr.Column():
+                                with gr.Column(variant="compact"):
                                     w[n].ad_use_steps = gr.Checkbox(
                                         label="Use separate steps" + suffix(n),
                                         value=False,
@@ -258,7 +258,7 @@ class AfterDetailerScript(scripts.Script):
                                         visible=True,
                                     )
 
-                                with gr.Column():
+                                with gr.Column(variant="compact"):
                                     w[n].ad_use_cfg_scale = gr.Checkbox(
                                         label="Use separate CFG scale" + suffix(n),
                                         value=False,
