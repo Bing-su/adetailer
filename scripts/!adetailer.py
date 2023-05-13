@@ -78,6 +78,18 @@ def suffix(n: int, c: str = " ") -> str:
     return "" if n == 0 else c + ordinal(n + 1)
 
 
+def on_enable_change(ad_enable: bool, *states):
+    for state in states:
+        state["enabled"] = ad_enable
+    return states
+
+
+def on_widget_change(state: dict, *values):
+    for (attr, *_), value in zip(ALL_ARGS[1:], values):
+        state[attr] = value
+    return state
+
+
 class AfterDetailerScript(scripts.Script):
     def __init__(self):
         super().__init__()
@@ -91,10 +103,10 @@ class AfterDetailerScript(scripts.Script):
         return scripts.AlwaysVisible
 
     def ui(self, is_img2img):
-        model_list = list(model_mapping.keys())
-
         num_models = opts.data.get("ad_max_models", 2)
-        w = [Widgets() for _ in range(num_models)]
+        widgets = []
+        states = []
+        self.infotext_fields = []
 
         with gr.Accordion(AFTER_DETAILER, open=False, elem_id="AD_main_acc"):
             with gr.Row():
@@ -104,212 +116,227 @@ class AfterDetailerScript(scripts.Script):
                     visible=True,
                 )
 
+            self.infotext_fields.append((ad_enable, ALL_ARGS[0].name))
+
             with gr.Group(), gr.Tabs():
                 for n in range(num_models):
                     with gr.Tab(ordinal(n + 1)):
-                        with gr.Row():
-                            model_choices = (
-                                model_list if n == 0 else ["None"] + model_list
-                            )
+                        w, state, infofields = self.ui_one_group(n)
 
-                            w[n].ad_model = gr.Dropdown(
-                                label="ADetailer model" + suffix(n),
-                                choices=model_choices,
-                                value=model_choices[0],
-                                visible=True,
-                                type="value",
-                            )
+                    widgets.append(w)
+                    states.append(state)
+                    self.infotext_fields.extend(infofields)
 
-                        with gr.Group():
-                            with gr.Row(elem_id="AD_toprow_prompt" + suffix(n, "_")):
-                                w[n].ad_prompt = gr.Textbox(
-                                    label="ad_prompt" + suffix(n),
-                                    show_label=False,
-                                    lines=3,
-                                    placeholder="ADetailer prompt" + suffix(n),
-                                    elem_id="AD_prompt" + suffix(n, "_"),
-                                )
+        ad_enable.change(
+            fn=on_enable_change, inputs=[ad_enable] + states, outputs=states
+        )
+        return states
 
-                            with gr.Row(
-                                elem_id="AD_toprow_negative_prompt" + suffix(n, "_")
-                            ):
-                                w[n].ad_negative_prompt = gr.Textbox(
-                                    label="ad_negative_prompt" + suffix(n),
-                                    show_label=False,
-                                    lines=2,
-                                    placeholder="ADetailer negative prompt" + suffix(n),
-                                    elem_id="AD_negative_prompt" + suffix(n, "_"),
-                                )
+    def one_ui_group(self, n: int):
+        model_list = list(model_mapping.keys())
+        w = Widgets()
+        state = gr.State({"enabled": False})
 
-                        with gr.Group():
-                            with gr.Row():
-                                w[n].ad_conf = gr.Slider(
-                                    label="Detection model confidence threshold %"
-                                    + suffix(n),
-                                    minimum=0,
-                                    maximum=100,
-                                    step=1,
-                                    value=30,
-                                    visible=True,
-                                )
-                                w[n].ad_dilate_erode = gr.Slider(
-                                    label="Mask erosion (-) / dilation (+)" + suffix(n),
-                                    minimum=-128,
-                                    maximum=128,
-                                    step=4,
-                                    value=32,
-                                    visible=True,
-                                )
+        with gr.Row():
+            model_choices = model_list if n == 0 else ["None"] + model_list
 
-                            with gr.Row():
-                                w[n].ad_x_offset = gr.Slider(
-                                    label="Mask x(→) offset" + suffix(n),
-                                    minimum=-200,
-                                    maximum=200,
-                                    step=1,
-                                    value=0,
-                                    visible=True,
-                                )
-                                w[n].ad_y_offset = gr.Slider(
-                                    label="Mask y(↑) offset" + suffix(n),
-                                    minimum=-200,
-                                    maximum=200,
-                                    step=1,
-                                    value=0,
-                                    visible=True,
-                                )
+            w.ad_model = gr.Dropdown(
+                label="ADetailer model" + suffix(n),
+                choices=model_choices,
+                value=model_choices[0],
+                visible=True,
+                type="value",
+            )
 
-                            with gr.Row():
-                                w[n].ad_mask_blur = gr.Slider(
-                                    label="Inpaint mask blur" + suffix(n),
-                                    minimum=0,
-                                    maximum=64,
-                                    step=1,
-                                    value=4,
-                                    visible=True,
-                                )
+        with gr.Group():
+            with gr.Row(elem_id="AD_toprow_prompt" + suffix(n, "_")):
+                w.ad_prompt = gr.Textbox(
+                    label="ad_prompt" + suffix(n),
+                    show_label=False,
+                    lines=3,
+                    placeholder="ADetailer prompt" + suffix(n),
+                    elem_id="AD_prompt" + suffix(n, "_"),
+                )
 
-                                w[n].ad_denoising_strength = gr.Slider(
-                                    label="Inpaint denoising strength" + suffix(n),
-                                    minimum=0.0,
-                                    maximum=1.0,
-                                    step=0.01,
-                                    value=0.4,
-                                    visible=True,
-                                )
+            with gr.Row(elem_id="AD_toprow_negative_prompt" + suffix(n, "_")):
+                w.ad_negative_prompt = gr.Textbox(
+                    label="ad_negative_prompt" + suffix(n),
+                    show_label=False,
+                    lines=2,
+                    placeholder="ADetailer negative prompt" + suffix(n),
+                    elem_id="AD_negative_prompt" + suffix(n, "_"),
+                )
 
-                        with gr.Group():
-                            with gr.Row():
-                                with gr.Column(variant="compact"):
-                                    w[n].ad_inpaint_full_res = gr.Checkbox(
-                                        label="Inpaint at full resolution " + suffix(n),
-                                        value=True,
-                                        visible=True,
-                                    )
-                                    w[n].ad_inpaint_full_res_padding = gr.Slider(
-                                        label="Inpaint at full resolution padding, pixels "
-                                        + suffix(n),
-                                        minimum=0,
-                                        maximum=256,
-                                        step=4,
-                                        value=0,
-                                        visible=True,
-                                    )
+        with gr.Group():
+            with gr.Row():
+                w.ad_conf = gr.Slider(
+                    label="Detection model confidence threshold %" + suffix(n),
+                    minimum=0,
+                    maximum=100,
+                    step=1,
+                    value=30,
+                    visible=True,
+                )
+                w.ad_dilate_erode = gr.Slider(
+                    label="Mask erosion (-) / dilation (+)" + suffix(n),
+                    minimum=-128,
+                    maximum=128,
+                    step=4,
+                    value=32,
+                    visible=True,
+                )
 
-                                with gr.Column(variant="compact"):
-                                    w[n].ad_use_inpaint_width_height = gr.Checkbox(
-                                        label="Use separate width/height" + suffix(n),
-                                        value=False,
-                                        visible=True,
-                                    )
+            with gr.Row():
+                w.ad_x_offset = gr.Slider(
+                    label="Mask x(→) offset" + suffix(n),
+                    minimum=-200,
+                    maximum=200,
+                    step=1,
+                    value=0,
+                    visible=True,
+                )
+                w.ad_y_offset = gr.Slider(
+                    label="Mask y(↑) offset" + suffix(n),
+                    minimum=-200,
+                    maximum=200,
+                    step=1,
+                    value=0,
+                    visible=True,
+                )
 
-                                    w[n].ad_inpaint_width = gr.Slider(
-                                        label="inpaint width" + suffix(n),
-                                        minimum=64,
-                                        maximum=2048,
-                                        step=4,
-                                        value=512,
-                                        visible=True,
-                                    )
+            with gr.Row():
+                w.ad_mask_blur = gr.Slider(
+                    label="Inpaint mask blur" + suffix(n),
+                    minimum=0,
+                    maximum=64,
+                    step=1,
+                    value=4,
+                    visible=True,
+                )
 
-                                    w[n].ad_inpaint_height = gr.Slider(
-                                        label="inpaint height" + suffix(n),
-                                        minimum=64,
-                                        maximum=2048,
-                                        step=4,
-                                        value=512,
-                                        visible=True,
-                                    )
+                w.ad_denoising_strength = gr.Slider(
+                    label="Inpaint denoising strength" + suffix(n),
+                    minimum=0.0,
+                    maximum=1.0,
+                    step=0.01,
+                    value=0.4,
+                    visible=True,
+                )
 
-                            with gr.Row():
-                                with gr.Column(variant="compact"):
-                                    w[n].ad_use_steps = gr.Checkbox(
-                                        label="Use separate steps" + suffix(n),
-                                        value=False,
-                                        visible=True,
-                                    )
+        with gr.Group():
+            with gr.Row():
+                with gr.Column(variant="compact"):
+                    w.ad_inpaint_full_res = gr.Checkbox(
+                        label="Inpaint at full resolution " + suffix(n),
+                        value=True,
+                        visible=True,
+                    )
+                    w.ad_inpaint_full_res_padding = gr.Slider(
+                        label="Inpaint at full resolution padding, pixels " + suffix(n),
+                        minimum=0,
+                        maximum=256,
+                        step=4,
+                        value=0,
+                        visible=True,
+                    )
 
-                                    w[n].ad_steps = gr.Slider(
-                                        label="ADetailer steps" + suffix(n),
-                                        minimum=1,
-                                        maximum=150,
-                                        step=1,
-                                        value=28,
-                                        visible=True,
-                                    )
+                with gr.Column(variant="compact"):
+                    w.ad_use_inpaint_width_height = gr.Checkbox(
+                        label="Use separate width/height" + suffix(n),
+                        value=False,
+                        visible=True,
+                    )
 
-                                with gr.Column(variant="compact"):
-                                    w[n].ad_use_cfg_scale = gr.Checkbox(
-                                        label="Use separate CFG scale" + suffix(n),
-                                        value=False,
-                                        visible=True,
-                                    )
+                    w.ad_inpaint_width = gr.Slider(
+                        label="inpaint width" + suffix(n),
+                        minimum=64,
+                        maximum=2048,
+                        step=4,
+                        value=512,
+                        visible=True,
+                    )
 
-                                    w[n].ad_cfg_scale = gr.Slider(
-                                        label="ADetailer CFG scale" + suffix(n),
-                                        minimum=0.0,
-                                        maximum=30.0,
-                                        step=0.5,
-                                        value=7.0,
-                                        visible=True,
-                                    )
+                    w.ad_inpaint_height = gr.Slider(
+                        label="inpaint height" + suffix(n),
+                        minimum=64,
+                        maximum=2048,
+                        step=4,
+                        value=512,
+                        visible=True,
+                    )
 
-                        with gr.Group(), gr.Row(variant="panel"):
-                            cn_inpaint_models = ["None"] + get_cn_inpaint_models()
+            with gr.Row():
+                with gr.Column(variant="compact"):
+                    w.ad_use_steps = gr.Checkbox(
+                        label="Use separate steps" + suffix(n),
+                        value=False,
+                        visible=True,
+                    )
 
-                            w[n].ad_controlnet_model = gr.Dropdown(
-                                label="ControlNet model" + suffix(n),
-                                choices=cn_inpaint_models,
-                                value="None",
-                                visible=True,
-                                type="value",
-                                interactive=controlnet_exists,
-                            )
+                    w.ad_steps = gr.Slider(
+                        label="ADetailer steps" + suffix(n),
+                        minimum=1,
+                        maximum=150,
+                        step=1,
+                        value=28,
+                        visible=True,
+                    )
 
-                            w[n].ad_controlnet_weight = gr.Slider(
-                                label="ControlNet weight" + suffix(n),
-                                minimum=0.0,
-                                maximum=1.0,
-                                step=0.05,
-                                value=1.0,
-                                visible=True,
-                                interactive=controlnet_exists,
-                            )
+                with gr.Column(variant="compact"):
+                    w.ad_use_cfg_scale = gr.Checkbox(
+                        label="Use separate CFG scale" + suffix(n),
+                        value=False,
+                        visible=True,
+                    )
 
-        # Accordion end
+                    w.ad_cfg_scale = gr.Slider(
+                        label="ADetailer CFG scale" + suffix(n),
+                        minimum=0.0,
+                        maximum=30.0,
+                        step=0.5,
+                        value=7.0,
+                        visible=True,
+                    )
 
-        self.infotext_fields = [(ad_enable, ALL_ARGS[0].name)]
-        self.infotext_fields += [
-            (getattr(w[n], attr), name + suffix(n))
-            for n in range(num_models)
-            for attr, name, *_ in ALL_ARGS[1:]
+        with gr.Group(), gr.Row(variant="panel"):
+            cn_inpaint_models = ["None"] + get_cn_inpaint_models()
+
+            w.ad_controlnet_model = gr.Dropdown(
+                label="ControlNet model" + suffix(n),
+                choices=cn_inpaint_models,
+                value="None",
+                visible=True,
+                type="value",
+                interactive=controlnet_exists,
+            )
+
+            w.ad_controlnet_weight = gr.Slider(
+                label="ControlNet weight" + suffix(n),
+                minimum=0.0,
+                maximum=1.0,
+                step=0.05,
+                value=1.0,
+                visible=True,
+                interactive=controlnet_exists,
+            )
+
+        subscribers = []
+        for attr, *_ in ALL_ARGS[1:]:
+            widget = getattr(w, attr)
+            for method in ["edit", "click", "change", "clear"]:
+                if hasattr(widget, method):
+                    subscribers.append(getattr(widget, method))
+
+        sub_inputs = [state] + w.tolist()
+
+        for subscriber in subscribers:
+            subscriber(fn=on_widget_change, inputs=sub_inputs, outputs=state)
+
+        infotext_fields = [
+            (getattr(w, attr), name + suffix(n)) for attr, name in ALL_ARGS[1:]
         ]
 
-        ret = [ad_enable]
-        for n in range(num_models):
-            ret.extend(w[n].tolist())
-
-        return ret
+        return w, state, infotext_fields
 
     def init_controlnet_ext(self) -> None:
         if self.controlnet_ext is not None:
