@@ -18,8 +18,8 @@ from adetailer import (
     AD_ENABLE,
     ALL_ARGS,
     ADetailerArgs,
+    EnableChecker,
     __version__,
-    enable_check,
     get_models,
     mediapipe_predict,
     ultralytics_predict,
@@ -403,7 +403,10 @@ class AfterDetailerScript(scripts.Script):
                            input: {args_!r}
                        """
             raise ValueError(dedent(message))
-        return enable_check(*args_)
+        a0 = args_[0]
+        a1 = args_[1] if len(args_) > 1 else None
+        checker = EnableChecker(a0=a0, a1=a1)
+        return checker.is_enabled()
 
     def get_args(self, *args_) -> list[ADetailerArgs]:
         """
