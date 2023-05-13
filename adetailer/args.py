@@ -1,3 +1,6 @@
+from collections import UserList
+from collections.abc import Mapping
+from functools import cached_property
 from typing import Any, NamedTuple
 
 import pydantic
@@ -17,35 +20,17 @@ class Arg(NamedTuple):
     name: str
 
 
-_all_args = [
-    ("ad_enable", "ADetailer enable"),
-    ("ad_model", "ADetailer model"),
-    ("ad_prompt", "ADetailer prompt"),
-    ("ad_negative_prompt", "ADetailer negative prompt"),
-    ("ad_conf", "ADetailer conf"),
-    ("ad_dilate_erode", "ADetailer dilate/erode"),
-    ("ad_x_offset", "ADetailer x offset"),
-    ("ad_y_offset", "ADetailer y offset"),
-    ("ad_mask_blur", "ADetailer mask blur"),
-    ("ad_denoising_strength", "ADetailer denoising strength"),
-    ("ad_inpaint_full_res", "ADetailer inpaint full"),
-    ("ad_inpaint_full_res_padding", "ADetailer inpaint padding"),
-    ("ad_use_inpaint_width_height", "ADetailer use inpaint width/height"),
-    ("ad_inpaint_width", "ADetailer inpaint width"),
-    ("ad_inpaint_height", "ADetailer inpaint height"),
-    ("ad_use_steps", "ADetailer use separate steps"),
-    ("ad_steps", "ADetailer steps"),
-    ("ad_use_cfg_scale", "ADetailer use separate CFG scale"),
-    ("ad_cfg_scale", "ADetailer CFG scale"),
-    ("ad_controlnet_model", "ADetailer ControlNet model"),
-    ("ad_controlnet_weight", "ADetailer ControlNet weight"),
-]
+class ArgsList(UserList):
+    @cached_property
+    def attrs(self) -> tuple[str]:
+        return tuple(attr for attr, _ in self)
 
-ALL_ARGS = [Arg(*args) for args in _all_args]
+    @cached_property
+    def names(self) -> tuple[str]:
+        return tuple(name for _, name in self)
 
 
 class ADetailerArgs(BaseModel, extra=Extra.forbid):
-    ad_enable: bool = False
     ad_model: str = "None"
     ad_prompt: str = ""
     ad_negative_prompt: str = ""
@@ -83,7 +68,7 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
         if self.ad_model == "None":
             return {}
 
-        params = {name: getattr(self, attr) for attr, name in ALL_ARGS[1:]}
+        params = {name: getattr(self, attr) for attr, name in ALL_ARGS}
         params["ADetailer conf"] = int(params["ADetailer conf"] * 100)
 
         if not params["ADetailer prompt"]:
@@ -122,14 +107,46 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
         return params
 
 
-class EnableChecker(BaseModel):
-    ad_enable: bool = False
-    ad_model: str = "None"
+def enable_check(*args: Any) -> bool:
+    if not args:
+        return False
+    a0 = args[0]
+    ad_model = ALL_ARGS[0].attr
 
-    def is_enabled(self):
-        return self.ad_enable and self.ad_model != "None"
+    if isinstance(a0, Mapping):
+        return a0.get(ad_model, "None") != "None"
+    if len(args) == 1:
+        return False
+
+    a1 = args[1]
+    a1_model = a1.get(ad_model, "None")
+    return a0 and a1_model != "None"
 
 
-def get_one_args(*args: Any) -> ADetailerArgs:
-    arg_dict = {attr: arg for arg, (attr, *_) in zip(args, ALL_ARGS)}
-    return ADetailerArgs(**arg_dict)
+_all_args = [
+    ("ad_enable", "ADetailer enable"),
+    ("ad_model", "ADetailer model"),
+    ("ad_prompt", "ADetailer prompt"),
+    ("ad_negative_prompt", "ADetailer negative prompt"),
+    ("ad_conf", "ADetailer conf"),
+    ("ad_dilate_erode", "ADetailer dilate/erode"),
+    ("ad_x_offset", "ADetailer x offset"),
+    ("ad_y_offset", "ADetailer y offset"),
+    ("ad_mask_blur", "ADetailer mask blur"),
+    ("ad_denoising_strength", "ADetailer denoising strength"),
+    ("ad_inpaint_full_res", "ADetailer inpaint full"),
+    ("ad_inpaint_full_res_padding", "ADetailer inpaint padding"),
+    ("ad_use_inpaint_width_height", "ADetailer use inpaint width/height"),
+    ("ad_inpaint_width", "ADetailer inpaint width"),
+    ("ad_inpaint_height", "ADetailer inpaint height"),
+    ("ad_use_steps", "ADetailer use separate steps"),
+    ("ad_steps", "ADetailer steps"),
+    ("ad_use_cfg_scale", "ADetailer use separate CFG scale"),
+    ("ad_cfg_scale", "ADetailer CFG scale"),
+    ("ad_controlnet_model", "ADetailer ControlNet model"),
+    ("ad_controlnet_weight", "ADetailer ControlNet weight"),
+]
+
+AD_ENABLE = Arg(*_all_args[0])
+_args = [Arg(*args) for args in _all_args[1:]]
+ALL_ARGS = ArgsList(_args)
