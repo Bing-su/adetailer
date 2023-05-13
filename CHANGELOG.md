@@ -1,5 +1,14 @@
 # Changelog
 
+### 2023-05-13
+
+- v23.5.12
+- `ad_enable`을 제외한 입력이 dict타입으로 들어오도록 변경
+  - web api로 사용할 때에 특히 사용하기 쉬움
+  - web api breaking change
+- `mask_preprocess` 인자를 넣지 않았던 오류 수정 (PR #47)
+- huggingface에서 모델을 다운로드하지 않는 옵션 추가 `--ad-no-huggingface`
+
 ### 2023-05-12
 
 - v23.5.11
