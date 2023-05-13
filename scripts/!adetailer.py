@@ -3,6 +3,7 @@ from __future__ import annotations
 import platform
 import sys
 import traceback
+from collections.abc import Mapping
 from copy import copy, deepcopy
 from functools import partial
 from pathlib import Path
@@ -424,6 +425,9 @@ class AfterDetailerScript(scripts.Script):
                     arg = "DEFAULT" if arg is None else repr(arg)
                     message.append(f"    {attr}: {arg} ({dtype})")
                 raise ValueError("\n".join(message)) from e
+            except TypeError as e:
+                message = f"[-] ADetailer: {ordinal(n)} - Non-mapping arguments are sent: {arg_dict!r}\n{e}"
+                raise TypeError(message) from e
 
             all_inputs.append(inp)
 
