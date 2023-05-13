@@ -667,7 +667,12 @@ class AfterDetailerScript(scripts.Script):
         with ChangeTorchLoad():
             pred = predictor(ad_model, pp.image, args.ad_conf, **kwargs)
 
-        masks = mask_preprocess(pred.masks, args.ad_dilate_erode)
+        masks = mask_preprocess(
+            pred.masks,
+            kernel=args.ad_dilate_erode,
+            x_offset=args.ad_x_offset,
+            y_offset=args.ad_y_offset,
+        )
 
         if not masks:
             print(
