@@ -5,7 +5,6 @@ import sys
 import traceback
 from copy import copy, deepcopy
 from functools import partial
-from itertools import zip_longest
 from pathlib import Path
 from textwrap import dedent
 from typing import Any
@@ -46,6 +45,8 @@ except Exception:
 AFTER_DETAILER = "After Detailer"
 adetailer_dir = Path(models_path, "adetailer")
 model_mapping = get_models(adetailer_dir)
+txt2img_submit_button = img2img_submit_button = None
+
 
 print(
     f"[-] ADetailer initialized. version: {__version__}, num models: {len(model_mapping)}"
@@ -84,6 +85,12 @@ def on_widget_change(state: dict, value: Any, *, attr: str):
     return state
 
 
+def on_generate_click(state: dict, *values: Any):
+    for attr, value in zip(ALL_ARGS.attrs, values):
+        state[attr] = value
+    return state
+
+
 class AfterDetailerScript(scripts.Script):
     def __init__(self):
         super().__init__()
@@ -115,7 +122,7 @@ class AfterDetailerScript(scripts.Script):
             with gr.Group(), gr.Tabs():
                 for n in range(num_models):
                     with gr.Tab(ordinal(n + 1)):
-                        w, state, infofields = self.one_ui_group(n)
+                        w, state, infofields = self.one_ui_group(n, is_img2img)
 
                     widgets.append(w)
                     states.append(state)
@@ -124,7 +131,7 @@ class AfterDetailerScript(scripts.Script):
         # return: [bool, dict, dict, ...]
         return [ad_enable] + states
 
-    def one_ui_group(self, n: int):
+    def one_ui_group(self, n: int, is_img2img: bool):
         model_list = list(model_mapping.keys())
         w = Widgets()
         state = gr.State({})
@@ -236,6 +243,7 @@ class AfterDetailerScript(scripts.Script):
                         gr_interactive,
                         inputs=w.ad_inpaint_full_res,
                         outputs=w.ad_inpaint_full_res_padding,
+                        queue=False,
                     )
 
                 with gr.Column(variant="compact"):
@@ -264,9 +272,10 @@ class AfterDetailerScript(scripts.Script):
                     )
 
                     w.ad_use_inpaint_width_height.change(
-                        gr_interactive,
+                        lambda value: (gr_interactive(value), gr_interactive(value)),
                         inputs=w.ad_use_inpaint_width_height,
                         outputs=[w.ad_inpaint_width, w.ad_inpaint_height],
+                        queue=False,
                     )
 
             with gr.Row():
@@ -290,6 +299,7 @@ class AfterDetailerScript(scripts.Script):
                         gr_interactive,
                         inputs=w.ad_use_steps,
                         outputs=w.ad_steps,
+                        queue=False,
                     )
 
                 with gr.Column(variant="compact"):
@@ -312,6 +322,7 @@ class AfterDetailerScript(scripts.Script):
                         gr_interactive,
                         inputs=w.ad_use_cfg_scale,
                         outputs=w.ad_cfg_scale,
+                        queue=False,
                     )
 
         with gr.Group(), gr.Row(variant="panel"):
@@ -339,7 +350,19 @@ class AfterDetailerScript(scripts.Script):
         for attr in ALL_ARGS.attrs:
             widget = getattr(w, attr)
             on_change = partial(on_widget_change, attr=attr)
-            widget.change(fn=on_change, inputs=[state, widget], outputs=[state])
+            widget.change(
+                fn=on_change, inputs=[state, widget], outputs=[state], queue=False
+            )
+
+        all_inputs = [state] + w.tolist()
+        if is_img2img:
+            img2img_submit_button.click(
+                fn=on_generate_click, inputs=all_inputs, outputs=state, queue=False
+            )
+        else:
+            txt2img_submit_button.click(
+                fn=on_generate_click, inputs=all_inputs, outputs=state, queue=False
+            )
 
         infotext_fields = [
             (getattr(w, attr), name + suffix(n)) for attr, name in ALL_ARGS
@@ -711,6 +734,16 @@ class AfterDetailerScript(scripts.Script):
             pass
 
 
+def on_after_component(component, **_kwargs):
+    global txt2img_submit_button, img2img_submit_button
+    if getattr(component, "elem_id", None) == "txt2img_generate":
+        txt2img_submit_button = component
+        return
+
+    if getattr(component, "elem_id", None) == "img2img_generate":
+        img2img_submit_button = component
+
+
 def on_ui_settings():
     section = ("ADetailer", AFTER_DETAILER)
     shared.opts.add_option(
@@ -759,3 +792,4 @@ def on_ui_settings():
 
 
 script_callbacks.on_ui_settings(on_ui_settings)
+script_callbacks.on_after_component(on_after_component)
