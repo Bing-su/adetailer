@@ -20,7 +20,9 @@ class PredictOutput:
     preview: Optional[Image.Image] = None
 
 
-def get_models(model_dir: Union[str, Path]) -> OrderedDict[str, Optional[str]]:
+def get_models(
+    model_dir: Union[str, Path], huggingface: bool = True
+) -> OrderedDict[str, Optional[str]]:
     model_dir = Path(model_dir)
     if model_dir.is_dir():
         model_paths = [
@@ -31,17 +33,29 @@ def get_models(model_dir: Union[str, Path]) -> OrderedDict[str, Optional[str]]:
     else:
         model_paths = []
 
-    models = OrderedDict(
-        {
-            "face_yolov8n.pt": hf_hub_download(repo_id, "face_yolov8n.pt"),
-            "face_yolov8s.pt": hf_hub_download(repo_id, "face_yolov8s.pt"),
-            "mediapipe_face_full": None,
-            "mediapipe_face_short": None,
-            "hand_yolov8n.pt": hf_hub_download(repo_id, "hand_yolov8n.pt"),
-            "person_yolov8n-seg.pt": hf_hub_download(repo_id, "person_yolov8n-seg.pt"),
-            "person_yolov8s-seg.pt": hf_hub_download(repo_id, "person_yolov8s-seg.pt"),
-        }
-    )
+    if huggingface:
+        models = OrderedDict(
+            {
+                "face_yolov8n.pt": hf_hub_download(repo_id, "face_yolov8n.pt"),
+                "face_yolov8s.pt": hf_hub_download(repo_id, "face_yolov8s.pt"),
+                "mediapipe_face_full": None,
+                "mediapipe_face_short": None,
+                "hand_yolov8n.pt": hf_hub_download(repo_id, "hand_yolov8n.pt"),
+                "person_yolov8n-seg.pt": hf_hub_download(
+                    repo_id, "person_yolov8n-seg.pt"
+                ),
+                "person_yolov8s-seg.pt": hf_hub_download(
+                    repo_id, "person_yolov8s-seg.pt"
+                ),
+            }
+        )
+    else:
+        models = OrderedDict(
+            {
+                "mediapipe_face_full": None,
+                "mediapipe_face_short": None,
+            }
+        )
 
     for path in model_paths:
         if path.name in models:
