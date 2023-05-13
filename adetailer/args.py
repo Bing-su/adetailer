@@ -110,7 +110,7 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
 def enable_check(*args: Any) -> bool:
     if not args:
         return False
-    a0 = args[0]
+    a0: bool | Mapping = args[0]
     ad_model = ALL_ARGS[0].attr
 
     if isinstance(a0, Mapping):

@@ -355,14 +355,10 @@ class AfterDetailerScript(scripts.Script):
             )
 
         all_inputs = [state] + w.tolist()
-        if is_img2img:
-            img2img_submit_button.click(
-                fn=on_generate_click, inputs=all_inputs, outputs=state, queue=False
-            )
-        else:
-            txt2img_submit_button.click(
-                fn=on_generate_click, inputs=all_inputs, outputs=state, queue=False
-            )
+        target_button = img2img_submit_button if is_img2img else txt2img_submit_button
+        target_button.click(
+            fn=on_generate_click, inputs=all_inputs, outputs=state, queue=False
+        )
 
         infotext_fields = [
             (getattr(w, attr), name + suffix(n)) for attr, name in ALL_ARGS
