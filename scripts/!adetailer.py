@@ -115,7 +115,7 @@ class AfterDetailerScript(scripts.Script):
             with gr.Group(), gr.Tabs():
                 for n in range(num_models):
                     with gr.Tab(ordinal(n + 1)):
-                        w, state, infofields = self.ui_one_group(n)
+                        w, state, infofields = self.one_ui_group(n)
 
                     widgets.append(w)
                     states.append(state)
