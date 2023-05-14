@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections import UserList
 from collections.abc import Mapping
 from functools import cached_property
