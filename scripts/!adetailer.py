@@ -3,9 +3,7 @@ from __future__ import annotations
 import platform
 import sys
 import traceback
-from collections.abc import Mapping
 from copy import copy, deepcopy
-from functools import partial
 from pathlib import Path
 from textwrap import dedent
 from typing import Any
@@ -257,10 +255,11 @@ class AfterDetailerScript(scripts.Script):
 
     def script_filter(self, p, args: ADetailerArgs):
         script_runner = copy(p.scripts)
+        script_args = deepcopy(p.script_args)
 
         ad_only_seleted_scripts = opts.data.get("ad_only_seleted_scripts", True)
         if not ad_only_seleted_scripts:
-            return script_runner
+            return script_runner, script_args
 
         default = "dynamic_prompting,dynamic_thresholding,wildcards,wildcard_recursive"
         ad_script_names = opts.data.get("ad_script_names", default)
@@ -270,6 +269,7 @@ class AfterDetailerScript(scripts.Script):
             for name in (script_name, script_name.strip())
         }
         if args.ad_controlnet_model != "None":
+            self.disable_controlnet_units(script_args)
             script_names_set.add("controlnet")
 
         filtered_alwayson = []
@@ -280,7 +280,14 @@ class AfterDetailerScript(scripts.Script):
                 filtered_alwayson.append(script_object)
 
         script_runner.alwayson_scripts = filtered_alwayson
-        return script_runner
+        return script_runner, script_args
+
+    def disable_controlnet_units(self, script_args: list[Any]) -> None:
+        for obj in script_args:
+            if "controlnet" in obj.__class__.__name__.lower() and hasattr(
+                obj, "enabled"
+            ):
+                obj.enabled = False
 
     def get_i2i_p(self, p, args: ADetailerArgs, image):
         prompt, negative_prompt = self.get_prompt(p, args)
@@ -327,8 +334,7 @@ class AfterDetailerScript(scripts.Script):
             do_not_save_grid=True,
         )
 
-        i2i.scripts = self.script_filter(p, args)
-        i2i.script_args = deepcopy(p.script_args)
+        i2i.scripts, i2i.script_args = self.script_filter(p, args)
         i2i._disable_adetailer = True
 
         if args.ad_controlnet_model != "None":
