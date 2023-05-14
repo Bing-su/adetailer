@@ -4,10 +4,13 @@ from .common import PredictOutput, get_models
 from .mediapipe import mediapipe_predict
 from .ultralytics import ultralytics_predict
 
+AFTER_DETAILER = "After Detailer"
+
 __all__ = [
     "__version__",
     "AD_ENABLE",
     "ADetailerArgs",
+    "AFTER_DETAILER",
     "ALL_ARGS",
     "EnableChecker",
     "PredictOutput",
