@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections import UserList
 from functools import cached_property
 from typing import Any, NamedTuple, Optional, Union
