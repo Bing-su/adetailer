@@ -177,28 +177,23 @@ class AfterDetailerScript(scripts.Script):
 
         return device
 
+    def _get_prompt(self, ad_prompt: str, all_prompts: list[str], i: int, default: str):
+        if ad_prompt:
+            return ad_prompt
+        if not all_prompts:
+            return default
+        if i < len(all_prompts):
+            return all_prompts[i]
+        j = i % len(all_prompts)
+        return all_prompts[j]
+
     def get_prompt(self, p, args: ADetailerArgs) -> tuple[str, str]:
         i = p._idx
 
-        if args.ad_prompt:
-            prompt = args.ad_prompt
-        elif not p.all_prompts:
-            prompt = p.prompt
-        elif i < len(p.all_prompts):
-            prompt = p.all_prompts[i]
-        else:
-            j = i % len(p.all_prompts)
-            prompt = p.all_prompts[j]
-
-        if args.ad_negative_prompt:
-            negative_prompt = args.ad_negative_prompt
-        elif not p.all_negative_prompts:
-            negative_prompt = p.negative_prompt
-        elif i < len(p.all_negative_prompts):
-            negative_prompt = p.all_negative_prompts[i]
-        else:
-            j = i % len(p.all_negative_prompts)
-            negative_prompt = p.all_negative_prompts[j]
+        prompt = self._get_prompt(args.ad_prompt, p.all_prompts, i, p.prompt)
+        negative_prompt = self._get_prompt(
+            args.ad_negative_prompt, p.all_negative_prompts, i, p.negative_prompt
+        )
 
         return prompt, negative_prompt
 
