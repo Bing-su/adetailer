@@ -1,5 +1,14 @@
 # Changelog
 
+### 2023-05-15
+
+- v23.5.13
+- `[SEP]`으로 ad prompt를 분리하여 적용하는 기능 추가
+- enable checker를 다시 pydantic으로 변경함
+- ui 관련 함수를 adetailer.ui 폴더로 분리함
+- controlnet을 사용할 때 모든 controlnet unit 비활성화
+- adetailer 폴더가 없으면 만들게 함
+
 ### 2023-05-13
 
 - v23.5.12
