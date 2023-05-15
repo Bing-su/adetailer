@@ -14,7 +14,7 @@
 6. Go to "Installed" tab, click "Check for updates", and then click "Apply and restart UI". (The next time you can also use this method to update extensions.)
 7. Completely restart A1111 webui including your terminal. (If you do not know what is a "terminal", you can reboot your computer: turn your computer off and turn it on again.)
 
-You **DON'T** need to download any model from huggingface.
+You **DON'T** need to download any model from Hugging Face.
 
 ## Usage
 
@@ -52,7 +52,7 @@ On the ControlNet tab, select a ControlNet inpaint model and set the model weigh
 | person_yolov8n-seg.pt | 2D / realistic person | 0.782 (bbox)<br/>0.761 (mask) | 0.555 (bbox)<br/>0.460 (mask) |
 | person_yolov8s-seg.pt | 2D / realistic person | 0.824 (bbox)<br/>0.809 (mask) | 0.605 (bbox)<br/>0.508 (mask) |
 
-The yolo models can be found on huggingface [Bingsu/adetailer](https://huggingface.co/Bingsu/adetailer).
+The yolo models can be found on Hugging Face [Bingsu/adetailer](https://huggingface.co/Bingsu/adetailer).
 
 ### User Model
 
