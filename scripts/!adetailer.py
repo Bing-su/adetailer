@@ -1,11 +1,11 @@
 from __future__ import annotations
 
+import os
 import platform
+import re
 import sys
 import traceback
-from collections.abc import Mapping
 from copy import copy, deepcopy
-from functools import partial
 from pathlib import Path
 from textwrap import dedent
 from typing import Any
@@ -15,17 +15,18 @@ import torch
 
 import modules  # noqa: F401
 from adetailer import (
-    AD_ENABLE,
+    AFTER_DETAILER,
     ALL_ARGS,
     ADetailerArgs,
+    EnableChecker,
     __version__,
-    enable_check,
     get_models,
     mediapipe_predict,
     ultralytics_predict,
 )
 from adetailer.common import mask_preprocess
-from controlnet_ext import ControlNetExt, controlnet_exists, get_cn_inpaint_models
+from adetailer.ui import adui, ordinal, suffix
+from controlnet_ext import ControlNetExt, controlnet_exists
 from modules import images, safe, script_callbacks, scripts, shared
 from modules.paths import data_path, models_path
 from modules.processing import (
@@ -43,21 +44,21 @@ try:
 except Exception:
     pass
 
-AFTER_DETAILER = "After Detailer"
 no_huggingface = getattr(cmd_opts, "ad_no_huggingface", False)
 adetailer_dir = Path(models_path, "adetailer")
 model_mapping = get_models(adetailer_dir, huggingface=not no_huggingface)
 txt2img_submit_button = img2img_submit_button = None
 
+if (
+    not adetailer_dir.exists()
+    and adetailer_dir.parent.exists()
+    and os.access(adetailer_dir.parent, os.W_OK)
+):
+    adetailer_dir.mkdir()
 
 print(
     f"[-] ADetailer initialized. version: {__version__}, num models: {len(model_mapping)}"
 )
-
-
-class Widgets:
-    def tolist(self):
-        return [getattr(self, attr) for attr in ALL_ARGS.attrs]
 
 
 class ChangeTorchLoad:
@@ -67,30 +68,6 @@ class ChangeTorchLoad:
 
     def __exit__(self, *args, **kwargs):
         torch.load = self.orig
-
-
-def gr_interactive(value: bool = True):
-    return gr.update(interactive=value)
-
-
-def ordinal(n: int) -> str:
-    d = {1: "st", 2: "nd", 3: "rd"}
-    return str(n) + ("th" if 11 <= n % 100 <= 13 else d.get(n % 10, "th"))
-
-
-def suffix(n: int, c: str = " ") -> str:
-    return "" if n == 0 else c + ordinal(n + 1)
-
-
-def on_widget_change(state: dict, value: Any, *, attr: str):
-    state[attr] = value
-    return state
-
-
-def on_generate_click(state: dict, *values: Any):
-    for attr, value in zip(ALL_ARGS.attrs, values):
-        state[attr] = value
-    return state
 
 
 class AfterDetailerScript(scripts.Script):
@@ -107,266 +84,18 @@ class AfterDetailerScript(scripts.Script):
 
     def ui(self, is_img2img):
         num_models = opts.data.get("ad_max_models", 2)
-        widgets = []
-        states = []
-        self.infotext_fields = []
-
-        with gr.Accordion(AFTER_DETAILER, open=False, elem_id="AD_main_acc"):
-            with gr.Row():
-                ad_enable = gr.Checkbox(
-                    label="Enable ADetailer",
-                    value=False,
-                    visible=True,
-                )
-
-            self.infotext_fields.append((ad_enable, AD_ENABLE.name))
-
-            with gr.Group(), gr.Tabs():
-                for n in range(num_models):
-                    with gr.Tab(ordinal(n + 1)):
-                        w, state, infofields = self.one_ui_group(n, is_img2img)
-
-                    widgets.append(w)
-                    states.append(state)
-                    self.infotext_fields.extend(infofields)
-
-        # return: [bool, dict, dict, ...]
-        return [ad_enable] + states
-
-    def one_ui_group(self, n: int, is_img2img: bool):
         model_list = list(model_mapping.keys())
-        w = Widgets()
-        state = gr.State({})
 
-        with gr.Row():
-            model_choices = model_list if n == 0 else ["None"] + model_list
-
-            w.ad_model = gr.Dropdown(
-                label="ADetailer model" + suffix(n),
-                choices=model_choices,
-                value=model_choices[0],
-                visible=True,
-                type="value",
-            )
-
-        with gr.Group():
-            with gr.Row(elem_id="AD_toprow_prompt" + suffix(n, "_")):
-                w.ad_prompt = gr.Textbox(
-                    label="ad_prompt" + suffix(n),
-                    show_label=False,
-                    lines=3,
-                    placeholder="ADetailer prompt" + suffix(n),
-                    elem_id="AD_prompt" + suffix(n, "_"),
-                )
-
-            with gr.Row(elem_id="AD_toprow_negative_prompt" + suffix(n, "_")):
-                w.ad_negative_prompt = gr.Textbox(
-                    label="ad_negative_prompt" + suffix(n),
-                    show_label=False,
-                    lines=2,
-                    placeholder="ADetailer negative prompt" + suffix(n),
-                    elem_id="AD_negative_prompt" + suffix(n, "_"),
-                )
-
-        with gr.Group():
-            with gr.Row():
-                w.ad_conf = gr.Slider(
-                    label="Detection model confidence threshold %" + suffix(n),
-                    minimum=0,
-                    maximum=100,
-                    step=1,
-                    value=30,
-                    visible=True,
-                )
-                w.ad_dilate_erode = gr.Slider(
-                    label="Mask erosion (-) / dilation (+)" + suffix(n),
-                    minimum=-128,
-                    maximum=128,
-                    step=4,
-                    value=32,
-                    visible=True,
-                )
-
-            with gr.Row():
-                w.ad_x_offset = gr.Slider(
-                    label="Mask x(→) offset" + suffix(n),
-                    minimum=-200,
-                    maximum=200,
-                    step=1,
-                    value=0,
-                    visible=True,
-                )
-                w.ad_y_offset = gr.Slider(
-                    label="Mask y(↑) offset" + suffix(n),
-                    minimum=-200,
-                    maximum=200,
-                    step=1,
-                    value=0,
-                    visible=True,
-                )
-
-            with gr.Row():
-                w.ad_mask_blur = gr.Slider(
-                    label="Inpaint mask blur" + suffix(n),
-                    minimum=0,
-                    maximum=64,
-                    step=1,
-                    value=4,
-                    visible=True,
-                )
-
-                w.ad_denoising_strength = gr.Slider(
-                    label="Inpaint denoising strength" + suffix(n),
-                    minimum=0.0,
-                    maximum=1.0,
-                    step=0.01,
-                    value=0.4,
-                    visible=True,
-                )
-
-        with gr.Group():
-            with gr.Row():
-                with gr.Column(variant="compact"):
-                    w.ad_inpaint_full_res = gr.Checkbox(
-                        label="Inpaint at full resolution " + suffix(n),
-                        value=True,
-                        visible=True,
-                    )
-                    w.ad_inpaint_full_res_padding = gr.Slider(
-                        label="Inpaint at full resolution padding, pixels " + suffix(n),
-                        minimum=0,
-                        maximum=256,
-                        step=4,
-                        value=0,
-                        visible=True,
-                    )
-
-                    w.ad_inpaint_full_res.change(
-                        gr_interactive,
-                        inputs=w.ad_inpaint_full_res,
-                        outputs=w.ad_inpaint_full_res_padding,
-                        queue=False,
-                    )
-
-                with gr.Column(variant="compact"):
-                    w.ad_use_inpaint_width_height = gr.Checkbox(
-                        label="Use separate width/height" + suffix(n),
-                        value=False,
-                        visible=True,
-                    )
-
-                    w.ad_inpaint_width = gr.Slider(
-                        label="inpaint width" + suffix(n),
-                        minimum=64,
-                        maximum=2048,
-                        step=4,
-                        value=512,
-                        visible=True,
-                    )
-
-                    w.ad_inpaint_height = gr.Slider(
-                        label="inpaint height" + suffix(n),
-                        minimum=64,
-                        maximum=2048,
-                        step=4,
-                        value=512,
-                        visible=True,
-                    )
-
-                    w.ad_use_inpaint_width_height.change(
-                        lambda value: (gr_interactive(value), gr_interactive(value)),
-                        inputs=w.ad_use_inpaint_width_height,
-                        outputs=[w.ad_inpaint_width, w.ad_inpaint_height],
-                        queue=False,
-                    )
-
-            with gr.Row():
-                with gr.Column(variant="compact"):
-                    w.ad_use_steps = gr.Checkbox(
-                        label="Use separate steps" + suffix(n),
-                        value=False,
-                        visible=True,
-                    )
-
-                    w.ad_steps = gr.Slider(
-                        label="ADetailer steps" + suffix(n),
-                        minimum=1,
-                        maximum=150,
-                        step=1,
-                        value=28,
-                        visible=True,
-                    )
-
-                    w.ad_use_steps.change(
-                        gr_interactive,
-                        inputs=w.ad_use_steps,
-                        outputs=w.ad_steps,
-                        queue=False,
-                    )
-
-                with gr.Column(variant="compact"):
-                    w.ad_use_cfg_scale = gr.Checkbox(
-                        label="Use separate CFG scale" + suffix(n),
-                        value=False,
-                        visible=True,
-                    )
-
-                    w.ad_cfg_scale = gr.Slider(
-                        label="ADetailer CFG scale" + suffix(n),
-                        minimum=0.0,
-                        maximum=30.0,
-                        step=0.5,
-                        value=7.0,
-                        visible=True,
-                    )
-
-                    w.ad_use_cfg_scale.change(
-                        gr_interactive,
-                        inputs=w.ad_use_cfg_scale,
-                        outputs=w.ad_cfg_scale,
-                        queue=False,
-                    )
-
-        with gr.Group(), gr.Row(variant="panel"):
-            cn_inpaint_models = ["None"] + get_cn_inpaint_models()
-
-            w.ad_controlnet_model = gr.Dropdown(
-                label="ControlNet model" + suffix(n),
-                choices=cn_inpaint_models,
-                value="None",
-                visible=True,
-                type="value",
-                interactive=controlnet_exists,
-            )
-
-            w.ad_controlnet_weight = gr.Slider(
-                label="ControlNet weight" + suffix(n),
-                minimum=0.0,
-                maximum=1.0,
-                step=0.05,
-                value=1.0,
-                visible=True,
-                interactive=controlnet_exists,
-            )
-
-        for attr in ALL_ARGS.attrs:
-            widget = getattr(w, attr)
-            on_change = partial(on_widget_change, attr=attr)
-            widget.change(
-                fn=on_change, inputs=[state, widget], outputs=[state], queue=False
-            )
-
-        all_inputs = [state] + w.tolist()
-        target_button = img2img_submit_button if is_img2img else txt2img_submit_button
-        target_button.click(
-            fn=on_generate_click, inputs=all_inputs, outputs=state, queue=False
+        components, infotext_fields = adui(
+            num_models,
+            is_img2img,
+            model_list,
+            txt2img_submit_button,
+            img2img_submit_button,
         )
 
-        infotext_fields = [
-            (getattr(w, attr), name + suffix(n)) for attr, name in ALL_ARGS
-        ]
-
-        return w, state, infotext_fields
+        self.infotext_fields = infotext_fields
+        return components
 
     def init_controlnet_ext(self) -> None:
         if self.controlnet_ext is not None:
@@ -403,7 +132,10 @@ class AfterDetailerScript(scripts.Script):
                            input: {args_!r}
                        """
             raise ValueError(dedent(message))
-        return enable_check(*args_)
+        a0 = args_[0]
+        a1 = args_[1] if len(args_) > 1 else None
+        checker = EnableChecker(a0=a0, a1=a1)
+        return checker.is_enabled()
 
     def get_args(self, *args_) -> list[ADetailerArgs]:
         """
@@ -453,28 +185,33 @@ class AfterDetailerScript(scripts.Script):
 
         return device
 
-    def get_prompt(self, p, args: ADetailerArgs) -> tuple[str, str]:
+    def prompt_blank_replacement(
+        self, all_prompts: list[str], i: int, default: str
+    ) -> str:
+        if not all_prompts:
+            return default
+        if i < len(all_prompts):
+            return all_prompts[i]
+        j = i % len(all_prompts)
+        return all_prompts[j]
+
+    def _get_prompt(
+        self, ad_prompt: str, all_prompts: list[str], i: int, default: str
+    ) -> list[str]:
+        prompts = re.split(r"\s*\[SEP\]\s*", ad_prompt)
+        blank_replacement = self.prompt_blank_replacement(all_prompts, i, default)
+        for n in range(len(prompts)):
+            if not prompts[n]:
+                prompts[n] = blank_replacement
+        return prompts
+
+    def get_prompt(self, p, args: ADetailerArgs) -> tuple[list[str], list[str]]:
         i = p._idx
 
-        if args.ad_prompt:
-            prompt = args.ad_prompt
-        elif not p.all_prompts:
-            prompt = p.prompt
-        elif i < len(p.all_prompts):
-            prompt = p.all_prompts[i]
-        else:
-            j = i % len(p.all_prompts)
-            prompt = p.all_prompts[j]
-
-        if args.ad_negative_prompt:
-            negative_prompt = args.ad_negative_prompt
-        elif not p.all_negative_prompts:
-            negative_prompt = p.negative_prompt
-        elif i < len(p.all_negative_prompts):
-            negative_prompt = p.all_negative_prompts[i]
-        else:
-            j = i % len(p.all_negative_prompts)
-            negative_prompt = p.all_negative_prompts[j]
+        prompt = self._get_prompt(args.ad_prompt, p.all_prompts, i, p.prompt)
+        negative_prompt = self._get_prompt(
+            args.ad_negative_prompt, p.all_negative_prompts, i, p.negative_prompt
+        )
 
         return prompt, negative_prompt
 
@@ -531,10 +268,11 @@ class AfterDetailerScript(scripts.Script):
 
     def script_filter(self, p, args: ADetailerArgs):
         script_runner = copy(p.scripts)
+        script_args = deepcopy(p.script_args)
 
         ad_only_seleted_scripts = opts.data.get("ad_only_seleted_scripts", True)
         if not ad_only_seleted_scripts:
-            return script_runner
+            return script_runner, script_args
 
         default = "dynamic_prompting,dynamic_thresholding,wildcards,wildcard_recursive"
         ad_script_names = opts.data.get("ad_script_names", default)
@@ -544,6 +282,7 @@ class AfterDetailerScript(scripts.Script):
             for name in (script_name, script_name.strip())
         }
         if args.ad_controlnet_model != "None":
+            self.disable_controlnet_units(script_args)
             script_names_set.add("controlnet")
 
         filtered_alwayson = []
@@ -554,10 +293,16 @@ class AfterDetailerScript(scripts.Script):
                 filtered_alwayson.append(script_object)
 
         script_runner.alwayson_scripts = filtered_alwayson
-        return script_runner
+        return script_runner, script_args
+
+    def disable_controlnet_units(self, script_args: list[Any]) -> None:
+        for obj in script_args:
+            if "controlnet" in obj.__class__.__name__.lower() and hasattr(
+                obj, "enabled"
+            ):
+                obj.enabled = False
 
     def get_i2i_p(self, p, args: ADetailerArgs, image):
-        prompt, negative_prompt = self.get_prompt(p, args)
         seed, subseed = self.get_seed(p)
         width, height = self.get_width_height(p, args)
         steps = self.get_steps(p, args)
@@ -580,8 +325,8 @@ class AfterDetailerScript(scripts.Script):
             sd_model=p.sd_model,
             outpath_samples=p.outpath_samples,
             outpath_grids=p.outpath_grids,
-            prompt=prompt,
-            negative_prompt=negative_prompt,
+            prompt="",  # replace later
+            negative_prompt="",
             styles=p.styles,
             seed=seed,
             subseed=subseed,
@@ -601,8 +346,7 @@ class AfterDetailerScript(scripts.Script):
             do_not_save_grid=True,
         )
 
-        i2i.scripts = self.script_filter(p, args)
-        i2i.script_args = deepcopy(p.script_args)
+        i2i.scripts, i2i.script_args = self.script_filter(p, args)
         i2i._disable_adetailer = True
 
         if args.ad_controlnet_model != "None":
@@ -632,6 +376,16 @@ class AfterDetailerScript(scripts.Script):
             raise ValueError(msg)
         return model_mapping[name]
 
+    def i2i_prompts_replace(
+        self, i2i, prompts: list[str], negative_prompts: list[str], j: int
+    ):
+        i1 = min(j, len(prompts) - 1)
+        i2 = min(j, len(negative_prompts) - 1)
+        prompt = prompts[i1]
+        negative_prompt = negative_prompts[i2]
+        i2i.prompt = prompt
+        i2i.negative_prompt = negative_prompt
+
     def process(self, p, *args_):
         if getattr(p, "_disable_adetailer", False):
             return
@@ -653,6 +407,7 @@ class AfterDetailerScript(scripts.Script):
 
         i2i = self.get_i2i_p(p, args, pp.image)
         seed, subseed = self.get_seed(p)
+        ad_prompts, ad_negatives = self.get_prompt(p, args)
 
         is_mediapipe = args.ad_model.lower().startswith("mediapipe")
 
@@ -697,6 +452,7 @@ class AfterDetailerScript(scripts.Script):
         p2 = copy(i2i)
         for j in range(steps):
             p2.image_mask = masks[j]
+            self.i2i_prompts_replace(p2, ad_prompts, ad_negatives, j)
             processed = process_images(p2)
 
             p2 = copy(i2i)

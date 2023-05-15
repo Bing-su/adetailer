@@ -1,9 +1,8 @@
 from __future__ import annotations
 
 from collections import UserList
-from collections.abc import Mapping
 from functools import cached_property
-from typing import Any, NamedTuple
+from typing import Any, NamedTuple, Optional, Union
 
 import pydantic
 from pydantic import (
@@ -109,20 +108,17 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
         return params
 
 
-def enable_check(*args: Any) -> bool:
-    if not args:
-        return False
-    a0: bool | Mapping = args[0]
-    ad_model = ALL_ARGS[0].attr
+class EnableChecker(BaseModel):
+    a0: Union[bool, dict]
+    a1: Optional[dict]
 
-    if isinstance(a0, Mapping):
-        return a0.get(ad_model, "None") != "None"
-    if len(args) == 1:
-        return False
-
-    a1 = args[1]
-    a1_model = a1.get(ad_model, "None")
-    return a0 and a1_model != "None"
+    def is_enabled(self) -> bool:
+        ad_model = ALL_ARGS[0].attr
+        if isinstance(self.a0, dict):
+            return self.a0.get(ad_model, "None") != "None"
+        if self.a1 is None:
+            return False
+        return self.a0 and self.a1.get(ad_model, "None") != "None"
 
 
 _all_args = [
