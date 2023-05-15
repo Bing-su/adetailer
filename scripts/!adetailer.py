@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import platform
 import re
 import sys
@@ -48,6 +49,12 @@ adetailer_dir = Path(models_path, "adetailer")
 model_mapping = get_models(adetailer_dir, huggingface=not no_huggingface)
 txt2img_submit_button = img2img_submit_button = None
 
+if (
+    not adetailer_dir.exists()
+    and adetailer_dir.parent.exists()
+    and os.access(adetailer_dir.parent, os.W_OK)
+):
+    adetailer_dir.mkdir()
 
 print(
     f"[-] ADetailer initialized. version: {__version__}, num models: {len(model_mapping)}"
