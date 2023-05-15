@@ -372,8 +372,8 @@ class AfterDetailerScript(scripts.Script):
     def i2i_prompts_replace(
         self, i2i, prompts: list[str], negative_prompts: list[str], j: int
     ):
-        i1 = j % len(prompts)
-        i2 = j % len(negative_prompts)
+        i1 = min(j, len(prompts) - 1)
+        i2 = min(j, len(negative_prompts) - 1)
         prompt = prompts[i1]
         negative_prompt = negative_prompts[i2]
         i2i.prompt = prompt
