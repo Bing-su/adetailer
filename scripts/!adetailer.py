@@ -141,7 +141,11 @@ class AfterDetailerScript(scripts.Script):
         """
         `args_` is at least 1 in length by `is_ad_enabled` immediately above
         """
-        args = args_[1:] if isinstance(args_[0], bool) else args_
+        args = [arg for arg in args_ if isinstance(arg, dict)]
+
+        if not args:
+            message = f"[-] ADetailer: Invalid arguments passed to ADetailer: {args_!r}"
+            raise ValueError(message)
 
         all_inputs = []
 
@@ -149,18 +153,15 @@ class AfterDetailerScript(scripts.Script):
             try:
                 inp = ADetailerArgs(**arg_dict)
             except ValueError as e:
-                message = [
+                msgs = [
                     f"[-] ADetailer: ValidationError when validating {ordinal(n)} arguments: {e}\n"
                 ]
                 for attr in ALL_ARGS.attrs:
                     arg = arg_dict.get(attr)
                     dtype = type(arg)
                     arg = "DEFAULT" if arg is None else repr(arg)
-                    message.append(f"    {attr}: {arg} ({dtype})")
-                raise ValueError("\n".join(message)) from e
-            except TypeError as e:
-                message = f"[-] ADetailer: {ordinal(n)} - Non-mapping arguments are sent: {arg_dict!r}\n{e}"
-                raise TypeError(message) from e
+                    msgs.append(f"    {attr}: {arg} ({dtype})")
+                raise ValueError("\n".join(msgs)) from e
 
             all_inputs.append(inp)
 
@@ -281,6 +282,7 @@ class AfterDetailerScript(scripts.Script):
             for script_name in ad_script_names.split(",")
             for name in (script_name, script_name.strip())
         }
+
         if args.ad_controlnet_model != "None":
             self.disable_controlnet_units(script_args)
             script_names_set.add("controlnet")
