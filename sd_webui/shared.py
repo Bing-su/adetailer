@@ -12,7 +12,7 @@ if TYPE_CHECKING:
         default: Any = None
         label: str = ""
         component: Any = None
-        component_args: dict[str, Any] | None = None
+        component_args: Callable[[], dict] | dict[str, Any] | None = None
         onchange: Callable[[], None] | None = None
         section: tuple[str, str] | None = None
         refresh: Callable[[], None] | None = None
