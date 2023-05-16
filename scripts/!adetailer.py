@@ -24,7 +24,7 @@ from adetailer import (
     mediapipe_predict,
     ultralytics_predict,
 )
-from adetailer.common import mask_preprocess
+from adetailer.common import PredictOutput, mask_preprocess, sort_bboxes
 from adetailer.ui import adui, ordinal, suffix
 from controlnet_ext import ControlNetExt, controlnet_exists
 from sd_webui import images, safe, script_callbacks, scripts, shared
@@ -378,6 +378,11 @@ class AfterDetailerScript(scripts.Script):
             raise ValueError(msg)
         return model_mapping[name]
 
+    def sort_bboxes(self, pred: PredictOutput) -> PredictOutput:
+        sortby = opts.data.get("ad_bbox_sortby", 2)
+        pred = sort_bboxes(pred, sortby)
+        return pred
+
     def i2i_prompts_replace(
         self, i2i, prompts: list[str], negative_prompts: list[str], j: int
     ):
@@ -425,6 +430,7 @@ class AfterDetailerScript(scripts.Script):
         with ChangeTorchLoad():
             pred = predictor(ad_model, pp.image, args.ad_conf, **kwargs)
 
+        pred = self.sort_bboxes(pred)
         masks = mask_preprocess(
             pred.masks,
             kernel=args.ad_dilate_erode,
@@ -552,6 +558,24 @@ def on_ui_settings():
             label="Script names to apply to ADetailer (separated by comma)",
             component=gr.Textbox,
             component_args=textbox_args,
+            section=section,
+        ),
+    )
+
+    bbox_sortby = ["None", "Position (left to right)", "Area (large to small)"]
+    bbox_sortby_args = {
+        "choices": bbox_sortby,
+        "type": "index",
+        "interactive": True,
+    }
+
+    shared.opts.add_option(
+        "ad_bbox_sortby",
+        shared.OptionInfo(
+            default=0,
+            label="Sort bounding boxes by",
+            component=gr.Radio,
+            component_args=bbox_sortby_args,
             section=section,
         ),
     )

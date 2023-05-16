@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections import OrderedDict
 from dataclasses import dataclass
+from enum import IntEnum
 from pathlib import Path
 from typing import Optional, Union
 
@@ -18,6 +19,12 @@ class PredictOutput:
     bboxes: Optional[list[list[int]]] = None
     masks: Optional[list[Image.Image]] = None
     preview: Optional[Image.Image] = None
+
+
+class SortBy(IntEnum):
+    NONE = 0
+    POSITION = 1
+    AREA = 2
 
 
 def get_models(
@@ -190,3 +197,42 @@ def mask_preprocess(
         masks = [offset(m, x_offset, y_offset) for m in masks]
 
     return masks
+
+
+def _key_position(bbox: list[float]) -> float:
+    """
+    Left to right
+
+    Parameters
+    ----------
+    bbox: list[float]
+        list of [x1, y1, x2, y2]
+    """
+    return bbox[0]
+
+
+def _key_area(bbox: list[float]) -> float:
+    """
+    Large to small
+
+    Parameters
+    ----------
+    bbox: list[float]
+        list of [x1, y1, x2, y2]
+    """
+    area = (bbox[2] - bbox[0]) * (bbox[3] - bbox[1])
+    return -area
+
+
+def sort_bboxes(
+    pred: PredictOutput, order: int | SortBy = SortBy.NONE
+) -> PredictOutput:
+    if order == SortBy.NONE or not pred.bboxes:
+        return pred
+
+    items = len(pred.bboxes)
+    key = _key_area if order == SortBy.AREA else _key_position
+    idx = sorted(range(items), key=lambda i: key(pred.bboxes[i]))
+    pred.bboxes = [pred.bboxes[i] for i in idx]
+    pred.masks = [pred.masks[i] for i in idx]
+    return pred
