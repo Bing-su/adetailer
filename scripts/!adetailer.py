@@ -455,10 +455,12 @@ class AfterDetailerScript(scripts.Script):
         for j in range(steps):
             p2.image_mask = masks[j]
             self.i2i_prompts_replace(p2, ad_prompts, ad_negatives, j)
-            processed = process_images(p2)
 
-            p2 = copy(i2i)
-            p2.init_images = [processed.images[0]]
+            if not re.match(r"^\s*\[SKIP\]\s*", p2.prompt):
+                processed = process_images(p2)
+
+                p2 = copy(i2i)
+                p2.init_images = [processed.images[0]]
 
             p2.seed = seed + j + 1
             p2.subseed = subseed + j + 1
