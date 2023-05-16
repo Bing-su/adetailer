@@ -27,14 +27,14 @@ from adetailer import (
 from adetailer.common import mask_preprocess
 from adetailer.ui import adui, ordinal, suffix
 from controlnet_ext import ControlNetExt, controlnet_exists
-from modules import images, safe, script_callbacks, scripts, shared
-from modules.paths import data_path, models_path
-from modules.processing import (
+from sd_webui import images, safe, script_callbacks, scripts, shared
+from sd_webui.paths import data_path, models_path
+from sd_webui.processing import (
     StableDiffusionProcessingImg2Img,
     create_infotext,
     process_images,
 )
-from modules.shared import cmd_opts, opts
+from sd_webui.shared import cmd_opts, opts
 
 try:
     from rich import print
