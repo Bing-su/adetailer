@@ -9,13 +9,13 @@ if TYPE_CHECKING:
 
     @dataclass
     class OptionInfo:
-        default: Any
-        label: str
-        component: Any
-        component_args: dict[str, Any]
-        onchange: Callable[[], None]
-        section: tuple[str, str]
-        refresh: Callable[[], None]
+        default: Any = None
+        label: str = ""
+        component: Any = None
+        component_args: dict[str, Any] | None = None
+        onchange: Callable[[], None] | None = None
+        section: tuple[str, str] | None = None
+        refresh: Callable[[], None] | None = None
 
     class Option:
         data_labels: dict[str, OptionInfo]
