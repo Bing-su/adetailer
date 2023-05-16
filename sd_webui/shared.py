@@ -39,4 +39,4 @@ if TYPE_CHECKING:
     cmd_opts = argparse.Namespace()
 
 else:
-    from module.shared import *
+    from modules.shared import *

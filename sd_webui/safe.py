@@ -7,4 +7,4 @@ if TYPE_CHECKING:
 
     unsafe_torch_load = torch.load
 else:
-    from module.safe import *
+    from modules.safe import *
