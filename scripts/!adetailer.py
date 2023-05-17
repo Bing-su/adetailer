@@ -22,7 +22,8 @@ from adetailer import (
     ultralytics_predict,
 )
 from adetailer.args import ALL_ARGS, BBOX_SORTBY, ADetailerArgs, EnableChecker
-from adetailer.common import PredictOutput, mask_preprocess, sort_bboxes
+from adetailer.common import PredictOutput
+from adetailer.mask import mask_preprocess, sort_bboxes
 from adetailer.ui import adui, ordinal, suffix
 from controlnet_ext import ControlNetExt, controlnet_exists
 from sd_webui import images, safe, script_callbacks, scripts, shared
