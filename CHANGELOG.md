@@ -1,5 +1,13 @@
 # Changelog
 
+### 2023-05-17
+
+- v23.5.14
+- `[SKIP]`으로 ad prompt 일부를 건너뛰는 기능 추가
+- bbox 정렬 옵션 추가
+- sd_webui 타입힌트를 만들어냄
+- enable checker와 관련된 api 오류 수정?
+
 ### 2023-05-15
 
 - v23.5.13

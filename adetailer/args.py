@@ -110,13 +110,13 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
 
 class EnableChecker(BaseModel):
     a0: Union[bool, dict]
-    a1: Optional[dict]
+    a1: Any
 
     def is_enabled(self) -> bool:
         ad_model = ALL_ARGS[0].attr
         if isinstance(self.a0, dict):
             return self.a0.get(ad_model, "None") != "None"
-        if self.a1 is None:
+        if not isinstance(self.a1, dict):
             return False
         return self.a0 and self.a1.get(ad_model, "None") != "None"
 
@@ -148,3 +148,9 @@ _all_args = [
 AD_ENABLE = Arg(*_all_args[0])
 _args = [Arg(*args) for args in _all_args[1:]]
 ALL_ARGS = ArgsList(_args)
+BBOX_SORTBY = [
+    "None",
+    "Position (left to right)",
+    "Position (center to edge)",
+    "Area (large to small)",
+]

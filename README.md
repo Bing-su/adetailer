@@ -14,6 +14,10 @@
 6. Go to "Installed" tab, click "Check for updates", and then click "Apply and restart UI". (The next time you can also use this method to update extensions.)
 7. Completely restart A1111 webui including your terminal. (If you do not know what is a "terminal", you can reboot your computer: turn your computer off and turn it on again.)
 
+You can now install it directly from the Extensions tab.
+
+![image](https://i.imgur.com/g6GdRBT.png)
+
 You **DON'T** need to download any model from huggingface.
 
 ## Usage
@@ -33,6 +37,8 @@ Other options:
 | Detection model confidence threshold % | Only objects with a detection model confidence above this threshold are used for inpainting. |                                                                                         |
 | Mask erosion (-) / dilation (+)        | Enlarge or reduce the detected mask.                                                         | [opencv example](https://docs.opencv.org/4.7.0/db/df6/tutorial_erosion_dilatation.html) |
 | Mask x, y offset                       | Moves the mask horizontally and vertically by pixels.                                        |                                                                                         |                                                                 |
+
+See the [wiki](https://github.com/Bing-su/adetailer/wiki) for more options and other features.
 
 ## ControlNet Inpainting
 

@@ -16,25 +16,23 @@ import torch
 import modules  # noqa: F401
 from adetailer import (
     AFTER_DETAILER,
-    ALL_ARGS,
-    ADetailerArgs,
-    EnableChecker,
     __version__,
     get_models,
     mediapipe_predict,
     ultralytics_predict,
 )
-from adetailer.common import mask_preprocess
+from adetailer.args import ALL_ARGS, BBOX_SORTBY, ADetailerArgs, EnableChecker
+from adetailer.common import PredictOutput, mask_preprocess, sort_bboxes
 from adetailer.ui import adui, ordinal, suffix
 from controlnet_ext import ControlNetExt, controlnet_exists
-from modules import images, safe, script_callbacks, scripts, shared
-from modules.paths import data_path, models_path
-from modules.processing import (
+from sd_webui import images, safe, script_callbacks, scripts, shared
+from sd_webui.paths import data_path, models_path
+from sd_webui.processing import (
     StableDiffusionProcessingImg2Img,
     create_infotext,
     process_images,
 )
-from modules.shared import cmd_opts, opts
+from sd_webui.shared import cmd_opts, opts
 
 try:
     from rich import print
@@ -141,7 +139,11 @@ class AfterDetailerScript(scripts.Script):
         """
         `args_` is at least 1 in length by `is_ad_enabled` immediately above
         """
-        args = args_[1:] if isinstance(args_[0], bool) else args_
+        args = [arg for arg in args_ if isinstance(arg, dict)]
+
+        if not args:
+            message = f"[-] ADetailer: Invalid arguments passed to ADetailer: {args_!r}"
+            raise ValueError(message)
 
         all_inputs = []
 
@@ -149,18 +151,15 @@ class AfterDetailerScript(scripts.Script):
             try:
                 inp = ADetailerArgs(**arg_dict)
             except ValueError as e:
-                message = [
+                msgs = [
                     f"[-] ADetailer: ValidationError when validating {ordinal(n)} arguments: {e}\n"
                 ]
                 for attr in ALL_ARGS.attrs:
                     arg = arg_dict.get(attr)
                     dtype = type(arg)
                     arg = "DEFAULT" if arg is None else repr(arg)
-                    message.append(f"    {attr}: {arg} ({dtype})")
-                raise ValueError("\n".join(message)) from e
-            except TypeError as e:
-                message = f"[-] ADetailer: {ordinal(n)} - Non-mapping arguments are sent: {arg_dict!r}\n{e}"
-                raise TypeError(message) from e
+                    msgs.append(f"    {attr}: {arg} ({dtype})")
+                raise ValueError("\n".join(msgs)) from e
 
             all_inputs.append(inp)
 
@@ -281,6 +280,7 @@ class AfterDetailerScript(scripts.Script):
             for script_name in ad_script_names.split(",")
             for name in (script_name, script_name.strip())
         }
+
         if args.ad_controlnet_model != "None":
             self.disable_controlnet_units(script_args)
             script_names_set.add("controlnet")
@@ -376,6 +376,12 @@ class AfterDetailerScript(scripts.Script):
             raise ValueError(msg)
         return model_mapping[name]
 
+    def sort_bboxes(self, pred: PredictOutput) -> PredictOutput:
+        sortby = opts.data.get("ad_bbox_sortby", BBOX_SORTBY[0])
+        sortby_idx = BBOX_SORTBY.index(sortby)
+        pred = sort_bboxes(pred, sortby_idx)
+        return pred
+
     def i2i_prompts_replace(
         self, i2i, prompts: list[str], negative_prompts: list[str], j: int
     ):
@@ -423,6 +429,7 @@ class AfterDetailerScript(scripts.Script):
         with ChangeTorchLoad():
             pred = predictor(ad_model, pp.image, args.ad_conf, **kwargs)
 
+        pred = self.sort_bboxes(pred)
         masks = mask_preprocess(
             pred.masks,
             kernel=args.ad_dilate_erode,
@@ -453,10 +460,12 @@ class AfterDetailerScript(scripts.Script):
         for j in range(steps):
             p2.image_mask = masks[j]
             self.i2i_prompts_replace(p2, ad_prompts, ad_negatives, j)
-            processed = process_images(p2)
 
-            p2 = copy(i2i)
-            p2.init_images = [processed.images[0]]
+            if not re.match(r"^\s*\[SKIP\]\s*$", p2.prompt):
+                processed = process_images(p2)
+
+                p2 = copy(i2i)
+                p2.init_images = [processed.images[0]]
 
             p2.seed = seed + j + 1
             p2.subseed = subseed + j + 1
@@ -548,6 +557,17 @@ def on_ui_settings():
             label="Script names to apply to ADetailer (separated by comma)",
             component=gr.Textbox,
             component_args=textbox_args,
+            section=section,
+        ),
+    )
+
+    shared.opts.add_option(
+        "ad_bbox_sortby",
+        shared.OptionInfo(
+            default="None",
+            label="Sort bounding boxes by",
+            component=gr.Radio,
+            component_args={"choices": BBOX_SORTBY},
             section=section,
         ),
     )
