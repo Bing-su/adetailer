@@ -148,4 +148,9 @@ _all_args = [
 AD_ENABLE = Arg(*_all_args[0])
 _args = [Arg(*args) for args in _all_args[1:]]
 ALL_ARGS = ArgsList(_args)
-BBOX_SORTBY = ["None", "Position (left to right)", "Area (large to small)"]
+BBOX_SORTBY = [
+    "None",
+    "Position (left to right)",
+    "Position (center to edge)",
+    "Area (large to small)",
+]

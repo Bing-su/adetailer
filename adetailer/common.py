@@ -3,6 +3,8 @@ from __future__ import annotations
 from collections import OrderedDict
 from dataclasses import dataclass
 from enum import IntEnum
+from functools import partial
+from math import dist
 from pathlib import Path
 from typing import Optional, Union
 
@@ -23,8 +25,9 @@ class PredictOutput:
 
 class SortBy(IntEnum):
     NONE = 0
-    POSITION = 1
-    AREA = 2
+    LEFT_TO_RIGHT = 1
+    CENTER_TO_EDGE = 2
+    AREA = 3
 
 
 def get_models(
@@ -199,7 +202,8 @@ def mask_preprocess(
     return masks
 
 
-def _key_position(bbox: list[float]) -> float:
+# Bbox sorting
+def _key_left_to_right(bbox: list[float]) -> float:
     """
     Left to right
 
@@ -209,6 +213,21 @@ def _key_position(bbox: list[float]) -> float:
         list of [x1, y1, x2, y2]
     """
     return bbox[0]
+
+
+def _key_center_to_edge(bbox: list[float], *, center: tuple[float, float]) -> float:
+    """
+    Center to edge
+
+    Parameters
+    ----------
+    bbox: list[float]
+        list of [x1, y1, x2, y2]
+    image: Image.Image
+        the image
+    """
+    bbox_center = ((bbox[0] + bbox[2]) / 2, (bbox[1] + bbox[3]) / 2)
+    return dist(center, bbox_center)
 
 
 def _key_area(bbox: list[float]) -> float:
@@ -230,8 +249,18 @@ def sort_bboxes(
     if order == SortBy.NONE or not pred.bboxes:
         return pred
 
+    if order == SortBy.LEFT_TO_RIGHT:
+        key = _key_left_to_right
+    elif order == SortBy.CENTER_TO_EDGE:
+        width, height = pred.preview.size
+        center = (width / 2, height / 2)
+        key = partial(_key_center_to_edge, center=center)
+    elif order == SortBy.AREA:
+        key = _key_area
+    else:
+        raise RuntimeError
+
     items = len(pred.bboxes)
-    key = _key_area if order == SortBy.AREA else _key_position
     idx = sorted(range(items), key=lambda i: key(pred.bboxes[i]))
     pred.bboxes = [pred.bboxes[i] for i in idx]
     pred.masks = [pred.masks[i] for i in idx]
