@@ -16,14 +16,12 @@ import torch
 import modules  # noqa: F401
 from adetailer import (
     AFTER_DETAILER,
-    ALL_ARGS,
-    ADetailerArgs,
-    EnableChecker,
     __version__,
     get_models,
     mediapipe_predict,
     ultralytics_predict,
 )
+from adetailer.args import ALL_ARGS, BBOX_SORTBY, ADetailerArgs, EnableChecker
 from adetailer.common import PredictOutput, mask_preprocess, sort_bboxes
 from adetailer.ui import adui, ordinal, suffix
 from controlnet_ext import ControlNetExt, controlnet_exists
@@ -379,8 +377,9 @@ class AfterDetailerScript(scripts.Script):
         return model_mapping[name]
 
     def sort_bboxes(self, pred: PredictOutput) -> PredictOutput:
-        sortby = opts.data.get("ad_bbox_sortby", 2)
-        pred = sort_bboxes(pred, sortby)
+        sortby = opts.data.get("ad_bbox_sortby", BBOX_SORTBY[0])
+        sortby_idx = BBOX_SORTBY.index(sortby)
+        pred = sort_bboxes(pred, sortby_idx)
         return pred
 
     def i2i_prompts_replace(
@@ -562,20 +561,13 @@ def on_ui_settings():
         ),
     )
 
-    bbox_sortby = ["None", "Position (left to right)", "Area (large to small)"]
-    bbox_sortby_args = {
-        "choices": bbox_sortby,
-        "type": "index",
-        "interactive": True,
-    }
-
     shared.opts.add_option(
         "ad_bbox_sortby",
         shared.OptionInfo(
-            default=0,
+            default="None",
             label="Sort bounding boxes by",
             component=gr.Radio,
-            component_args=bbox_sortby_args,
+            component_args={"choices": BBOX_SORTBY},
             section=section,
         ),
     )
