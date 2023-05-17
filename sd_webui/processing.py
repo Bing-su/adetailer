@@ -163,4 +163,10 @@ if TYPE_CHECKING:
         pass
 
 else:
-    from modules.processing import *
+    from modules.processing import (
+        StableDiffusionProcessing,
+        StableDiffusionProcessingImg2Img,
+        StableDiffusionProcessingTxt2Img,
+        create_infotext,
+        process_images,
+    )

@@ -11,4 +11,10 @@ if TYPE_CHECKING:
     extensions_dir = os.path.join(os.path.dirname(__file__), "4")
     extensions_builtin_dir = os.path.join(os.path.dirname(__file__), "5")
 else:
-    from modules.paths import *
+    from modules.paths import (
+        data_path,
+        extensions_builtin_dir,
+        extensions_dir,
+        models_path,
+        script_path,
+    )

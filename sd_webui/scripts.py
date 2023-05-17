@@ -78,4 +78,4 @@ if TYPE_CHECKING:
             pass
 
 else:
-    from modules.scripts import *
+    from modules.scripts import AlwaysVisible, PostprocessImageArgs, Script

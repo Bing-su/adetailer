@@ -59,4 +59,4 @@ if TYPE_CHECKING:
         """
 
 else:
-    from modules.images import *
+    from modules.images import save_image
