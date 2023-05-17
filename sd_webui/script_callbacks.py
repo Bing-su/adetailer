@@ -10,4 +10,4 @@ if TYPE_CHECKING:
         pass
 
 else:
-    from modules.script_callbacks import *
+    from modules.script_callbacks import on_after_component, on_ui_settings

@@ -39,4 +39,4 @@ if TYPE_CHECKING:
     cmd_opts = argparse.Namespace()
 
 else:
-    from modules.shared import *
+    from modules.shared import OptionInfo, cmd_opts, opts
