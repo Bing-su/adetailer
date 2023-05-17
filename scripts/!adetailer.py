@@ -461,7 +461,7 @@ class AfterDetailerScript(scripts.Script):
             p2.image_mask = masks[j]
             self.i2i_prompts_replace(p2, ad_prompts, ad_negatives, j)
 
-            if not re.match(r"^\s*\[SKIP\]\s*", p2.prompt):
+            if not re.match(r"^\s*\[SKIP\]\s*$", p2.prompt):
                 processed = process_images(p2)
 
                 p2 = copy(i2i)
