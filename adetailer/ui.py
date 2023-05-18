@@ -46,7 +46,6 @@ def adui(
     t2i_button: gr.Button,
     i2i_button: gr.Button,
 ):
-    widgets = []
     states = []
     infotext_fields = []
 
@@ -63,7 +62,7 @@ def adui(
         with gr.Group(), gr.Tabs():
             for n in range(num_models):
                 with gr.Tab(ordinal(n + 1)):
-                    w, state, infofields = one_ui_group(
+                    state, infofields = one_ui_group(
                         n=n,
                         is_img2img=is_img2img,
                         model_list=model_list,
@@ -71,7 +70,6 @@ def adui(
                         i2i_button=i2i_button,
                     )
 
-                widgets.append(w)
                 states.append(state)
                 infotext_fields.extend(infofields)
 
@@ -121,7 +119,56 @@ def one_ui_group(
             )
 
     with gr.Group():
-        with gr.Row():
+        with gr.Accordion("Detection"):
+            detection(w, n)
+        with gr.Accordion("Mask Preprocessing"):
+            mask_preprocessing(w, n)
+        with gr.Accordion("Inpainting"):
+            inpainting(w, n)
+
+    with gr.Group(), gr.Row(variant="panel"):
+        cn_inpaint_models = ["None"] + get_cn_inpaint_models()
+
+        w.ad_controlnet_model = gr.Dropdown(
+            label="ControlNet model" + suffix(n),
+            choices=cn_inpaint_models,
+            value="None",
+            visible=True,
+            type="value",
+            interactive=controlnet_exists,
+        )
+
+        w.ad_controlnet_weight = gr.Slider(
+            label="ControlNet weight" + suffix(n),
+            minimum=0.0,
+            maximum=1.0,
+            step=0.05,
+            value=1.0,
+            visible=True,
+            interactive=controlnet_exists,
+        )
+
+    for attr in ALL_ARGS.attrs:
+        widget = getattr(w, attr)
+        on_change = partial(on_widget_change, attr=attr)
+        widget.change(
+            fn=on_change, inputs=[state, widget], outputs=[state], queue=False
+        )
+
+    all_inputs = [state] + w.tolist()
+    target_button = i2i_button if is_img2img else t2i_button
+    target_button.click(
+        fn=on_generate_click, inputs=all_inputs, outputs=state, queue=False
+    )
+
+    infotext_fields = [(getattr(w, attr), name + suffix(n)) for attr, name in ALL_ARGS]
+
+    return state, infotext_fields
+
+
+def detection(w: Widgets, n: int):
+    with gr.Row():
+        with gr.Column():
             w.ad_conf = gr.Slider(
                 label="Detection model confidence threshold %" + suffix(n),
                 minimum=0,
@@ -130,33 +177,68 @@ def one_ui_group(
                 value=30,
                 visible=True,
             )
-            w.ad_dilate_erode = gr.Slider(
-                label="Mask erosion (-) / dilation (+)" + suffix(n),
-                minimum=-128,
-                maximum=128,
-                step=4,
-                value=32,
+
+        with gr.Column(variant="compact"):
+            w.ad_mask_min_ratio = gr.Slider(
+                label="Mask min area ratio" + suffix(n),
+                minimum=0.0,
+                maximum=1.0,
+                step=0.01,
+                value=0.0,
                 visible=True,
             )
+            w.ad_mask_max_ratio = gr.Slider(
+                label="Mask max area ratio" + suffix(n),
+                minimum=0.0,
+                maximum=1.0,
+                step=0.01,
+                value=1.0,
+                visible=True,
+            )
+
+
+def mask_preprocessing(w: Widgets, n: int):
+    with gr.Group():
+        with gr.Row():
+            with gr.Column(variant="compact"):
+                w.ad_x_offset = gr.Slider(
+                    label="Mask x(→) offset" + suffix(n),
+                    minimum=-200,
+                    maximum=200,
+                    step=1,
+                    value=0,
+                    visible=True,
+                )
+                w.ad_y_offset = gr.Slider(
+                    label="Mask y(↑) offset" + suffix(n),
+                    minimum=-200,
+                    maximum=200,
+                    step=1,
+                    value=0,
+                    visible=True,
+                )
+
+            with gr.Column(variant="compact"):
+                w.ad_dilate_erode = gr.Slider(
+                    label="Mask erosion (-) / dilation (+)" + suffix(n),
+                    minimum=-128,
+                    maximum=128,
+                    step=4,
+                    value=32,
+                    visible=True,
+                )
 
         with gr.Row():
-            w.ad_x_offset = gr.Slider(
-                label="Mask x(→) offset" + suffix(n),
-                minimum=-200,
-                maximum=200,
-                step=1,
-                value=0,
-                visible=True,
-            )
-            w.ad_y_offset = gr.Slider(
-                label="Mask y(↑) offset" + suffix(n),
-                minimum=-200,
-                maximum=200,
-                step=1,
-                value=0,
-                visible=True,
+            w.ad_mask_merge_invert = gr.Radio(
+                label="Mask merge mode" + suffix(n),
+                choices=["None", "Merge", "Merge and Invert"],
+                type="index",
+                value="None",
             )
 
+
+def inpainting(w: Widgets, n: int):
+    with gr.Group():
         with gr.Row():
             w.ad_mask_blur = gr.Slider(
                 label="Inpaint mask blur" + suffix(n),
@@ -176,7 +258,6 @@ def one_ui_group(
                 visible=True,
             )
 
-    with gr.Group():
         with gr.Row():
             with gr.Column(variant="compact"):
                 w.ad_inpaint_full_res = gr.Checkbox(
@@ -279,41 +360,8 @@ def one_ui_group(
                     queue=False,
                 )
 
-    with gr.Group(), gr.Row(variant="panel"):
-        cn_inpaint_models = ["None"] + get_cn_inpaint_models()
-
-        w.ad_controlnet_model = gr.Dropdown(
-            label="ControlNet model" + suffix(n),
-            choices=cn_inpaint_models,
-            value="None",
-            visible=True,
-            type="value",
-            interactive=controlnet_exists,
-        )
-
-        w.ad_controlnet_weight = gr.Slider(
-            label="ControlNet weight" + suffix(n),
-            minimum=0.0,
-            maximum=1.0,
-            step=0.05,
-            value=1.0,
-            visible=True,
-            interactive=controlnet_exists,
-        )
-
-    for attr in ALL_ARGS.attrs:
-        widget = getattr(w, attr)
-        on_change = partial(on_widget_change, attr=attr)
-        widget.change(
-            fn=on_change, inputs=[state, widget], outputs=[state], queue=False
-        )
-
-    all_inputs = [state] + w.tolist()
-    target_button = i2i_button if is_img2img else t2i_button
-    target_button.click(
-        fn=on_generate_click, inputs=all_inputs, outputs=state, queue=False
-    )
-
-    infotext_fields = [(getattr(w, attr), name + suffix(n)) for attr, name in ALL_ARGS]
-
-    return w, state, infotext_fields
+        with gr.Row():
+            w.ad_restore_face = gr.Checkbox(
+                label="Restore faces after ADetailer" + suffix(n),
+                value=False,
+            )
