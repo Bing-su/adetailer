@@ -37,8 +37,8 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
     ad_prompt: str = ""
     ad_negative_prompt: str = ""
     ad_conf: confloat(ge=0.0, le=1.0) = 0.3
-    ad_mask_min_scale: confloat(ge=0.0, le=1.0) = 0.0
-    ad_mask_max_scale: confloat(ge=0.0, le=1.0) = 1.0
+    ad_mask_min_ratio: confloat(ge=0.0, le=1.0) = 0.0
+    ad_mask_max_ratio: confloat(ge=0.0, le=1.0) = 1.0
     ad_dilate_erode: int = 32
     ad_x_offset: int = 0
     ad_y_offset: int = 0
@@ -100,7 +100,7 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
         ppop("ADetailer mask max ratio", cond=1.0)
         ppop("ADetailer x offset", cond=0)
         ppop("ADetailer y offset", cond=0)
-        ppop("ad_mask_merge_invert", cond=0)
+        ppop("ADetailer mask merge/invert", cond=0)
         ppop("ADetailer inpaint full", ["ADetailer inpaint padding"])
         ppop(
             "ADetailer use inpaint width/height",

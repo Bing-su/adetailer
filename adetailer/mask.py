@@ -1,5 +1,5 @@
 from enum import IntEnum
-from functools import partial
+from functools import partial, reduce
 from math import dist
 
 import cv2
@@ -14,6 +14,12 @@ class SortBy(IntEnum):
     LEFT_TO_RIGHT = 1
     CENTER_TO_EDGE = 2
     AREA = 3
+
+
+class MergeInvert(IntEnum):
+    NONE = 0
+    MERGE = 1
+    MERGE_INVERT = 2
 
 
 def _dilate(arr: np.ndarray, value: int) -> np.ndarray:
@@ -88,6 +94,7 @@ def mask_preprocess(
     kernel: int = 0,
     x_offset: int = 0,
     y_offset: int = 0,
+    merge_invert: int | MergeInvert = MergeInvert.NONE,
 ) -> list[Image.Image]:
     """
     The mask_preprocess function takes a list of masks and preprocesses them.
@@ -118,6 +125,8 @@ def mask_preprocess(
     if kernel != 0:
         masks = [dilate_erode(m, kernel) for m in masks]
         masks = [m for m in masks if not is_all_black(m)]
+
+    masks = mask_merge_invert(masks, mode=merge_invert)
 
     return masks
 
@@ -203,3 +212,30 @@ def filter_by_ratio(pred: PredictOutput, low: float, high: float) -> PredictOutp
     pred.bboxes = [pred.bboxes[i] for i in idx]
     pred.masks = [pred.masks[i] for i in idx]
     return pred
+
+
+# Merge / Invert
+def mask_merge(masks: list[Image.Image]) -> list[Image.Image]:
+    arrs = [np.array(m) for m in masks]
+    arr = reduce(cv2.bitwise_or, arrs)
+    return [Image.fromarray(arr)]
+
+
+def mask_invert(masks: list[Image.Image]) -> list[Image.Image]:
+    return [ImageChops.invert(m) for m in masks]
+
+
+def mask_merge_invert(
+    masks: list[Image.Image], mode: int | MergeInvert
+) -> list[Image.Image]:
+    if mode == MergeInvert.NONE or not masks:
+        return masks
+
+    if mode == MergeInvert.MERGE:
+        return mask_merge(masks)
+
+    if mode == MergeInvert.MERGE_INVERT:
+        merged = mask_merge(masks)
+        return mask_invert(merged)
+
+    raise RuntimeError
