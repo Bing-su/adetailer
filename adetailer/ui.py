@@ -183,7 +183,7 @@ def detection(w: Widgets, n: int):
                 label="Mask min area ratio" + suffix(n),
                 minimum=0.0,
                 maximum=1.0,
-                step=0.01,
+                step=0.001,
                 value=0.0,
                 visible=True,
             )
@@ -191,7 +191,7 @@ def detection(w: Widgets, n: int):
                 label="Mask max area ratio" + suffix(n),
                 minimum=0.0,
                 maximum=1.0,
-                step=0.01,
+                step=0.001,
                 value=1.0,
                 visible=True,
             )
