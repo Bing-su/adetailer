@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections import OrderedDict
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional, Union
 
@@ -13,8 +13,8 @@ repo_id = "Bingsu/adetailer"
 
 @dataclass
 class PredictOutput:
-    bboxes: Optional[list[list[int]]] = None
-    masks: Optional[list[Image.Image]] = None
+    bboxes: list[list[float]] = field(default_factory=list)
+    masks: list[Image.Image] = field(default_factory=list)
     preview: Optional[Image.Image] = None
 
 
