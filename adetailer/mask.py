@@ -6,6 +6,7 @@ import cv2
 import numpy as np
 from PIL import Image, ImageChops
 
+from adetailer.args import MASK_MERGE_INVERT
 from adetailer.common import PredictOutput
 
 
@@ -94,7 +95,7 @@ def mask_preprocess(
     kernel: int = 0,
     x_offset: int = 0,
     y_offset: int = 0,
-    merge_invert: int | MergeInvert = MergeInvert.NONE,
+    merge_invert: int | MergeInvert | str = MergeInvert.NONE,
 ) -> list[Image.Image]:
     """
     The mask_preprocess function takes a list of masks and preprocesses them.
@@ -226,8 +227,11 @@ def mask_invert(masks: list[Image.Image]) -> list[Image.Image]:
 
 
 def mask_merge_invert(
-    masks: list[Image.Image], mode: int | MergeInvert
+    masks: list[Image.Image], mode: int | MergeInvert | str
 ) -> list[Image.Image]:
+    if isinstance(mode, str):
+        mode = MASK_MERGE_INVERT.index(mode)
+
     if mode == MergeInvert.NONE or not masks:
         return masks
 

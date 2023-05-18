@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections import UserList
 from functools import cached_property, partial
-from typing import Any, NamedTuple, Union
+from typing import Any, Literal, NamedTuple, Union
 
 import pydantic
 from pydantic import (
@@ -42,7 +42,7 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
     ad_dilate_erode: int = 32
     ad_x_offset: int = 0
     ad_y_offset: int = 0
-    ad_mask_merge_invert: conint(ge=0, le=2) = 0
+    ad_mask_merge_invert: Literal["None", "Merge", "Merge and Invert"] = "None"
     ad_mask_blur: NonNegativeInt = 4
     ad_denoising_strength: confloat(ge=0.0, le=1.0) = 0.4
     ad_inpaint_full_res: bool = True
@@ -100,7 +100,7 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
         ppop("ADetailer mask max ratio", cond=1.0)
         ppop("ADetailer x offset", cond=0)
         ppop("ADetailer y offset", cond=0)
-        ppop("ADetailer mask merge/invert", cond=0)
+        ppop("ADetailer mask merge/invert", cond="None")
         ppop("ADetailer inpaint full", ["ADetailer inpaint padding"])
         ppop(
             "ADetailer use inpaint width/height",
@@ -181,3 +181,4 @@ BBOX_SORTBY = [
     "Position (center to edge)",
     "Area (large to small)",
 ]
+MASK_MERGE_INVERT = ["None", "Merge", "Merge and Invert"]

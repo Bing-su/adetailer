@@ -6,7 +6,7 @@ from typing import Any
 import gradio as gr
 
 from adetailer import AFTER_DETAILER
-from adetailer.args import AD_ENABLE, ALL_ARGS
+from adetailer.args import AD_ENABLE, ALL_ARGS, MASK_MERGE_INVERT
 from controlnet_ext import controlnet_exists, get_cn_inpaint_models
 
 
@@ -231,8 +231,7 @@ def mask_preprocessing(w: Widgets, n: int):
         with gr.Row():
             w.ad_mask_merge_invert = gr.Radio(
                 label="Mask merge mode" + suffix(n),
-                choices=["None", "Merge", "Merge and Invert"],
-                type="index",
+                choices=MASK_MERGE_INVERT,
                 value="None",
             )
 
