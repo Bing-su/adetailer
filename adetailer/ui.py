@@ -119,11 +119,11 @@ def one_ui_group(
             )
 
     with gr.Group():
-        with gr.Accordion("Detection"):
+        with gr.Accordion("Detection", open=False):
             detection(w, n)
-        with gr.Accordion("Mask Preprocessing"):
+        with gr.Accordion("Mask Preprocessing", open=False):
             mask_preprocessing(w, n)
-        with gr.Accordion("Inpainting"):
+        with gr.Accordion("Inpainting", open=False):
             inpainting(w, n)
 
     with gr.Group(), gr.Row(variant="panel"):
