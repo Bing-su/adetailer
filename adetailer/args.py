@@ -12,7 +12,6 @@ from pydantic import (
     NonNegativeInt,
     PositiveInt,
     confloat,
-    conint,
     validator,
 )
 
@@ -60,7 +59,6 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
 
     @validator("ad_conf", pre=True)
     def check_ad_conf(cls, v: Any):  # noqa: N805
-        "ad_conf가 문자열로 들어올 경우를 대비"
         if not isinstance(v, (int, float)):
             try:
                 v = int(v)
@@ -175,6 +173,7 @@ _all_args = [
 AD_ENABLE = Arg(*_all_args[0])
 _args = [Arg(*args) for args in _all_args[1:]]
 ALL_ARGS = ArgsList(_args)
+
 BBOX_SORTBY = [
     "None",
     "Position (left to right)",
