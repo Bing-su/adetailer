@@ -1,5 +1,14 @@
 # Changelog
 
+### 2023-05-19
+
+- v23.5.16
+- 추가한 옵션
+  - Mask min/max ratio
+  - Mask merge mode
+  - Restore faces after ADetailer
+- 옵션들을 Accordion으로 묶음
+
 ### 2023-05-18
 
 - v23.5.15
