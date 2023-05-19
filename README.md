@@ -20,25 +20,31 @@ You can now install it directly from the Extensions tab.
 
 You **DON'T** need to download any model from huggingface.
 
-## Usage
+## Options
 
-It's auto detecting, masking, and inpainting tool.
+| Model, Prompts                    |                                       |                                                   |
+| --------------------------------- | ------------------------------------- | ------------------------------------------------- |
+| ADetailer model                   | Determine what to detect.             | `None` = disable                                  |
+| ADetailer prompt, negative prompt | Prompts and negative prompts to apply | If left blank, it will use the same as the input. |
 
-So some options correspond to options on the inpaint tab.
+| Detection                            |                                                                                              |     |
+| ------------------------------------ | -------------------------------------------------------------------------------------------- | --- |
+| Detection model confidence threshold | Only objects with a detection model confidence above this threshold are used for inpainting. |     |
+| Mask min/max ratio                   | Only use masks whose area is between those ratios for the area of the entire image.          |     |
 
-![image](https://i.imgur.com/Bm7YLEA.png)
+If you want to exclude objects in the background, try setting the min ratio to around `0.01`.
 
-Other options:
+| Mask Preprocessing              |                                                                                                                                     |                                                                                         |
+| ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| Mask x, y offset                | Moves the mask horizontally and vertically by                                                                                       |                                                                                         |
+| Mask erosion (-) / dilation (+) | Enlarge or reduce the detected mask.                                                                                                | [opencv example](https://docs.opencv.org/4.7.0/db/df6/tutorial_erosion_dilatation.html) |
+| Mask merge mode                 | `None`: Inpaint each mask<br/>`Merge`: Merge all masks and inpaint<br/>`Merge and Invert`: Merge all masks and Invert, then inpaint |                                                                                         |
 
-| Option                                 |                                                                                              |                                                                                         |
-| -------------------------------------- | -------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| ADetailer model                        | Determine what to detect.                                                                    | `None` = disable                                                                        |
-| ADetailer prompt, negative prompt      | Prompts and negative prompts to apply                                                        | If left blank, it will use the same as the input.                                       |
-| Detection model confidence threshold % | Only objects with a detection model confidence above this threshold are used for inpainting. |                                                                                         |
-| Mask erosion (-) / dilation (+)        | Enlarge or reduce the detected mask.                                                         | [opencv example](https://docs.opencv.org/4.7.0/db/df6/tutorial_erosion_dilatation.html) |
-| Mask x, y offset                       | Moves the mask horizontally and vertically by pixels.                                        |                                                                                         |                                                                 |
+#### Inpainting
 
-See the [wiki](https://github.com/Bing-su/adetailer/wiki) for more options and other features.
+![image](https://i.imgur.com/KbAeWar.png)
+
+Each option corresponds to a corresponding option on the inpaint tab.
 
 ## ControlNet Inpainting
 

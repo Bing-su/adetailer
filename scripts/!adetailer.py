@@ -22,7 +22,8 @@ from adetailer import (
     ultralytics_predict,
 )
 from adetailer.args import ALL_ARGS, BBOX_SORTBY, ADetailerArgs, EnableChecker
-from adetailer.common import PredictOutput, mask_preprocess, sort_bboxes
+from adetailer.common import PredictOutput
+from adetailer.mask import filter_by_ratio, mask_preprocess, sort_bboxes
 from adetailer.ui import adui, ordinal, suffix
 from controlnet_ext import ControlNetExt, controlnet_exists
 from sd_webui import images, safe, script_callbacks, scripts, shared
@@ -340,6 +341,7 @@ class AfterDetailerScript(scripts.Script):
             cfg_scale=cfg_scale,
             width=width,
             height=height,
+            restore_faces=args.ad_restore_face,
             tiling=p.tiling,
             extra_generation_params=p.extra_generation_params,
             do_not_save_samples=True,
@@ -381,6 +383,19 @@ class AfterDetailerScript(scripts.Script):
         sortby_idx = BBOX_SORTBY.index(sortby)
         pred = sort_bboxes(pred, sortby_idx)
         return pred
+
+    def pred_preprocessing(self, pred: PredictOutput, args: ADetailerArgs):
+        pred = filter_by_ratio(
+            pred, low=args.ad_mask_min_ratio, high=args.ad_mask_max_ratio
+        )
+        pred = self.sort_bboxes(pred)
+        return mask_preprocess(
+            pred.masks,
+            kernel=args.ad_dilate_erode,
+            x_offset=args.ad_x_offset,
+            y_offset=args.ad_y_offset,
+            merge_invert=args.ad_mask_merge_invert,
+        )
 
     def i2i_prompts_replace(
         self, i2i, prompts: list[str], negative_prompts: list[str], j: int
@@ -429,13 +444,7 @@ class AfterDetailerScript(scripts.Script):
         with ChangeTorchLoad():
             pred = predictor(ad_model, pp.image, args.ad_conf, **kwargs)
 
-        pred = self.sort_bboxes(pred)
-        masks = mask_preprocess(
-            pred.masks,
-            kernel=args.ad_dilate_erode,
-            x_offset=args.ad_x_offset,
-            y_offset=args.ad_y_offset,
-        )
+        masks = self.pred_preprocessing(pred, args)
 
         if not masks:
             print(
