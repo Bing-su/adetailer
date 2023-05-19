@@ -52,8 +52,8 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
     ad_use_steps: bool = False
     ad_steps: PositiveInt = 28
     ad_use_cfg_scale: bool = False
-    ad_restore_face: bool = False
     ad_cfg_scale: NonNegativeFloat = 7.0
+    ad_restore_face: bool = False
     ad_controlnet_model: str = "None"
     ad_controlnet_weight: confloat(ge=0.0, le=1.0) = 1.0
 

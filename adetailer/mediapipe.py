@@ -1,4 +1,4 @@
-from typing import Union
+from __future__ import annotations
 
 import numpy as np
 from PIL import Image
@@ -8,7 +8,7 @@ from adetailer.common import create_mask_from_bbox
 
 
 def mediapipe_predict(
-    model_type: Union[int, str], image: Image.Image, confidence: float = 0.3
+    model_type: int | str, image: Image.Image, confidence: float = 0.3
 ) -> PredictOutput:
     import mediapipe as mp
 
