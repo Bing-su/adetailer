@@ -39,6 +39,12 @@ def on_generate_click(state: dict, *values: Any):
     return state
 
 
+def elem_id(item_id: str, n: int, is_img2img: bool) -> str:
+    tap = "img2img" if is_img2img else "txt2img"
+    suf = suffix(n, "_")
+    return f"script_{tap}_adetailer_{item_id}{suf}"
+
+
 def adui(
     num_models: int,
     is_img2img: bool,
@@ -48,13 +54,15 @@ def adui(
 ):
     states = []
     infotext_fields = []
+    eid = partial(elem_id, n=0, is_img2img=is_img2img)
 
-    with gr.Accordion(AFTER_DETAILER, open=False, elem_id="AD_main_acc"):
+    with gr.Accordion(AFTER_DETAILER, open=False, elem_id=eid("ad_main_accordion")):
         with gr.Row():
             ad_enable = gr.Checkbox(
                 label="Enable ADetailer",
                 value=False,
                 visible=True,
+                elem_id=eid("ad_enable"),
             )
 
         infotext_fields.append((ad_enable, AD_ENABLE.name))
@@ -87,6 +95,7 @@ def one_ui_group(
 ):
     w = Widgets()
     state = gr.State({})
+    eid = partial(elem_id, n=n, is_img2img=is_img2img)
 
     with gr.Row():
         model_choices = model_list if n == 0 else ["None"] + model_list
@@ -97,34 +106,45 @@ def one_ui_group(
             value=model_choices[0],
             visible=True,
             type="value",
+            elem_id=eid("ad_model"),
         )
 
     with gr.Group():
-        with gr.Row(elem_id="AD_toprow_prompt" + suffix(n, "_")):
+        with gr.Row(elem_id=eid("ad_toprow_prompt")):
             w.ad_prompt = gr.Textbox(
                 label="ad_prompt" + suffix(n),
                 show_label=False,
                 lines=3,
                 placeholder="ADetailer prompt" + suffix(n),
-                elem_id="AD_prompt" + suffix(n, "_"),
+                elem_id=eid("ad_prompt"),
             )
 
-        with gr.Row(elem_id="AD_toprow_negative_prompt" + suffix(n, "_")):
+        with gr.Row(elem_id=eid("ad_toprow_negative_prompt")):
             w.ad_negative_prompt = gr.Textbox(
                 label="ad_negative_prompt" + suffix(n),
                 show_label=False,
                 lines=2,
                 placeholder="ADetailer negative prompt" + suffix(n),
-                elem_id="AD_negative_prompt" + suffix(n, "_"),
+                elem_id=eid("ad_negative_prompt"),
             )
 
     with gr.Group():
-        with gr.Accordion("Detection", open=False):
-            detection(w, n)
-        with gr.Accordion("Mask Preprocessing", open=False):
-            mask_preprocessing(w, n)
-        with gr.Accordion("Inpainting", open=False):
-            inpainting(w, n)
+        with gr.Accordion(
+            "Detection", open=False, elem_id=eid("ad_detection_accordion")
+        ):
+            detection(w, n, is_img2img)
+
+        with gr.Accordion(
+            "Mask Preprocessing",
+            open=False,
+            elem_id=eid("ad_mask_preprocessing_accordion"),
+        ):
+            mask_preprocessing(w, n, is_img2img)
+
+        with gr.Accordion(
+            "Inpainting", open=False, elem_id=eid("ad_inpainting_accordion")
+        ):
+            inpainting(w, n, is_img2img)
 
     with gr.Group(), gr.Row(variant="panel"):
         cn_inpaint_models = ["None"] + get_cn_inpaint_models()
@@ -136,6 +156,7 @@ def one_ui_group(
             visible=True,
             type="value",
             interactive=controlnet_exists,
+            elem_id=eid("ad_controlnet_model"),
         )
 
         w.ad_controlnet_weight = gr.Slider(
@@ -146,6 +167,7 @@ def one_ui_group(
             value=1.0,
             visible=True,
             interactive=controlnet_exists,
+            elem_id=eid("ad_controlnet_weight"),
         )
 
     for attr in ALL_ARGS.attrs:
@@ -166,7 +188,9 @@ def one_ui_group(
     return state, infotext_fields
 
 
-def detection(w: Widgets, n: int):
+def detection(w: Widgets, n: int, is_img2img: bool):
+    eid = partial(elem_id, n=n, is_img2img=is_img2img)
+
     with gr.Row():
         with gr.Column():
             w.ad_conf = gr.Slider(
@@ -176,6 +200,7 @@ def detection(w: Widgets, n: int):
                 step=1,
                 value=30,
                 visible=True,
+                elem_id=eid("ad_conf"),
             )
 
         with gr.Column(variant="compact"):
@@ -186,6 +211,7 @@ def detection(w: Widgets, n: int):
                 step=0.001,
                 value=0.0,
                 visible=True,
+                elem_id=eid("ad_mask_min_ratio"),
             )
             w.ad_mask_max_ratio = gr.Slider(
                 label="Mask max area ratio" + suffix(n),
@@ -194,10 +220,13 @@ def detection(w: Widgets, n: int):
                 step=0.001,
                 value=1.0,
                 visible=True,
+                elem_id=eid("ad_mask_max_ratio"),
             )
 
 
-def mask_preprocessing(w: Widgets, n: int):
+def mask_preprocessing(w: Widgets, n: int, is_img2img: bool):
+    eid = partial(elem_id, n=n, is_img2img=is_img2img)
+
     with gr.Group():
         with gr.Row():
             with gr.Column(variant="compact"):
@@ -208,6 +237,7 @@ def mask_preprocessing(w: Widgets, n: int):
                     step=1,
                     value=0,
                     visible=True,
+                    elem_id=eid("ad_x_offset"),
                 )
                 w.ad_y_offset = gr.Slider(
                     label="Mask y(↑) offset" + suffix(n),
@@ -216,6 +246,7 @@ def mask_preprocessing(w: Widgets, n: int):
                     step=1,
                     value=0,
                     visible=True,
+                    elem_id=eid("ad_y_offset"),
                 )
 
             with gr.Column(variant="compact"):
@@ -226,6 +257,7 @@ def mask_preprocessing(w: Widgets, n: int):
                     step=4,
                     value=32,
                     visible=True,
+                    elem_id=eid("ad_dilate_erode"),
                 )
 
         with gr.Row():
@@ -233,10 +265,13 @@ def mask_preprocessing(w: Widgets, n: int):
                 label="Mask merge mode" + suffix(n),
                 choices=MASK_MERGE_INVERT,
                 value="None",
+                elem_id=eid("ad_mask_merge_invert"),
             )
 
 
-def inpainting(w: Widgets, n: int):
+def inpainting(w: Widgets, n: int, is_img2img: bool):
+    eid = partial(elem_id, n=n, is_img2img=is_img2img)
+
     with gr.Group():
         with gr.Row():
             w.ad_mask_blur = gr.Slider(
@@ -246,6 +281,7 @@ def inpainting(w: Widgets, n: int):
                 step=1,
                 value=4,
                 visible=True,
+                elem_id=eid("ad_mask_blur"),
             )
 
             w.ad_denoising_strength = gr.Slider(
@@ -255,6 +291,7 @@ def inpainting(w: Widgets, n: int):
                 step=0.01,
                 value=0.4,
                 visible=True,
+                elem_id=eid("ad_denoising_strength"),
             )
 
         with gr.Row():
@@ -263,6 +300,7 @@ def inpainting(w: Widgets, n: int):
                     label="Inpaint at full resolution " + suffix(n),
                     value=True,
                     visible=True,
+                    elem_id=eid("ad_inpaint_full_res"),
                 )
                 w.ad_inpaint_full_res_padding = gr.Slider(
                     label="Inpaint at full resolution padding, pixels " + suffix(n),
@@ -271,6 +309,7 @@ def inpainting(w: Widgets, n: int):
                     step=4,
                     value=0,
                     visible=True,
+                    elem_id=eid("ad_inpaint_full_res_padding"),
                 )
 
                 w.ad_inpaint_full_res.change(
@@ -285,6 +324,7 @@ def inpainting(w: Widgets, n: int):
                     label="Use separate width/height" + suffix(n),
                     value=False,
                     visible=True,
+                    elem_id=eid("ad_use_inpaint_width_height"),
                 )
 
                 w.ad_inpaint_width = gr.Slider(
@@ -294,6 +334,7 @@ def inpainting(w: Widgets, n: int):
                     step=4,
                     value=512,
                     visible=True,
+                    elem_id=eid("ad_inpaint_width"),
                 )
 
                 w.ad_inpaint_height = gr.Slider(
@@ -303,6 +344,7 @@ def inpainting(w: Widgets, n: int):
                     step=4,
                     value=512,
                     visible=True,
+                    elem_id=eid("ad_inpaint_height"),
                 )
 
                 w.ad_use_inpaint_width_height.change(
@@ -318,6 +360,7 @@ def inpainting(w: Widgets, n: int):
                     label="Use separate steps" + suffix(n),
                     value=False,
                     visible=True,
+                    elem_id=eid("ad_use_steps"),
                 )
 
                 w.ad_steps = gr.Slider(
@@ -327,6 +370,7 @@ def inpainting(w: Widgets, n: int):
                     step=1,
                     value=28,
                     visible=True,
+                    elem_id=eid("ad_steps"),
                 )
 
                 w.ad_use_steps.change(
@@ -341,6 +385,7 @@ def inpainting(w: Widgets, n: int):
                     label="Use separate CFG scale" + suffix(n),
                     value=False,
                     visible=True,
+                    elem_id=eid("ad_use_cfg_scale"),
                 )
 
                 w.ad_cfg_scale = gr.Slider(
@@ -350,6 +395,7 @@ def inpainting(w: Widgets, n: int):
                     step=0.5,
                     value=7.0,
                     visible=True,
+                    elem_id=eid("ad_cfg_scale"),
                 )
 
                 w.ad_use_cfg_scale.change(
@@ -363,4 +409,5 @@ def inpainting(w: Widgets, n: int):
             w.ad_restore_face = gr.Checkbox(
                 label="Restore faces after ADetailer" + suffix(n),
                 value=False,
+                elem_id=eid("ad_restore_face"),
             )
