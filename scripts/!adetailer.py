@@ -47,6 +47,9 @@ no_huggingface = getattr(cmd_opts, "ad_no_huggingface", False)
 adetailer_dir = Path(models_path, "adetailer")
 model_mapping = get_models(adetailer_dir, huggingface=not no_huggingface)
 txt2img_submit_button = img2img_submit_button = None
+SCRIPT_DEFAULT = (
+    "controlnet,dynamic_prompting,dynamic_thresholding,wildcard_recursive,wildcards"
+)
 
 if (
     not adetailer_dir.exists()
@@ -269,21 +272,20 @@ class AfterDetailerScript(scripts.Script):
     def script_filter(self, p, args: ADetailerArgs):
         script_runner = copy(p.scripts)
         script_args = deepcopy(p.script_args)
+        cn_used = self.disable_controlnet_units(script_args)
 
         ad_only_seleted_scripts = opts.data.get("ad_only_seleted_scripts", True)
         if not ad_only_seleted_scripts:
             return script_runner, script_args
 
-        default = "dynamic_prompting,dynamic_thresholding,wildcards,wildcard_recursive"
-        ad_script_names = opts.data.get("ad_script_names", default)
+        ad_script_names = opts.data.get("ad_script_names", SCRIPT_DEFAULT)
         script_names_set = {
             name
             for script_name in ad_script_names.split(",")
             for name in (script_name, script_name.strip())
         }
 
-        if args.ad_controlnet_model != "None":
-            self.disable_controlnet_units(script_args)
+        if cn_used or args.ad_controlnet_model != "None":
             script_names_set.add("controlnet")
 
         filtered_alwayson = []
@@ -296,12 +298,16 @@ class AfterDetailerScript(scripts.Script):
         script_runner.alwayson_scripts = filtered_alwayson
         return script_runner, script_args
 
-    def disable_controlnet_units(self, script_args: list[Any]) -> None:
+    def disable_controlnet_units(self, script_args: list[Any]) -> bool:
+        cn_used = False
         for obj in script_args:
             if "controlnet" in obj.__class__.__name__.lower() and hasattr(
                 obj, "enabled"
             ):
                 obj.enabled = False
+                cn_used = True
+
+        return cn_used
 
     def get_i2i_p(self, p, args: ADetailerArgs, image):
         seed, subseed = self.get_seed(p)
@@ -562,7 +568,7 @@ def on_ui_settings():
     shared.opts.add_option(
         "ad_script_names",
         shared.OptionInfo(
-            default="dynamic_prompting,dynamic_thresholding,wildcards,wildcard_recursive",
+            default=SCRIPT_DEFAULT,
             label="Script names to apply to ADetailer (separated by comma)",
             component=gr.Textbox,
             component_args=textbox_args,
