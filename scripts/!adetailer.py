@@ -272,7 +272,7 @@ class AfterDetailerScript(scripts.Script):
     def script_filter(self, p, args: ADetailerArgs):
         script_runner = copy(p.scripts)
         script_args = deepcopy(p.script_args)
-        self.disable_controlnet_units(script_args)
+        cn_used = self.disable_controlnet_units(script_args)
 
         ad_only_seleted_scripts = opts.data.get("ad_only_seleted_scripts", True)
         if not ad_only_seleted_scripts:
@@ -285,7 +285,7 @@ class AfterDetailerScript(scripts.Script):
             for name in (script_name, script_name.strip())
         }
 
-        if args.ad_controlnet_model != "None":
+        if cn_used or args.ad_controlnet_model != "None":
             script_names_set.add("controlnet")
 
         filtered_alwayson = []
@@ -298,12 +298,16 @@ class AfterDetailerScript(scripts.Script):
         script_runner.alwayson_scripts = filtered_alwayson
         return script_runner, script_args
 
-    def disable_controlnet_units(self, script_args: list[Any]) -> None:
+    def disable_controlnet_units(self, script_args: list[Any]) -> bool:
+        cn_used = False
         for obj in script_args:
             if "controlnet" in obj.__class__.__name__.lower() and hasattr(
                 obj, "enabled"
             ):
                 obj.enabled = False
+                cn_used = True
+
+        return cn_used
 
     def get_i2i_p(self, p, args: ADetailerArgs, image):
         seed, subseed = self.get_seed(p)
