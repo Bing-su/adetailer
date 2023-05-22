@@ -5,7 +5,7 @@ from typing import Any
 
 import gradio as gr
 
-from adetailer import AFTER_DETAILER
+from adetailer import AFTER_DETAILER, __version__
 from adetailer.args import AD_ENABLE, ALL_ARGS, MASK_MERGE_INVERT
 from controlnet_ext import controlnet_exists, get_cn_inpaint_models
 
@@ -58,12 +58,19 @@ def adui(
 
     with gr.Accordion(AFTER_DETAILER, open=False, elem_id=eid("ad_main_accordion")):
         with gr.Row():
-            ad_enable = gr.Checkbox(
-                label="Enable ADetailer",
-                value=False,
-                visible=True,
-                elem_id=eid("ad_enable"),
-            )
+            with gr.Column(scale=6):
+                ad_enable = gr.Checkbox(
+                    label="Enable ADetailer",
+                    value=False,
+                    visible=True,
+                    elem_id=eid("ad_enable"),
+                )
+
+            with gr.Column(scale=1, min_width=180):
+                gr.Markdown(
+                    f"v{__version__}",
+                    elem_id=eid("ad_version"),
+                )
 
         infotext_fields.append((ad_enable, AD_ENABLE.name))
 
