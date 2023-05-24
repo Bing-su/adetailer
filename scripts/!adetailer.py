@@ -74,8 +74,10 @@ class ChangeTorchLoad:
 class AfterDetailerScript(scripts.Script):
     def __init__(self):
         super().__init__()
-        self.controlnet_ext = None
         self.ultralytics_device = self.get_ultralytics_device()
+
+        self.controlnet_ext = None
+        self.cn_script = None
         self.cn_latest_network = None
 
     def title(self):
@@ -295,6 +297,7 @@ class AfterDetailerScript(scripts.Script):
             if filename in script_names_set:
                 filtered_alwayson.append(script_object)
             if filename == "controlnet":
+                self.cn_script = script_object
                 self.cn_latest_network = script_object.latest_network
 
         script_runner.alwayson_scripts = filtered_alwayson
@@ -514,6 +517,9 @@ class AfterDetailerScript(scripts.Script):
             self.save_image(
                 p, init_image, condition="ad_save_images_before", suffix="-ad-before"
             )
+
+            if self.cn_script is not None:
+                self.cn_script.process(p)
 
         try:
             if p._idx == len(p.all_prompts) - 1:
