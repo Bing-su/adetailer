@@ -47,9 +47,7 @@ no_huggingface = getattr(cmd_opts, "ad_no_huggingface", False)
 adetailer_dir = Path(models_path, "adetailer")
 model_mapping = get_models(adetailer_dir, huggingface=not no_huggingface)
 txt2img_submit_button = img2img_submit_button = None
-SCRIPT_DEFAULT = (
-    "controlnet,dynamic_prompting,dynamic_thresholding,wildcard_recursive,wildcards"
-)
+SCRIPT_DEFAULT = "dynamic_prompting,dynamic_thresholding,wildcard_recursive,wildcards"
 
 if (
     not adetailer_dir.exists()
