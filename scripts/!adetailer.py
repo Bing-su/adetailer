@@ -301,11 +301,12 @@ class AfterDetailerScript(scripts.Script):
     def disable_controlnet_units(self, script_args: list[Any]) -> bool:
         cn_used = False
         for obj in script_args:
-            if "controlnet" in obj.__class__.__name__.lower() and hasattr(
-                obj, "enabled"
-            ):
-                obj.enabled = False
+            if "controlnet" in obj.__class__.__name__.lower():
                 cn_used = True
+                if hasattr(obj, "enabled"):
+                    obj.enabled = False
+                if hasattr(obj, "input_mode"):
+                    obj.input_mode = getattr(obj.input_mode, "SIMPLE", "simple")
 
         return cn_used
 
