@@ -519,10 +519,10 @@ class AfterDetailerScript(scripts.Script):
         arg_list = self.get_args(*args_)
 
         is_processed = False
-        for n, args in enumerate(arg_list):
-            if args.ad_model == "None":
-                continue
-            with CNHijackRestore(), pause_total_tqdm():
+        with CNHijackRestore(), pause_total_tqdm():
+            for n, args in enumerate(arg_list):
+                if args.ad_model == "None":
+                    continue
                 is_processed |= self._postprocess_image(p, pp, args, n=n)
 
         if is_processed:
