@@ -1,5 +1,14 @@
 # Changelog
 
+## 2023-05-26
+
+- v23.5.19
+- 1번째 탭에도 `None` 옵션을 추가함
+- api로 ad controlnet model에 inpaint가 아닌 다른 컨트롤넷 모델을 사용하지 못하도록 막음
+- adetailer 진행중에 total tqdm 진행바 업데이트를 멈춤
+- state.inturrupted 상태에서 adetailer 과정을 중지함
+- 컨트롤넷 process를 각 batch가 끝난 순간에만 호출하도록 변경
+
 ### 2023-05-25
 
 - v23.5.18

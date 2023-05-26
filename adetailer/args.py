@@ -12,6 +12,7 @@ from pydantic import (
     NonNegativeInt,
     PositiveInt,
     confloat,
+    constr,
     validator,
 )
 
@@ -54,7 +55,7 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
     ad_use_cfg_scale: bool = False
     ad_cfg_scale: NonNegativeFloat = 7.0
     ad_restore_face: bool = False
-    ad_controlnet_model: str = "None"
+    ad_controlnet_model: constr(regex=r".*inpaint.*|^None$") = "None"
     ad_controlnet_weight: confloat(ge=0.0, le=1.0) = 1.0
 
     @validator("ad_conf", pre=True)

@@ -7,6 +7,29 @@ if TYPE_CHECKING:
     from dataclasses import dataclass
     from typing import Any, Callable
 
+    import torch
+    from PIL import Image
+
+    @dataclass
+    class State:
+        skipped: bool = False
+        interrupted: bool = False
+        job: str = ""
+        job_no: int = 0
+        job_count: int = 0
+        processing_has_refined_job_count: bool = False
+        job_timestamp: str = "0"
+        sampling_step: int = 0
+        sampling_steps: int = 0
+        current_latent: torch.Tensor | None = None
+        current_image: Image.Image | None = None
+        current_image_sampling_step: int = 0
+        id_live_preview: int = 0
+        textinfo: str | None = None
+        time_start: float | None = None
+        need_restart: bool = False
+        server_start: float | None = None
+
     @dataclass
     class OptionInfo:
         default: Any = None
@@ -37,6 +60,7 @@ if TYPE_CHECKING:
 
     opts = Option()
     cmd_opts = argparse.Namespace()
+    state = State()
 
 else:
-    from modules.shared import OptionInfo, cmd_opts, opts
+    from modules.shared import OptionInfo, cmd_opts, opts, state

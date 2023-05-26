@@ -105,7 +105,7 @@ def one_ui_group(
     eid = partial(elem_id, n=n, is_img2img=is_img2img)
 
     with gr.Row():
-        model_choices = model_list if n == 0 else ["None"] + model_list
+        model_choices = model_list + ["None"] if n == 0 else ["None"] + model_list
 
         w.ad_model = gr.Dropdown(
             label="ADetailer model" + suffix(n),

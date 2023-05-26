@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from modules import img2img, processing
+from contextlib import contextmanager
+
+from modules import img2img, processing, shared
 
 
 def cn_restore_unet_hook(p, cn_latest_network):
@@ -31,3 +33,17 @@ class CNHijackRestore:
             processing.process_images_inner = self.orig_process
         if self.img2img:
             img2img.process_batch = self.orig_img2img
+
+
+@contextmanager
+def cn_allow_script_control():
+    orig = False
+    if "control_net_allow_script_control" in shared.opts.data:
+        try:
+            orig = shared.opts.data["control_net_allow_script_control"]
+            shared.opts.data["control_net_allow_script_control"] = True
+            yield
+        finally:
+            shared.opts.data["control_net_allow_script_control"] = orig
+    else:
+        yield
