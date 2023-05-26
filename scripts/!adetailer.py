@@ -39,7 +39,7 @@ from sd_webui.processing import (
     create_infotext,
     process_images,
 )
-from sd_webui.shared import cmd_opts, opts
+from sd_webui.shared import cmd_opts, opts, state
 
 try:
     from rich import print
@@ -451,6 +451,9 @@ class AfterDetailerScript(scripts.Script):
 
             `True` if image was processed, `False` otherwise.
         """
+        if state.interrupted:
+            return False
+
         i = p._idx
 
         i2i = self.get_i2i_p(p, args, pp.image)
@@ -488,6 +491,7 @@ class AfterDetailerScript(scripts.Script):
 
         steps = len(masks)
         processed = None
+        state.job_count += steps
 
         if is_mediapipe:
             print(f"mediapipe: {steps} detected.")
