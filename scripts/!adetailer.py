@@ -327,6 +327,9 @@ class AfterDetailerScript(scripts.Script):
                 if hasattr(obj, "input_mode"):
                     obj.input_mode = getattr(obj.input_mode, "SIMPLE", "simple")
 
+            elif isinstance(obj, dict) and "module" in obj:
+                obj["enabled"] = False
+
     def get_i2i_p(self, p, args: ADetailerArgs, image):
         seed, subseed = self.get_seed(p)
         width, height = self.get_width_height(p, args)
