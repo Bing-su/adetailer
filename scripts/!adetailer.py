@@ -452,6 +452,8 @@ class AfterDetailerScript(scripts.Script):
             extra_params = self.extra_params(arg_list)
             p.extra_generation_params.update(extra_params)
 
+            p._idx = -1
+
     def _postprocess_image(self, p, pp, args: ADetailerArgs, *, n: int = 0) -> bool:
         """
         Returns
