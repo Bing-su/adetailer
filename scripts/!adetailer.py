@@ -434,6 +434,12 @@ class AfterDetailerScript(scripts.Script):
         i2i.prompt = prompt
         i2i.negative_prompt = negative_prompt
 
+    def is_need_call_process(self, p):
+        i = p._idx
+        n_iter = p.iteration
+        bs = p.batch_size
+        return (i == (n_iter + 1) * bs - 1) and (i != len(p.all_prompts) - 1)
+
     def process(self, p, *args_):
         if getattr(p, "_disable_adetailer", False):
             return
@@ -541,8 +547,8 @@ class AfterDetailerScript(scripts.Script):
                 p, init_image, condition="ad_save_images_before", suffix="-ad-before"
             )
 
-            if self.cn_script is not None:
-                self.cn_script.process(p)
+        if self.cn_script is not None and self.is_need_call_process(p):
+            self.cn_script.process(p)
 
         try:
             if p._idx == len(p.all_prompts) - 1:
