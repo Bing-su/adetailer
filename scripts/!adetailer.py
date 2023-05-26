@@ -27,7 +27,11 @@ from adetailer.common import PredictOutput
 from adetailer.mask import filter_by_ratio, mask_preprocess, sort_bboxes
 from adetailer.ui import adui, ordinal, suffix
 from controlnet_ext import ControlNetExt, controlnet_exists
-from controlnet_ext.restore import CNHijackRestore, cn_restore_unet_hook
+from controlnet_ext.restore import (
+    CNHijackRestore,
+    cn_allow_script_control,
+    cn_restore_unet_hook,
+)
 from sd_webui import images, safe, script_callbacks, scripts, shared
 from sd_webui.paths import data_path, models_path
 from sd_webui.processing import (
@@ -373,6 +377,9 @@ class AfterDetailerScript(scripts.Script):
 
         if args.ad_controlnet_model != "None":
             self.update_controlnet_args(i2i, args)
+        else:
+            i2i.control_net_enabled = False
+
         return i2i
 
     def save_image(self, p, image, *, condition: str, suffix: str) -> None:
@@ -519,7 +526,7 @@ class AfterDetailerScript(scripts.Script):
         arg_list = self.get_args(*args_)
 
         is_processed = False
-        with CNHijackRestore(), pause_total_tqdm():
+        with CNHijackRestore(), pause_total_tqdm(), cn_allow_script_control():
             for n, args in enumerate(arg_list):
                 if args.ad_model == "None":
                     continue
