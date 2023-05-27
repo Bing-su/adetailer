@@ -347,8 +347,8 @@ class AfterDetailerScript(scripts.Script):
             mask=None,
             mask_blur=args.ad_mask_blur,
             inpainting_fill=1,
-            inpaint_full_res=args.ad_inpaint_full_res,
-            inpaint_full_res_padding=args.ad_inpaint_full_res_padding,
+            inpaint_full_res=args.ad_inpaint_only_masked,
+            inpaint_full_res_padding=args.ad_inpaint_only_masked_padding,
             inpainting_mask_invert=0,
             sd_model=p.sd_model,
             outpath_samples=p.outpath_samples,
@@ -429,7 +429,7 @@ class AfterDetailerScript(scripts.Script):
 
     def i2i_prompts_replace(
         self, i2i, prompts: list[str], negative_prompts: list[str], j: int
-    ):
+    ) -> None:
         i1 = min(j, len(prompts) - 1)
         i2 = min(j, len(negative_prompts) - 1)
         prompt = prompts[i1]
@@ -437,7 +437,7 @@ class AfterDetailerScript(scripts.Script):
         i2i.prompt = prompt
         i2i.negative_prompt = negative_prompt
 
-    def is_need_call_process(self, p):
+    def is_need_call_process(self, p) -> bool:
         i = p._idx
         n_iter = p.iteration
         bs = p.batch_size
@@ -483,7 +483,7 @@ class AfterDetailerScript(scripts.Script):
             kwargs["device"] = self.ultralytics_device
 
         with change_torch_load():
-            pred = predictor(ad_model, pp.image, args.ad_conf, **kwargs)
+            pred = predictor(ad_model, pp.image, args.ad_confidence, **kwargs)
 
         masks = self.pred_preprocessing(pred, args)
 
