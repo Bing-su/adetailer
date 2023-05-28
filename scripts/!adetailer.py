@@ -5,7 +5,7 @@ import platform
 import re
 import sys
 import traceback
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from copy import copy, deepcopy
 from pathlib import Path
 from textwrap import dedent
@@ -41,13 +41,9 @@ from sd_webui.processing import (
 )
 from sd_webui.shared import cmd_opts, opts, state
 
-try:
+with suppress(ImportError):
     from rich import print
-    from rich.traceback import install
 
-    install(show_locals=True)
-except Exception:
-    pass
 
 no_huggingface = getattr(cmd_opts, "ad_no_huggingface", False)
 adetailer_dir = Path(models_path, "adetailer")
