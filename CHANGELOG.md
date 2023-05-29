@@ -1,5 +1,20 @@
 # Changelog
 
+## 2023-05-30
+
+- v23.6.0
+- 스크립트의 이름을 `After Detailer`에서 `ADetailer`로 변경
+  - API 사용자는 변경 필요함
+- 몇몇 설정 변경
+  - `ad_conf` → `ad_confidence`. 0~100 사이의 int → 0.0~1.0 사이의 float
+  - `ad_inpaint_full_res` → `ad_inpaint_only_masked`
+  - `ad_inpaint_full_res_padding` → `ad_inpaint_only_masked_padding`
+- mediapipe face mesh 모델 추가
+  - mediapipe 최소 버전 `0.10.0`
+
+- rich traceback 제거함
+- huggingface 다운로드 실패할 때 에러가 나지 않게 하고 해당 모델을 제거함
+
 ## 2023-05-26
 
 - v23.5.19
