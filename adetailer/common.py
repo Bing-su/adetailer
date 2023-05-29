@@ -13,7 +13,7 @@ repo_id = "Bingsu/adetailer"
 
 @dataclass
 class PredictOutput:
-    bboxes: list[list[float]] = field(default_factory=list)
+    bboxes: list[list[int | float]] = field(default_factory=list)
     masks: list[Image.Image] = field(default_factory=list)
     preview: Optional[Image.Image] = None
 
@@ -54,6 +54,7 @@ def get_models(
         {
             "mediapipe_face_full": None,
             "mediapipe_face_short": None,
+            "mediapipe_face_mesh": None,
         }
     )
 
@@ -94,3 +95,29 @@ def create_mask_from_bbox(
         mask_draw.rectangle(bbox, fill=255)
         masks.append(mask)
     return masks
+
+
+def create_bbox_from_mask(
+    masks: list[Image.Image], shape: tuple[int, int]
+) -> list[list[int]]:
+    """
+    Parameters
+    ----------
+        masks: list[Image.Image]
+            A list of masks
+        shape: tuple[int, int]
+            shape of the image (width, height)
+
+    Returns
+    -------
+        bboxes: list[list[float]]
+        A list of bounding boxes
+
+    """
+    bboxes = []
+    for mask in masks:
+        mask = mask.resize(shape)
+        bbox = mask.getbbox()
+        if bbox is not None:
+            bboxes.append(list(bbox))
+    return bboxes
