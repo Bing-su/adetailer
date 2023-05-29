@@ -18,6 +18,14 @@ class PredictOutput:
     preview: Optional[Image.Image] = None
 
 
+def hf_download(file: str):
+    try:
+        path = hf_hub_download(repo_id, file)
+    except Exception:
+        path = "INVALID"
+    return path
+
+
 def get_models(
     model_dir: Union[str, Path], huggingface: bool = True
 ) -> OrderedDict[str, Optional[str]]:
@@ -31,29 +39,27 @@ def get_models(
     else:
         model_paths = []
 
+    models = OrderedDict()
     if huggingface:
-        models = OrderedDict(
+        models.update(
             {
-                "face_yolov8n.pt": hf_hub_download(repo_id, "face_yolov8n.pt"),
-                "face_yolov8s.pt": hf_hub_download(repo_id, "face_yolov8s.pt"),
-                "mediapipe_face_full": None,
-                "mediapipe_face_short": None,
-                "hand_yolov8n.pt": hf_hub_download(repo_id, "hand_yolov8n.pt"),
-                "person_yolov8n-seg.pt": hf_hub_download(
-                    repo_id, "person_yolov8n-seg.pt"
-                ),
-                "person_yolov8s-seg.pt": hf_hub_download(
-                    repo_id, "person_yolov8s-seg.pt"
-                ),
+                "face_yolov8n.pt": hf_download("face_yolov8n.pt"),
+                "face_yolov8s.pt": hf_download("face_yolov8s.pt"),
+                "hand_yolov8n.pt": hf_download("hand_yolov8n.pt"),
+                "person_yolov8n-seg.pt": hf_download("person_yolov8n-seg.pt"),
+                "person_yolov8s-seg.pt": hf_download("person_yolov8s-seg.pt"),
             }
         )
-    else:
-        models = OrderedDict(
-            {
-                "mediapipe_face_full": None,
-                "mediapipe_face_short": None,
-            }
-        )
+    models.update(
+        {
+            "mediapipe_face_full": None,
+            "mediapipe_face_short": None,
+        }
+    )
+
+    invalid_keys = [k for k, v in models.items() if v == "INVALID"]
+    for key in invalid_keys:
+        models.pop(key)
 
     for path in model_paths:
         if path.name in models:
