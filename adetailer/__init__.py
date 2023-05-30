@@ -4,7 +4,7 @@ from .common import PredictOutput, get_models
 from .mediapipe import mediapipe_predict
 from .ultralytics import ultralytics_predict
 
-AFTER_DETAILER = "After Detailer"
+AFTER_DETAILER = "ADetailer"
 
 __all__ = [
     "__version__",

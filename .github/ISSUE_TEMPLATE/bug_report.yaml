@@ -1,0 +1,23 @@
+name: Bug report
+description: Create a report
+title: "[Bug]: "
+
+body:
+  - type: textarea
+    attributes:
+      label: Describe the bug
+      description: A clear and concise description of what the bug is.
+
+  - type: textarea
+    attributes:
+      label: Full console logs
+      description: |
+        The full console log of your terminal.
+        From `Python 3.10.*, Version: v1.*, Commit hash: *` to the end.
+      render: Shell
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: List of installed extensions

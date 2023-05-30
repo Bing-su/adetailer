@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from functools import partial
+from types import SimpleNamespace
 from typing import Any
 
 import gradio as gr
@@ -10,7 +11,7 @@ from adetailer.args import AD_ENABLE, ALL_ARGS, MASK_MERGE_INVERT
 from controlnet_ext import controlnet_exists, get_cn_inpaint_models
 
 
-class Widgets:
+class Widgets(SimpleNamespace):
     def tolist(self):
         return [getattr(self, attr) for attr in ALL_ARGS.attrs]
 
@@ -200,14 +201,14 @@ def detection(w: Widgets, n: int, is_img2img: bool):
 
     with gr.Row():
         with gr.Column():
-            w.ad_conf = gr.Slider(
-                label="Detection model confidence threshold %" + suffix(n),
-                minimum=0,
-                maximum=100,
-                step=1,
-                value=30,
+            w.ad_confidence = gr.Slider(
+                label="Detection model confidence threshold" + suffix(n),
+                minimum=0.0,
+                maximum=1.0,
+                step=0.01,
+                value=0.3,
                 visible=True,
-                elem_id=eid("ad_conf"),
+                elem_id=eid("ad_confidence"),
             )
 
         with gr.Column(variant="compact"):
@@ -262,7 +263,7 @@ def mask_preprocessing(w: Widgets, n: int, is_img2img: bool):
                     minimum=-128,
                     maximum=128,
                     step=4,
-                    value=32,
+                    value=4,
                     visible=True,
                     elem_id=eid("ad_dilate_erode"),
                 )
@@ -303,26 +304,26 @@ def inpainting(w: Widgets, n: int, is_img2img: bool):
 
         with gr.Row():
             with gr.Column(variant="compact"):
-                w.ad_inpaint_full_res = gr.Checkbox(
-                    label="Inpaint at full resolution " + suffix(n),
+                w.ad_inpaint_only_masked = gr.Checkbox(
+                    label="Inpaint only masked" + suffix(n),
                     value=True,
                     visible=True,
                     elem_id=eid("ad_inpaint_full_res"),
                 )
-                w.ad_inpaint_full_res_padding = gr.Slider(
-                    label="Inpaint at full resolution padding, pixels " + suffix(n),
+                w.ad_inpaint_only_masked_padding = gr.Slider(
+                    label="Inpaint only masked padding, pixels" + suffix(n),
                     minimum=0,
                     maximum=256,
                     step=4,
-                    value=0,
+                    value=32,
                     visible=True,
                     elem_id=eid("ad_inpaint_full_res_padding"),
                 )
 
-                w.ad_inpaint_full_res.change(
+                w.ad_inpaint_only_masked.change(
                     gr_interactive,
-                    inputs=w.ad_inpaint_full_res,
-                    outputs=w.ad_inpaint_full_res_padding,
+                    inputs=w.ad_inpaint_only_masked,
+                    outputs=w.ad_inpaint_only_masked_padding,
                     queue=False,
                 )
 

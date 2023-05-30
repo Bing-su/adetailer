@@ -40,9 +40,11 @@ If you want to exclude objects in the background, try setting the min ratio to a
 | Mask erosion (-) / dilation (+) | Enlarge or reduce the detected mask.                                                                                                | [opencv example](https://docs.opencv.org/4.7.0/db/df6/tutorial_erosion_dilatation.html) |
 | Mask merge mode                 | `None`: Inpaint each mask<br/>`Merge`: Merge all masks and inpaint<br/>`Merge and Invert`: Merge all masks and Invert, then inpaint |                                                                                         |
 
+Applied in this order: x, y offset → erosion/dilation → merge/invert.
+
 #### Inpainting
 
-![image](https://i.imgur.com/KbAeWar.png)
+![image](https://i.imgur.com/wyWlT1n.png)
 
 Each option corresponds to a corresponding option on the inpaint tab.
 
@@ -58,11 +60,12 @@ On the ControlNet tab, select a ControlNet inpaint model and set the model weigh
 | --------------------- | --------------------- | ----------------------------- | ----------------------------- |
 | face_yolov8n.pt       | 2D / realistic face   | 0.660                         | 0.366                         |
 | face_yolov8s.pt       | 2D / realistic face   | 0.713                         | 0.404                         |
-| mediapipe_face_full   | realistic face        | -                             | -                             |
-| mediapipe_face_short  | realistic face        | -                             | -                             |
 | hand_yolov8n.pt       | 2D / realistic hand   | 0.767                         | 0.505                         |
 | person_yolov8n-seg.pt | 2D / realistic person | 0.782 (bbox)<br/>0.761 (mask) | 0.555 (bbox)<br/>0.460 (mask) |
 | person_yolov8s-seg.pt | 2D / realistic person | 0.824 (bbox)<br/>0.809 (mask) | 0.605 (bbox)<br/>0.508 (mask) |
+| mediapipe_face_full   | realistic face        | -                             | -                             |
+| mediapipe_face_short  | realistic face        | -                             | -                             |
+| mediapipe_face_mesh   | realistic face        | -                             | -                             |
 
 The yolo models can be found on huggingface [Bingsu/adetailer](https://huggingface.co/Bingsu/adetailer).
 

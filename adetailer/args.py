@@ -13,7 +13,6 @@ from pydantic import (
     PositiveInt,
     confloat,
     constr,
-    validator,
 )
 
 
@@ -36,7 +35,7 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
     ad_model: str = "None"
     ad_prompt: str = ""
     ad_negative_prompt: str = ""
-    ad_conf: confloat(ge=0.0, le=1.0) = 0.3
+    ad_confidence: confloat(ge=0.0, le=1.0) = 0.3
     ad_mask_min_ratio: confloat(ge=0.0, le=1.0) = 0.0
     ad_mask_max_ratio: confloat(ge=0.0, le=1.0) = 1.0
     ad_dilate_erode: int = 32
@@ -45,8 +44,8 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
     ad_mask_merge_invert: Literal["None", "Merge", "Merge and Invert"] = "None"
     ad_mask_blur: NonNegativeInt = 4
     ad_denoising_strength: confloat(ge=0.0, le=1.0) = 0.4
-    ad_inpaint_full_res: bool = True
-    ad_inpaint_full_res_padding: NonNegativeInt = 0
+    ad_inpaint_only_masked: bool = True
+    ad_inpaint_only_masked_padding: NonNegativeInt = 0
     ad_use_inpaint_width_height: bool = False
     ad_inpaint_width: PositiveInt = 512
     ad_inpaint_height: PositiveInt = 512
@@ -57,17 +56,6 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
     ad_restore_face: bool = False
     ad_controlnet_model: constr(regex=r".*inpaint.*|^None$") = "None"
     ad_controlnet_weight: confloat(ge=0.0, le=1.0) = 1.0
-
-    @validator("ad_conf", pre=True)
-    def check_ad_conf(cls, v: Any):  # noqa: N805
-        if not isinstance(v, (int, float)):
-            try:
-                v = int(v)
-            except ValueError:
-                v = float(v)
-        if isinstance(v, int):
-            v /= 100.0
-        return v
 
     @staticmethod
     def ppop(
@@ -90,7 +78,6 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
             return {}
 
         p = {name: getattr(self, attr) for attr, name in ALL_ARGS}
-        p["ADetailer conf"] = int(p["ADetailer conf"] * 100)
         ppop = partial(self.ppop, p)
 
         ppop("ADetailer prompt")
@@ -100,7 +87,7 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
         ppop("ADetailer x offset", cond=0)
         ppop("ADetailer y offset", cond=0)
         ppop("ADetailer mask merge/invert", cond="None")
-        ppop("ADetailer inpaint full", ["ADetailer inpaint padding"])
+        ppop("ADetailer inpaint only masked", ["ADetailer inpaint padding"])
         ppop(
             "ADetailer use inpaint width/height",
             [
@@ -148,7 +135,7 @@ _all_args = [
     ("ad_model", "ADetailer model"),
     ("ad_prompt", "ADetailer prompt"),
     ("ad_negative_prompt", "ADetailer negative prompt"),
-    ("ad_conf", "ADetailer conf"),
+    ("ad_confidence", "ADetailer confidence"),
     ("ad_mask_min_ratio", "ADetailer mask min ratio"),
     ("ad_mask_max_ratio", "ADetailer mask max ratio"),
     ("ad_x_offset", "ADetailer x offset"),
@@ -157,8 +144,8 @@ _all_args = [
     ("ad_mask_merge_invert", "ADetailer mask merge/invert"),
     ("ad_mask_blur", "ADetailer mask blur"),
     ("ad_denoising_strength", "ADetailer denoising strength"),
-    ("ad_inpaint_full_res", "ADetailer inpaint full"),
-    ("ad_inpaint_full_res_padding", "ADetailer inpaint padding"),
+    ("ad_inpaint_only_masked", "ADetailer inpaint only masked"),
+    ("ad_inpaint_only_masked_padding", "ADetailer inpaint padding"),
     ("ad_use_inpaint_width_height", "ADetailer use inpaint width/height"),
     ("ad_inpaint_width", "ADetailer inpaint width"),
     ("ad_inpaint_height", "ADetailer inpaint height"),

@@ -13,9 +13,17 @@ repo_id = "Bingsu/adetailer"
 
 @dataclass
 class PredictOutput:
-    bboxes: list[list[float]] = field(default_factory=list)
+    bboxes: list[list[int | float]] = field(default_factory=list)
     masks: list[Image.Image] = field(default_factory=list)
     preview: Optional[Image.Image] = None
+
+
+def hf_download(file: str):
+    try:
+        path = hf_hub_download(repo_id, file)
+    except Exception:
+        path = "INVALID"
+    return path
 
 
 def get_models(
@@ -31,29 +39,28 @@ def get_models(
     else:
         model_paths = []
 
+    models = OrderedDict()
     if huggingface:
-        models = OrderedDict(
+        models.update(
             {
-                "face_yolov8n.pt": hf_hub_download(repo_id, "face_yolov8n.pt"),
-                "face_yolov8s.pt": hf_hub_download(repo_id, "face_yolov8s.pt"),
-                "mediapipe_face_full": None,
-                "mediapipe_face_short": None,
-                "hand_yolov8n.pt": hf_hub_download(repo_id, "hand_yolov8n.pt"),
-                "person_yolov8n-seg.pt": hf_hub_download(
-                    repo_id, "person_yolov8n-seg.pt"
-                ),
-                "person_yolov8s-seg.pt": hf_hub_download(
-                    repo_id, "person_yolov8s-seg.pt"
-                ),
+                "face_yolov8n.pt": hf_download("face_yolov8n.pt"),
+                "face_yolov8s.pt": hf_download("face_yolov8s.pt"),
+                "hand_yolov8n.pt": hf_download("hand_yolov8n.pt"),
+                "person_yolov8n-seg.pt": hf_download("person_yolov8n-seg.pt"),
+                "person_yolov8s-seg.pt": hf_download("person_yolov8s-seg.pt"),
             }
         )
-    else:
-        models = OrderedDict(
-            {
-                "mediapipe_face_full": None,
-                "mediapipe_face_short": None,
-            }
-        )
+    models.update(
+        {
+            "mediapipe_face_full": None,
+            "mediapipe_face_short": None,
+            "mediapipe_face_mesh": None,
+        }
+    )
+
+    invalid_keys = [k for k, v in models.items() if v == "INVALID"]
+    for key in invalid_keys:
+        models.pop(key)
 
     for path in model_paths:
         if path.name in models:
@@ -88,3 +95,29 @@ def create_mask_from_bbox(
         mask_draw.rectangle(bbox, fill=255)
         masks.append(mask)
     return masks
+
+
+def create_bbox_from_mask(
+    masks: list[Image.Image], shape: tuple[int, int]
+) -> list[list[int]]:
+    """
+    Parameters
+    ----------
+        masks: list[Image.Image]
+            A list of masks
+        shape: tuple[int, int]
+            shape of the image (width, height)
+
+    Returns
+    -------
+        bboxes: list[list[float]]
+        A list of bounding boxes
+
+    """
+    bboxes = []
+    for mask in masks:
+        mask = mask.resize(shape)
+        bbox = mask.getbbox()
+        if bbox is not None:
+            bboxes.append(list(bbox))
+    return bboxes
