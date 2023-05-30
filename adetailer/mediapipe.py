@@ -13,8 +13,8 @@ def mediapipe_predict(
     model_type: str, image: Image.Image, confidence: float = 0.3
 ) -> PredictOutput:
     mapping = {
-        "mediapipe_face_short": partial(mediapipe_face_detection, model_type=0),
-        "mediapipe_face_full": partial(mediapipe_face_detection, model_type=1),
+        "mediapipe_face_short": partial(mediapipe_face_detection, 0),
+        "mediapipe_face_full": partial(mediapipe_face_detection, 1),
         "mediapipe_face_mesh": mediapipe_face_mesh,
     }
     if model_type in mapping:
