@@ -54,8 +54,9 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
     ad_use_cfg_scale: bool = False
     ad_cfg_scale: NonNegativeFloat = 7.0
     ad_restore_face: bool = False
-    ad_controlnet_model: constr(regex=r".*inpaint.*|^None$") = "None"
+    ad_controlnet_model: constr(regex=r".*(inpaint|tile|scribble|lineart|openpose).*|^None$") = "None"
     ad_controlnet_weight: confloat(ge=0.0, le=1.0) = 1.0
+    ad_controlnet_guidance_end: confloat(ge=0.0, le=1.0) = 1.0
 
     @staticmethod
     def ppop(
@@ -107,7 +108,7 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
         ppop("ADetailer restore face")
         ppop(
             "ADetailer ControlNet model",
-            ["ADetailer ControlNet model", "ADetailer ControlNet weight"],
+            ["ADetailer ControlNet model", "ADetailer ControlNet weight", "ADetailer ControlNet guidance end"],
             cond="None",
         )
 
@@ -156,6 +157,7 @@ _all_args = [
     ("ad_restore_face", "ADetailer restore face"),
     ("ad_controlnet_model", "ADetailer ControlNet model"),
     ("ad_controlnet_weight", "ADetailer ControlNet weight"),
+    ("ad_controlnet_guidance_end", "ADetailer ControlNet guidance end"),
 ]
 
 AD_ENABLE = Arg(*_all_args[0])

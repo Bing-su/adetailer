@@ -3,6 +3,7 @@ from __future__ import annotations
 import importlib
 from functools import lru_cache
 from pathlib import Path
+import re
 
 from modules import sd_models, shared
 from modules.paths import data_path, models_path, script_path
@@ -11,6 +12,14 @@ ext_path = Path(data_path, "extensions")
 ext_builtin_path = Path(script_path, "extensions-builtin")
 is_in_builtin = False  # compatibility for vladmandic/automatic
 controlnet_exists = False
+controlnet_enabled_models = {
+    'inpaint': 'inpaint_global_harmonious',
+    'scribble': 't2ia_sketch_pidi',
+    'lineart': 'lineart_coarse',
+    'openpose': 'openpose_full',
+    'tile': None,
+}
+controlnet_model_regex = re.compile(r'.*('+('|'.join(controlnet_enabled_models.keys()))+').*')
 
 if ext_path.exists():
     controlnet_exists = any(
@@ -43,24 +52,31 @@ class ControlNetExt:
         self.external_cn = importlib.import_module(import_path, "external_code")
         self.cn_available = True
         models = self.external_cn.get_models()
-        self.cn_models.extend(m for m in models if "inpaint" in m)
+        self.cn_models.extend(m for m in models if controlnet_model_regex.match(m))
 
-    def _update_scripts_args(self, p, model: str, weight: float):
+    def _update_scripts_args(self, p, model: str, weight: float, guidance_end: float):
+        module = None
+        for m, v in controlnet_enabled_models.items():
+            if m in model:
+                module = v
+                break
+
         cn_units = [
             self.external_cn.ControlNetUnit(
                 model=model,
                 weight=weight,
                 control_mode=self.external_cn.ControlMode.BALANCED,
-                module="inpaint_global_harmonious",
+                module=module,
+                guidance_end=guidance_end,
                 pixel_perfect=True,
             )
         ]
 
         self.external_cn.update_cn_script_in_processing(p, cn_units)
 
-    def update_scripts_args(self, p, model: str, weight: float):
+    def update_scripts_args(self, p, model: str, weight: float, guidance_end: float):
         if self.cn_available and model != "None":
-            self._update_scripts_args(p, model, weight)
+            self._update_scripts_args(p, model, weight, guidance_end)
 
 
 def get_cn_model_dirs() -> list[Path]:
@@ -98,7 +114,7 @@ def _get_cn_inpaint_models() -> list[str]:
             continue
 
         for p in base.rglob("*"):
-            if p.is_file() and p.suffix in cn_model_exts and "inpaint" in p.name:
+            if p.is_file() and p.suffix in cn_model_exts and controlnet_model_regex.match(p.name):
                 if name_filter and name_filter not in p.name.lower():
                     continue
                 model_paths.append(p)
