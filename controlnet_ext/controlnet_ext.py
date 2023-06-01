@@ -22,6 +22,7 @@ for extension in extensions.active():
         controlnet_exists = True
         controlnet_path = Path(extension.path)
         cn_base_path = ".".join(controlnet_path.parts[-2:])
+        break
 
 cn_model_module = {
     "inpaint": "inpaint_global_harmonious",
