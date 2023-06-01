@@ -5,28 +5,23 @@ import re
 from functools import lru_cache
 from pathlib import Path
 
-from modules import sd_models, shared
+from modules import extensions, sd_models, shared
 from modules.paths import data_path, models_path, script_path
 
 ext_path = Path(data_path, "extensions")
 ext_builtin_path = Path(script_path, "extensions-builtin")
-is_in_builtin = False  # compatibility for vladmandic/automatic
 controlnet_exists = False
+controlnet_path = None
+cn_base_path = ""
 
-if ext_path.exists():
-    controlnet_exists = any(
-        p.name == "sd-webui-controlnet" for p in ext_path.iterdir() if p.is_dir()
-    )
-
-if not controlnet_exists and ext_builtin_path.exists():
-    controlnet_exists = any(
-        p.name == "sd-webui-controlnet"
-        for p in ext_builtin_path.iterdir()
-        if p.is_dir()
-    )
-
-    if controlnet_exists:
-        is_in_builtin = True
+for extension in extensions.active():
+    if not extension.enabled:
+        continue
+    # For cases like sd-webui-controlnet-master
+    if "sd-webui-controlnet" in extension.name:
+        controlnet_exists = True
+        controlnet_path = Path(extension.path)
+        cn_base_path = ".".join(controlnet_path.parts[-2:])
 
 cn_model_module = {
     "inpaint": "inpaint_global_harmonious",
@@ -45,10 +40,7 @@ class ControlNetExt:
         self.external_cn = None
 
     def init_controlnet(self):
-        if is_in_builtin:
-            import_path = "extensions-builtin.sd-webui-controlnet.scripts.external_code"
-        else:
-            import_path = "extensions.sd-webui-controlnet.scripts.external_code"
+        import_path = cn_base_path + ".scripts.external_code"
 
         self.external_cn = importlib.import_module(import_path, "external_code")
         self.cn_available = True
@@ -84,15 +76,15 @@ class ControlNetExt:
 
 def get_cn_model_dirs() -> list[Path]:
     cn_model_dir = Path(models_path, "ControlNet")
-    if is_in_builtin:
-        cn_model_dir_old = Path(ext_builtin_path, "sd-webui-controlnet", "models")
+    if controlnet_path is not None:
+        cn_model_dir_old = controlnet_path.joinpath("models")
     else:
-        cn_model_dir_old = Path(ext_path, "sd-webui-controlnet", "models")
+        cn_model_dir_old = None
     ext_dir1 = shared.opts.data.get("control_net_models_path", "")
     ext_dir2 = shared.opts.data.get("controlnet_dir", "")
 
-    dirs = [cn_model_dir, cn_model_dir_old]
-    for ext_dir in [ext_dir1, ext_dir2]:
+    dirs = [cn_model_dir]
+    for ext_dir in [cn_model_dir_old, ext_dir1, ext_dir2]:
         if ext_dir:
             dirs.append(Path(ext_dir))
 
