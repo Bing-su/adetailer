@@ -8,7 +8,7 @@ import gradio as gr
 
 from adetailer import AFTER_DETAILER, __version__
 from adetailer.args import AD_ENABLE, ALL_ARGS, MASK_MERGE_INVERT
-from controlnet_ext import controlnet_exists, get_cn_inpaint_models
+from controlnet_ext import controlnet_exists, get_cn_models
 
 
 class Widgets(SimpleNamespace):
@@ -154,29 +154,8 @@ def one_ui_group(
         ):
             inpainting(w, n, is_img2img)
 
-    with gr.Group(), gr.Row(variant="panel"):
-        cn_inpaint_models = ["None"] + get_cn_inpaint_models()
-
-        w.ad_controlnet_model = gr.Dropdown(
-            label="ControlNet model" + suffix(n),
-            choices=cn_inpaint_models,
-            value="None",
-            visible=True,
-            type="value",
-            interactive=controlnet_exists,
-            elem_id=eid("ad_controlnet_model"),
-        )
-
-        w.ad_controlnet_weight = gr.Slider(
-            label="ControlNet weight" + suffix(n),
-            minimum=0.0,
-            maximum=1.0,
-            step=0.05,
-            value=1.0,
-            visible=True,
-            interactive=controlnet_exists,
-            elem_id=eid("ad_controlnet_weight"),
-        )
+    with gr.Group():
+        controlnet(w, n, is_img2img)
 
     for attr in ALL_ARGS.attrs:
         widget = getattr(w, attr)
@@ -418,4 +397,55 @@ def inpainting(w: Widgets, n: int, is_img2img: bool):
                 label="Restore faces after ADetailer" + suffix(n),
                 value=False,
                 elem_id=eid("ad_restore_face"),
+            )
+
+
+def controlnet(w: Widgets, n: int, is_img2img: bool):
+    eid = partial(elem_id, n=n, is_img2img=is_img2img)
+    cn_models = ["None"] + get_cn_models()
+
+    with gr.Row(variant="panel"):
+        with gr.Column(variant="compact"):
+            w.ad_controlnet_model = gr.Dropdown(
+                label="ControlNet model" + suffix(n),
+                choices=cn_models,
+                value="None",
+                visible=True,
+                type="value",
+                interactive=controlnet_exists,
+                elem_id=eid("ad_controlnet_model"),
+            )
+
+            w.ad_controlnet_weight = gr.Slider(
+                label="ControlNet weight" + suffix(n),
+                minimum=0.0,
+                maximum=1.0,
+                step=0.01,
+                value=1.0,
+                visible=True,
+                interactive=controlnet_exists,
+                elem_id=eid("ad_controlnet_weight"),
+            )
+
+        with gr.Column(variant="compact"):
+            w.ad_controlnet_guidance_start = gr.Slider(
+                label="ControlNet guidance start" + suffix(n),
+                minimum=0.0,
+                maximum=1.0,
+                step=0.01,
+                value=0.0,
+                visible=True,
+                interactive=controlnet_exists,
+                elem_id=eid("ad_controlnet_guidance_start"),
+            )
+
+            w.ad_controlnet_guidance_end = gr.Slider(
+                label="ControlNet guidance end" + suffix(n),
+                minimum=0.0,
+                maximum=1.0,
+                step=0.01,
+                value=1.0,
+                visible=True,
+                interactive=controlnet_exists,
+                elem_id=eid("ad_controlnet_guidance_end"),
             )

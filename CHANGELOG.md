@@ -1,5 +1,13 @@
 # Changelog
 
+## 2023-06-01
+
+- v23.6.1
+- `inpaint, scribble, lineart, openpose, tile` 5가지 컨트롤넷 모델 지원 (PR #107)
+- controlnet guidance start, end 인자 추가 (PR #107)
+- `modules.extensions`를 사용하여 컨트롤넷 확장을 불러오고 경로를 알아내로록 변경
+- ui에서 컨트롤넷을 별도 함수로 분리
+
 ## 2023-05-30
 
 - v23.6.0

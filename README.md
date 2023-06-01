@@ -50,9 +50,9 @@ Each option corresponds to a corresponding option on the inpaint tab.
 
 ## ControlNet Inpainting
 
-You can use the ControlNet inpaint extension if you have ControlNet installed and a ControlNet inpaint model.
+You can use the ControlNet extension if you have ControlNet installed and ControlNet models.
 
-On the ControlNet tab, select a ControlNet inpaint model and set the model weights.
+Support `inpaint, scribble, lineart, openpose, tile` controlnet models. Once you choose a model, the preprocessor is set automatically.
 
 ## Model
 

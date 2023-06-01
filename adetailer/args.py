@@ -15,6 +15,8 @@ from pydantic import (
     constr,
 )
 
+cn_model_regex = r".*(inpaint|tile|scribble|lineart|openpose).*|^None$"
+
 
 class Arg(NamedTuple):
     attr: str
@@ -54,8 +56,10 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
     ad_use_cfg_scale: bool = False
     ad_cfg_scale: NonNegativeFloat = 7.0
     ad_restore_face: bool = False
-    ad_controlnet_model: constr(regex=r".*inpaint.*|^None$") = "None"
+    ad_controlnet_model: constr(regex=cn_model_regex) = "None"
     ad_controlnet_weight: confloat(ge=0.0, le=1.0) = 1.0
+    ad_controlnet_guidance_start: confloat(ge=0.0, le=1.0) = 0.0
+    ad_controlnet_guidance_end: confloat(ge=0.0, le=1.0) = 1.0
 
     @staticmethod
     def ppop(
@@ -71,7 +75,7 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
 
         if cond:
             for k in pops:
-                p.pop(k)
+                p.pop(k, None)
 
     def extra_params(self, suffix: str = ""):
         if self.ad_model == "None":
@@ -107,9 +111,17 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
         ppop("ADetailer restore face")
         ppop(
             "ADetailer ControlNet model",
-            ["ADetailer ControlNet model", "ADetailer ControlNet weight"],
+            [
+                "ADetailer ControlNet model",
+                "ADetailer ControlNet weight",
+                "ADetailer ControlNet guidance start",
+                "ADetailer ControlNet guidance end",
+            ],
             cond="None",
         )
+        ppop("ADetailer ControlNet weight", cond=1.0)
+        ppop("ADetailer ControlNet guidance start", cond=0.0)
+        ppop("ADetailer ControlNet guidance end", cond=1.0)
 
         if suffix:
             p = {k + suffix: v for k, v in p.items()}
@@ -156,6 +168,8 @@ _all_args = [
     ("ad_restore_face", "ADetailer restore face"),
     ("ad_controlnet_model", "ADetailer ControlNet model"),
     ("ad_controlnet_weight", "ADetailer ControlNet weight"),
+    ("ad_controlnet_guidance_start", "ADetailer ControlNet guidance start"),
+    ("ad_controlnet_guidance_end", "ADetailer ControlNet guidance end"),
 ]
 
 AD_ENABLE = Arg(*_all_args[0])

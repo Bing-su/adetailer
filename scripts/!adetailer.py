@@ -138,7 +138,11 @@ class AfterDetailerScript(scripts.Script):
             and args.ad_controlnet_model != "None"
         ):
             self.controlnet_ext.update_scripts_args(
-                p, args.ad_controlnet_model, args.ad_controlnet_weight
+                p,
+                model=args.ad_controlnet_model,
+                weight=args.ad_controlnet_weight,
+                guidance_start=args.ad_controlnet_guidance_start,
+                guidance_end=args.ad_controlnet_guidance_end,
             )
 
     def is_ad_enabled(self, *args_) -> bool:

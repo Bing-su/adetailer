@@ -1,7 +1,7 @@
-from .controlnet_ext import ControlNetExt, controlnet_exists, get_cn_inpaint_models
+from .controlnet_ext import ControlNetExt, controlnet_exists, get_cn_models
 
 __all__ = [
     "ControlNetExt",
     "controlnet_exists",
-    "get_cn_inpaint_models",
+    "get_cn_models",
 ]
