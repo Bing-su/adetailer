@@ -70,6 +70,8 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
     ):
         if pops is None:
             pops = [key]
+        if key not in p:
+            return
         value = p[key]
         cond = (not bool(value)) if cond is None else value == cond
 
