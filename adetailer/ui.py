@@ -177,6 +177,17 @@ def one_ui_group(
             interactive=controlnet_exists,
             elem_id=eid("ad_controlnet_weight"),
         )
+        
+        w.ad_controlnet_guidance_end = gr.Slider(
+            label="ControlNet guidance end" + suffix(n),
+            minimum=0.0,
+            maximum=1.0,
+            step=0.05,
+            value=1.0,
+            visible=True,
+            interactive=controlnet_exists,
+            elem_id=eid("ad_controlnet_guidance_end"),
+        )
 
     for attr in ALL_ARGS.attrs:
         widget = getattr(w, attr)
