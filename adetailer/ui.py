@@ -177,7 +177,7 @@ def one_ui_group(
             interactive=controlnet_exists,
             elem_id=eid("ad_controlnet_weight"),
         )
-        
+
         w.ad_controlnet_guidance_end = gr.Slider(
             label="ControlNet guidance end" + suffix(n),
             minimum=0.0,

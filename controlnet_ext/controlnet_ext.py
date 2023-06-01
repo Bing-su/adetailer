@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import importlib
+import re
 from functools import lru_cache
 from pathlib import Path
-import re
 
 from modules import sd_models, shared
 from modules.paths import data_path, models_path, script_path
@@ -13,13 +13,15 @@ ext_builtin_path = Path(script_path, "extensions-builtin")
 is_in_builtin = False  # compatibility for vladmandic/automatic
 controlnet_exists = False
 controlnet_enabled_models = {
-    'inpaint': 'inpaint_global_harmonious',
-    'scribble': 't2ia_sketch_pidi',
-    'lineart': 'lineart_coarse',
-    'openpose': 'openpose_full',
-    'tile': None,
+    "inpaint": "inpaint_global_harmonious",
+    "scribble": "t2ia_sketch_pidi",
+    "lineart": "lineart_coarse",
+    "openpose": "openpose_full",
+    "tile": None,
 }
-controlnet_model_regex = re.compile(r'.*('+('|'.join(controlnet_enabled_models.keys()))+').*')
+controlnet_model_regex = re.compile(
+    r".*(" + ("|".join(controlnet_enabled_models.keys())) + ").*"
+)
 
 if ext_path.exists():
     controlnet_exists = any(
@@ -114,7 +116,11 @@ def _get_cn_inpaint_models() -> list[str]:
             continue
 
         for p in base.rglob("*"):
-            if p.is_file() and p.suffix in cn_model_exts and controlnet_model_regex.match(p.name):
+            if (
+                p.is_file()
+                and p.suffix in cn_model_exts
+                and controlnet_model_regex.match(p.name)
+            ):
                 if name_filter and name_filter not in p.name.lower():
                     continue
                 model_paths.append(p)
