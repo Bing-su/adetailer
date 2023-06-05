@@ -287,7 +287,7 @@ def inpainting(w: Widgets, n: int, is_img2img: bool):
                     label="Inpaint only masked" + suffix(n),
                     value=True,
                     visible=True,
-                    elem_id=eid("ad_inpaint_full_res"),
+                    elem_id=eid("ad_inpaint_only_masked"),
                 )
                 w.ad_inpaint_only_masked_padding = gr.Slider(
                     label="Inpaint only masked padding, pixels" + suffix(n),
@@ -296,7 +296,7 @@ def inpainting(w: Widgets, n: int, is_img2img: bool):
                     step=4,
                     value=32,
                     visible=True,
-                    elem_id=eid("ad_inpaint_full_res_padding"),
+                    elem_id=eid("ad_inpaint_only_masked_padding"),
                 )
 
                 w.ad_inpaint_only_masked.change(
