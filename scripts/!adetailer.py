@@ -158,7 +158,7 @@ class AfterDetailerScript(scripts.Script):
         checker = EnableChecker(a0=a0, a1=a1)
         return checker.is_enabled()
 
-    def get_args(self, *args_) -> list[ADetailerArgs]:
+    def get_args(self, p, *args_) -> list[ADetailerArgs]:
         """
         `args_` is at least 1 in length by `is_ad_enabled` immediately above
         """
@@ -167,6 +167,9 @@ class AfterDetailerScript(scripts.Script):
         if not args:
             message = f"[-] ADetailer: Invalid arguments passed to ADetailer: {args_!r}"
             raise ValueError(message)
+
+        if hasattr(p, "adetailer_xyz"):
+            args[0].update(p.adetailer_xyz)
 
         all_inputs = []
 
@@ -449,7 +452,7 @@ class AfterDetailerScript(scripts.Script):
             return
 
         if self.is_ad_enabled(*args_):
-            arg_list = self.get_args(*args_)
+            arg_list = self.get_args(p, *args_)
             extra_params = self.extra_params(arg_list)
             p.extra_generation_params.update(extra_params)
 
@@ -539,7 +542,7 @@ class AfterDetailerScript(scripts.Script):
 
         p._idx = getattr(p, "_idx", -1) + 1
         init_image = copy(pp.image)
-        arg_list = self.get_args(*args_)
+        arg_list = self.get_args(p, *args_)
 
         is_processed = False
         with CNHijackRestore(), pause_total_tqdm(), cn_allow_script_control():
