@@ -7,6 +7,7 @@ import sys
 import traceback
 from contextlib import contextmanager, suppress
 from copy import copy, deepcopy
+from functools import partial
 from pathlib import Path
 from textwrap import dedent
 from typing import Any
@@ -26,7 +27,7 @@ from adetailer.args import ALL_ARGS, BBOX_SORTBY, ADetailerArgs, EnableChecker
 from adetailer.common import PredictOutput
 from adetailer.mask import filter_by_ratio, mask_preprocess, sort_bboxes
 from adetailer.ui import adui, ordinal, suffix
-from controlnet_ext import ControlNetExt, controlnet_exists
+from controlnet_ext import ControlNetExt, controlnet_exists, get_cn_models
 from controlnet_ext.restore import (
     CNHijackRestore,
     cn_allow_script_control,
@@ -157,7 +158,7 @@ class AfterDetailerScript(scripts.Script):
         checker = EnableChecker(a0=a0, a1=a1)
         return checker.is_enabled()
 
-    def get_args(self, *args_) -> list[ADetailerArgs]:
+    def get_args(self, p, *args_) -> list[ADetailerArgs]:
         """
         `args_` is at least 1 in length by `is_ad_enabled` immediately above
         """
@@ -166,6 +167,9 @@ class AfterDetailerScript(scripts.Script):
         if not args:
             message = f"[-] ADetailer: Invalid arguments passed to ADetailer: {args_!r}"
             raise ValueError(message)
+
+        if hasattr(p, "adetailer_xyz"):
+            args[0].update(p.adetailer_xyz)
 
         all_inputs = []
 
@@ -448,7 +452,7 @@ class AfterDetailerScript(scripts.Script):
             return
 
         if self.is_ad_enabled(*args_):
-            arg_list = self.get_args(*args_)
+            arg_list = self.get_args(p, *args_)
             extra_params = self.extra_params(arg_list)
             p.extra_generation_params.update(extra_params)
 
@@ -538,7 +542,7 @@ class AfterDetailerScript(scripts.Script):
 
         p._idx = getattr(p, "_idx", -1) + 1
         init_image = copy(pp.image)
-        arg_list = self.get_args(*args_)
+        arg_list = self.get_args(p, *args_)
 
         is_processed = False
         with CNHijackRestore(), pause_total_tqdm(), cn_allow_script_control():
@@ -630,5 +634,87 @@ def on_ui_settings():
     )
 
 
+# xyz_grid
+
+
+def make_axis_on_xyz_grid():
+    xyz_grid = None
+    for script in scripts.scripts_data:
+        if script.script_class.__module__ == "xyz_grid.py":
+            xyz_grid = script.module
+            break
+
+    if xyz_grid is None:
+        return
+
+    model_list = ["None"] + list(model_mapping.keys())
+
+    def set_value(p, x, xs, *, field: str):
+        if not hasattr(p, "adetailer_xyz"):
+            p.adetailer_xyz = {}
+        p.adetailer_xyz[field] = x
+
+    axis = [
+        xyz_grid.AxisOption(
+            "[ADetailer] ADetailer model 1st",
+            str,
+            partial(set_value, field="ad_model"),
+            choices=lambda: model_list,
+        ),
+        xyz_grid.AxisOption(
+            "[ADetailer] ADetailer prompt 1st",
+            str,
+            partial(set_value, field="ad_prompt"),
+        ),
+        xyz_grid.AxisOption(
+            "[ADetailer] ADetailer negative prompt 1st",
+            str,
+            partial(set_value, field="ad_negative_prompt"),
+        ),
+        xyz_grid.AxisOption(
+            "[ADetailer] Mask erosion / dilation 1st",
+            int,
+            partial(set_value, field="ad_dilate_erode"),
+        ),
+        xyz_grid.AxisOption(
+            "[ADetailer] Inpaint denoising strength 1st",
+            float,
+            partial(set_value, field="ad_denoising_strength"),
+        ),
+        xyz_grid.AxisOption(
+            "[ADetailer] Inpaint only masked 1st",
+            str,
+            partial(set_value, field="ad_inpaint_only_masked"),
+            choices=lambda: ["True", "False"],
+        ),
+        xyz_grid.AxisOption(
+            "[ADetailer] Inpaint only masked padding 1st",
+            int,
+            partial(set_value, field="ad_inpaint_only_masked_padding"),
+        ),
+        xyz_grid.AxisOption(
+            "[ADetailer] ControlNet model 1st",
+            str,
+            partial(set_value, field="ad_controlnet_model"),
+            choices=lambda: ["None"] + get_cn_models(),
+        ),
+    ]
+
+    if not any(x.label.startswith("[ADetailer]") for x in xyz_grid.axis_options):
+        xyz_grid.axis_options.extend(axis)
+
+
+def on_before_ui():
+    try:
+        make_axis_on_xyz_grid()
+    except Exception:
+        error = traceback.format_exc()
+        print(
+            f"[-] ADetailer: xyz_grid error:\n{error}",
+            file=sys.stderr,
+        )
+
+
 script_callbacks.on_ui_settings(on_ui_settings)
 script_callbacks.on_after_component(on_after_component)
+script_callbacks.on_before_ui(on_before_ui)

@@ -13,7 +13,7 @@ body:
       label: Full console logs
       description: |
         The full console log of your terminal.
-        From `Python 3.10.*, Version: v1.*, Commit hash: *` to the end.
+        From `Python 3.*, Version: ..., Commit hash: ...` to the end.
       render: Shell
     validations:
       required: true

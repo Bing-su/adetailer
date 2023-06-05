@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from abc import ABC, abstractmethod
+    from collections import namedtuple
     from dataclasses import dataclass
     from typing import Any
 
@@ -79,5 +80,15 @@ if TYPE_CHECKING:
         def elem_id(self, item_id: Any) -> str:
             pass
 
+    ScriptClassData = namedtuple(
+        "ScriptClassData", ["script_class", "path", "basedir", "module"]
+    )
+    scripts_data: list[ScriptClassData] = []
+
 else:
-    from modules.scripts import AlwaysVisible, PostprocessImageArgs, Script
+    from modules.scripts import (
+        AlwaysVisible,
+        PostprocessImageArgs,
+        Script,
+        scripts_data,
+    )
