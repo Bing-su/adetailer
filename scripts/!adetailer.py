@@ -669,11 +669,11 @@ def make_axis_on_xyz_grid():
         xyz_grid.AxisOption(
             "[ADetailer] ADetailer negative prompt 1st",
             str,
-            partial(set_value, field="ad_prompt"),
+            partial(set_value, field="ad_negative_prompt"),
         ),
         xyz_grid.AxisOption(
             "[ADetailer] Mask erosion / dilation 1st",
-            float,
+            int,
             partial(set_value, field="ad_dilate_erode"),
         ),
         xyz_grid.AxisOption(
@@ -683,7 +683,7 @@ def make_axis_on_xyz_grid():
         ),
         xyz_grid.AxisOption(
             "[ADetailer] Inpaint only masked 1st",
-            bool,
+            str,
             partial(set_value, field="ad_inpaint_only_masked"),
             choices=lambda: ["True", "False"],
         ),
@@ -694,7 +694,7 @@ def make_axis_on_xyz_grid():
         ),
         xyz_grid.AxisOption(
             "[ADetailer] ControlNet model 1st",
-            int,
+            str,
             partial(set_value, field="ad_controlnet_model"),
             choices=lambda: ["None"] + get_cn_models(),
         ),
