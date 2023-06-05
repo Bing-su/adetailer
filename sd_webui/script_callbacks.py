@@ -11,5 +11,12 @@ if TYPE_CHECKING:
     def on_after_component(callback: Callable):
         pass
 
+    def on_before_ui(callback: Callable):
+        pass
+
 else:
-    from modules.script_callbacks import on_after_component, on_ui_settings
+    from modules.script_callbacks import (
+        on_after_component,
+        on_before_ui,
+        on_ui_settings,
+    )
