@@ -15,7 +15,7 @@ from typing import Any
 import gradio as gr
 import torch
 
-import modules  # noqa: F401
+import modules
 from adetailer import (
     AFTER_DETAILER,
     __version__,
@@ -647,7 +647,7 @@ def make_axis_on_xyz_grid():
     if xyz_grid is None:
         return
 
-    model_list = ["None"] + list(model_mapping.keys())
+    model_list = ["None", *model_mapping.keys()]
 
     def set_value(p, x, xs, *, field: str):
         if not hasattr(p, "adetailer_xyz"):
@@ -696,7 +696,7 @@ def make_axis_on_xyz_grid():
             "[ADetailer] ControlNet model 1st",
             str,
             partial(set_value, field="ad_controlnet_model"),
-            choices=lambda: ["None"] + get_cn_models(),
+            choices=lambda: ["None", *get_cn_models()],
         ),
     ]
 

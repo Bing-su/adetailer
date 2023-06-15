@@ -16,7 +16,7 @@ profile = "black"
 known_first_party = ["launch", "modules"]
 
 [tool.ruff]
-select = ["A", "B", "C4", "C90", "COM", "E", "EM", "F", "FA", "I001", "ISC", "N", "PIE", "PT", "RET", "RUF", "SIM", "UP", "W"]
+select = ["A", "B", "C4", "C90", "E", "EM", "F", "FA", "I001", "ISC", "N", "PIE", "PT", "RET", "RUF", "SIM", "UP", "W"]
 ignore = ["B008", "B905", "E501", "F401", "UP007"]
 
 [tool.ruff.isort]

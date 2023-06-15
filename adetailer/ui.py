@@ -90,7 +90,7 @@ def adui(
                 infotext_fields.extend(infofields)
 
     # components: [bool, dict, dict, ...]
-    components = [ad_enable] + states
+    components = [ad_enable, *states]
     return components, infotext_fields
 
 
@@ -106,7 +106,7 @@ def one_ui_group(
     eid = partial(elem_id, n=n, is_img2img=is_img2img)
 
     with gr.Row():
-        model_choices = model_list + ["None"] if n == 0 else ["None"] + model_list
+        model_choices = [*model_list, "None"] if n == 0 else ["None", *model_list]
 
         w.ad_model = gr.Dropdown(
             label="ADetailer model" + suffix(n),
@@ -164,7 +164,7 @@ def one_ui_group(
             fn=on_change, inputs=[state, widget], outputs=[state], queue=False
         )
 
-    all_inputs = [state] + w.tolist()
+    all_inputs = [state, *w.tolist()]
     target_button = i2i_button if is_img2img else t2i_button
     target_button.click(
         fn=on_generate_click, inputs=all_inputs, outputs=state, queue=False
@@ -402,7 +402,7 @@ def inpainting(w: Widgets, n: int, is_img2img: bool):
 
 def controlnet(w: Widgets, n: int, is_img2img: bool):
     eid = partial(elem_id, n=n, is_img2img=is_img2img)
-    cn_models = ["None"] + get_cn_models()
+    cn_models = ["None", *get_cn_models()]
 
     with gr.Row(variant="panel"):
         with gr.Column(variant="compact"):
