@@ -132,6 +132,7 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
             ],
             cond="None",
         )
+        ppop("ADetailer ControlNet module")
         ppop("ADetailer ControlNet weight", cond=1.0)
         ppop("ADetailer ControlNet guidance start", cond=0.0)
         ppop("ADetailer ControlNet guidance end", cond=1.0)
