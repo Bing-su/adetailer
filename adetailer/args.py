@@ -37,6 +37,8 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
     ad_model: str = "None"
     ad_prompt: str = ""
     ad_negative_prompt: str = ""
+    ad_use_initial_noise_multiplier: bool = False
+    ad_initial_noise_multiplier: confloat(ge=0.5, le=1.5) = 1
     ad_confidence: confloat(ge=0.0, le=1.0) = 0.3
     ad_mask_min_ratio: confloat(ge=0.0, le=1.0) = 0.0
     ad_mask_max_ratio: confloat(ge=0.0, le=1.0) = 1.0
@@ -149,6 +151,8 @@ _all_args = [
     ("ad_model", "ADetailer model"),
     ("ad_prompt", "ADetailer prompt"),
     ("ad_negative_prompt", "ADetailer negative prompt"),
+    ("ad_use_initial_noise_multiplier", "ADetailer use separate Noise Multiplier for img2img"),
+    ("ad_initial_noise_multiplier", "ADetailer Noise Multiplier for img2img"),
     ("ad_confidence", "ADetailer confidence"),
     ("ad_mask_min_ratio", "ADetailer mask min ratio"),
     ("ad_mask_max_ratio", "ADetailer mask max ratio"),
