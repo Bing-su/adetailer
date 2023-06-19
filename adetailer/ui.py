@@ -10,6 +10,12 @@ from adetailer import AFTER_DETAILER, __version__
 from adetailer.args import AD_ENABLE, ALL_ARGS, MASK_MERGE_INVERT
 from controlnet_ext import controlnet_exists, get_cn_models
 
+cn_module_choices = [
+    "inpaint_global_harmonious",
+    "inpaint_only",
+    "inpaint_only+lama",
+]
+
 
 class Widgets(SimpleNamespace):
     def tolist(self):
@@ -38,6 +44,12 @@ def on_generate_click(state: dict, *values: Any):
     for attr, value in zip(ALL_ARGS.attrs, values):
         state[attr] = value
     return state
+
+
+def on_cn_model_update(cn_model: str):
+    if "inpaint" in cn_model:
+        return gr.update(visible=True, choices=cn_module_choices)
+    return gr.update(visible=False, choices=["None"])
 
 
 def elem_id(item_id: str, n: int, is_img2img: bool) -> str:
@@ -416,6 +428,16 @@ def controlnet(w: Widgets, n: int, is_img2img: bool):
                 elem_id=eid("ad_controlnet_model"),
             )
 
+            w.ad_controlnet_module = gr.Dropdown(
+                label="ControlNet module" + suffix(n),
+                choices=cn_module_choices,
+                value="inpaint_global_harmonious",
+                visible=False,
+                type="value",
+                interactive=controlnet_exists,
+                elem_id=eid("ad_controlnet_module"),
+            )
+
             w.ad_controlnet_weight = gr.Slider(
                 label="ControlNet weight" + suffix(n),
                 minimum=0.0,
@@ -425,6 +447,13 @@ def controlnet(w: Widgets, n: int, is_img2img: bool):
                 visible=True,
                 interactive=controlnet_exists,
                 elem_id=eid("ad_controlnet_weight"),
+            )
+
+            w.ad_controlnet_model.change(
+                on_cn_model_update,
+                inputs=w.ad_controlnet_model,
+                outputs=w.ad_controlnet_module,
+                queue=False,
             )
 
         with gr.Column(variant="compact"):

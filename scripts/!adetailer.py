@@ -141,6 +141,7 @@ class AfterDetailerScript(scripts.Script):
             self.controlnet_ext.update_scripts_args(
                 p,
                 model=args.ad_controlnet_model,
+                module=args.ad_controlnet_module,
                 weight=args.ad_controlnet_weight,
                 guidance_start=args.ad_controlnet_guidance_start,
                 guidance_end=args.ad_controlnet_guidance_end,
