@@ -10,6 +10,12 @@ from adetailer import AFTER_DETAILER, __version__
 from adetailer.args import AD_ENABLE, ALL_ARGS, MASK_MERGE_INVERT
 from controlnet_ext import controlnet_exists, get_cn_models
 
+cn_module_choices = [
+    "inpaint_global_harmonious",
+    "inpaint_only",
+    "inpaint_only+lama",
+]
+
 
 class Widgets(SimpleNamespace):
     def tolist(self):
@@ -38,6 +44,14 @@ def on_generate_click(state: dict, *values: Any):
     for attr, value in zip(ALL_ARGS.attrs, values):
         state[attr] = value
     return state
+
+
+def on_cn_model_update(cn_model: str):
+    if "inpaint" in cn_model:
+        return gr.update(
+            visible=True, choices=cn_module_choices, value=cn_module_choices[0]
+        )
+    return gr.update(visible=False, choices=["None"], value="None")
 
 
 def elem_id(item_id: str, n: int, is_img2img: bool) -> str:
@@ -90,7 +104,7 @@ def adui(
                 infotext_fields.extend(infofields)
 
     # components: [bool, dict, dict, ...]
-    components = [ad_enable] + states
+    components = [ad_enable, *states]
     return components, infotext_fields
 
 
@@ -106,7 +120,7 @@ def one_ui_group(
     eid = partial(elem_id, n=n, is_img2img=is_img2img)
 
     with gr.Row():
-        model_choices = model_list + ["None"] if n == 0 else ["None"] + model_list
+        model_choices = [*model_list, "None"] if n == 0 else ["None", *model_list]
 
         w.ad_model = gr.Dropdown(
             label="ADetailer model" + suffix(n),
@@ -164,7 +178,7 @@ def one_ui_group(
             fn=on_change, inputs=[state, widget], outputs=[state], queue=False
         )
 
-    all_inputs = [state] + w.tolist()
+    all_inputs = [state, *w.tolist()]
     target_button = i2i_button if is_img2img else t2i_button
     target_button.click(
         fn=on_generate_click, inputs=all_inputs, outputs=state, queue=False
@@ -393,6 +407,31 @@ def inpainting(w: Widgets, n: int, is_img2img: bool):
                 )
 
         with gr.Row():
+            with gr.Column(variant="compact"):
+                w.ad_use_noise_multiplier = gr.Checkbox(
+                    label="Use separate noise multiplier" + suffix(n),
+                    value=False,
+                    visible=True,
+                    elem_id=eid("ad_use_noise_multiplier"),
+                )
+
+                w.ad_noise_multiplier = gr.Slider(
+                    label="Noise multiplier for img2img" + suffix(n),
+                    minimum=0.5,
+                    maximum=1.5,
+                    step=0.01,
+                    value=1.0,
+                    visible=True,
+                    elem_id=eid("ad_noise_multiplier"),
+                )
+
+                w.ad_use_noise_multiplier.change(
+                    gr_interactive,
+                    inputs=w.ad_use_noise_multiplier,
+                    outputs=w.ad_noise_multiplier,
+                    queue=False,
+                )
+
             w.ad_restore_face = gr.Checkbox(
                 label="Restore faces after ADetailer" + suffix(n),
                 value=False,
@@ -402,7 +441,7 @@ def inpainting(w: Widgets, n: int, is_img2img: bool):
 
 def controlnet(w: Widgets, n: int, is_img2img: bool):
     eid = partial(elem_id, n=n, is_img2img=is_img2img)
-    cn_models = ["None"] + get_cn_models()
+    cn_models = ["None", *get_cn_models()]
 
     with gr.Row(variant="panel"):
         with gr.Column(variant="compact"):
@@ -416,6 +455,16 @@ def controlnet(w: Widgets, n: int, is_img2img: bool):
                 elem_id=eid("ad_controlnet_model"),
             )
 
+            w.ad_controlnet_module = gr.Dropdown(
+                label="ControlNet module" + suffix(n),
+                choices=cn_module_choices,
+                value="inpaint_global_harmonious",
+                visible=False,
+                type="value",
+                interactive=controlnet_exists,
+                elem_id=eid("ad_controlnet_module"),
+            )
+
             w.ad_controlnet_weight = gr.Slider(
                 label="ControlNet weight" + suffix(n),
                 minimum=0.0,
@@ -425,6 +474,13 @@ def controlnet(w: Widgets, n: int, is_img2img: bool):
                 visible=True,
                 interactive=controlnet_exists,
                 elem_id=eid("ad_controlnet_weight"),
+            )
+
+            w.ad_controlnet_model.change(
+                on_cn_model_update,
+                inputs=w.ad_controlnet_model,
+                outputs=w.ad_controlnet_module,
+                queue=False,
             )
 
         with gr.Column(variant="compact"):

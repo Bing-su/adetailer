@@ -15,7 +15,7 @@ from typing import Any
 import gradio as gr
 import torch
 
-import modules  # noqa: F401
+import modules
 from adetailer import (
     AFTER_DETAILER,
     __version__,
@@ -141,6 +141,7 @@ class AfterDetailerScript(scripts.Script):
             self.controlnet_ext.update_scripts_args(
                 p,
                 model=args.ad_controlnet_model,
+                module=args.ad_controlnet_module,
                 weight=args.ad_controlnet_weight,
                 guidance_start=args.ad_controlnet_guidance_start,
                 guidance_end=args.ad_controlnet_guidance_end,
@@ -281,6 +282,11 @@ class AfterDetailerScript(scripts.Script):
             return args.ad_cfg_scale
         return p.cfg_scale
 
+    def get_initial_noise_multiplier(self, p, args: ADetailerArgs) -> float | None:
+        if args.ad_use_noise_multiplier:
+            return args.ad_noise_multiplier
+        return None
+
     def infotext(self, p) -> str:
         return create_infotext(
             p, p.all_prompts, p.all_seeds, p.all_subseeds, None, 0, 0
@@ -339,6 +345,7 @@ class AfterDetailerScript(scripts.Script):
         width, height = self.get_width_height(p, args)
         steps = self.get_steps(p, args)
         cfg_scale = self.get_cfg_scale(p, args)
+        initial_noise_multiplier = self.get_initial_noise_multiplier(p, args)
 
         sampler_name = p.sampler_name
         if sampler_name in ["PLMS", "UniPC"]:
@@ -354,6 +361,7 @@ class AfterDetailerScript(scripts.Script):
             inpaint_full_res=args.ad_inpaint_only_masked,
             inpaint_full_res_padding=args.ad_inpaint_only_masked_padding,
             inpainting_mask_invert=0,
+            initial_noise_multiplier=initial_noise_multiplier,
             sd_model=p.sd_model,
             outpath_samples=p.outpath_samples,
             outpath_grids=p.outpath_grids,
@@ -647,7 +655,7 @@ def make_axis_on_xyz_grid():
     if xyz_grid is None:
         return
 
-    model_list = ["None"] + list(model_mapping.keys())
+    model_list = ["None", *model_mapping.keys()]
 
     def set_value(p, x, xs, *, field: str):
         if not hasattr(p, "adetailer_xyz"):
@@ -696,7 +704,7 @@ def make_axis_on_xyz_grid():
             "[ADetailer] ControlNet model 1st",
             str,
             partial(set_value, field="ad_controlnet_model"),
-            choices=lambda: ["None"] + get_cn_models(),
+            choices=lambda: ["None", *get_cn_models()],
         ),
     ]
 

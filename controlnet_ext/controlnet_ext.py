@@ -49,16 +49,22 @@ class ControlNetExt:
         self.cn_models.extend(m for m in models if cn_model_regex.search(m))
 
     def update_scripts_args(
-        self, p, model: str, weight: float, guidance_start: float, guidance_end: float
+        self,
+        p,
+        model: str,
+        module: str | None,
+        weight: float,
+        guidance_start: float,
+        guidance_end: float,
     ):
         if (not self.cn_available) or model == "None":
             return
 
-        module = None
-        for m, v in cn_model_module.items():
-            if m in model:
-                module = v
-                break
+        if module is None:
+            for m, v in cn_model_module.items():
+                if m in model:
+                    module = v
+                    break
 
         cn_units = [
             self.external_cn.ControlNetUnit(

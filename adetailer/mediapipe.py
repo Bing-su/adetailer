@@ -20,7 +20,8 @@ def mediapipe_predict(
     if model_type in mapping:
         func = mapping[model_type]
         return func(image, confidence)
-    raise RuntimeError(f"[-] ADetailer: Invalid mediapipe model type: {model_type}")
+    msg = f"[-] ADetailer: Invalid mediapipe model type: {model_type}"
+    raise RuntimeError(msg)
 
 
 def mediapipe_face_detection(

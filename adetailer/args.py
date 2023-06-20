@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections import UserList
 from functools import cached_property, partial
-from typing import Any, Literal, NamedTuple, Union
+from typing import Any, Literal, NamedTuple, Optional, Union
 
 import pydantic
 from pydantic import (
@@ -13,6 +13,7 @@ from pydantic import (
     PositiveInt,
     confloat,
     constr,
+    root_validator,
 )
 
 cn_model_regex = r".*(inpaint|tile|scribble|lineart|openpose).*|^None$"
@@ -55,11 +56,22 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
     ad_steps: PositiveInt = 28
     ad_use_cfg_scale: bool = False
     ad_cfg_scale: NonNegativeFloat = 7.0
+    ad_use_noise_multiplier: bool = False
+    ad_noise_multiplier: confloat(ge=0.5, le=1.5) = 1.0
     ad_restore_face: bool = False
     ad_controlnet_model: constr(regex=cn_model_regex) = "None"
+    ad_controlnet_module: Optional[constr(regex=r".*inpaint.*|^None$")] = None
     ad_controlnet_weight: confloat(ge=0.0, le=1.0) = 1.0
     ad_controlnet_guidance_start: confloat(ge=0.0, le=1.0) = 0.0
     ad_controlnet_guidance_end: confloat(ge=0.0, le=1.0) = 1.0
+
+    @root_validator
+    def ad_controlnt_module_validator(cls, values):  # noqa: N805
+        cn_model = values.get("ad_controlnet_model", "None")
+        cn_module = values.get("ad_controlnet_module", None)
+        if "inpaint" not in cn_model or cn_module == "None":
+            values["ad_controlnet_module"] = None
+        return values
 
     @staticmethod
     def ppop(
@@ -110,17 +122,24 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
             "ADetailer use separate CFG scale",
             ["ADetailer use separate CFG scale", "ADetailer CFG scale"],
         )
+        ppop(
+            "ADetailer use separate noise multiplier",
+            ["ADetailer use separate noise multiplier", "ADetailer noise multiplier"],
+        )
+
         ppop("ADetailer restore face")
         ppop(
             "ADetailer ControlNet model",
             [
                 "ADetailer ControlNet model",
+                "ADetailer ControlNet module",
                 "ADetailer ControlNet weight",
                 "ADetailer ControlNet guidance start",
                 "ADetailer ControlNet guidance end",
             ],
             cond="None",
         )
+        ppop("ADetailer ControlNet module")
         ppop("ADetailer ControlNet weight", cond=1.0)
         ppop("ADetailer ControlNet guidance start", cond=0.0)
         ppop("ADetailer ControlNet guidance end", cond=1.0)
@@ -167,8 +186,11 @@ _all_args = [
     ("ad_steps", "ADetailer steps"),
     ("ad_use_cfg_scale", "ADetailer use separate CFG scale"),
     ("ad_cfg_scale", "ADetailer CFG scale"),
+    ("ad_use_noise_multiplier", "ADetailer use separate noise multiplier"),
+    ("ad_noise_multiplier", "ADetailer noise multiplier"),
     ("ad_restore_face", "ADetailer restore face"),
     ("ad_controlnet_model", "ADetailer ControlNet model"),
+    ("ad_controlnet_module", "ADetailer ControlNet module"),
     ("ad_controlnet_weight", "ADetailer ControlNet weight"),
     ("ad_controlnet_guidance_start", "ADetailer ControlNet guidance start"),
     ("ad_controlnet_guidance_end", "ADetailer ControlNet guidance end"),
