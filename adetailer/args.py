@@ -122,6 +122,11 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
             "ADetailer use separate CFG scale",
             ["ADetailer use separate CFG scale", "ADetailer CFG scale"],
         )
+        ppop(
+            "ADetailer use separate noise multiplier",
+            ["ADetailer use separate noise multiplier", "ADetailer noise multiplier"],
+        )
+
         ppop("ADetailer restore face")
         ppop(
             "ADetailer ControlNet model",
