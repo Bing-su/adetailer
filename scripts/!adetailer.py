@@ -342,7 +342,7 @@ class AfterDetailerScript(scripts.Script):
     def get_i2i_p(self, p, args: ADetailerArgs, image):
         seed, subseed = self.get_seed(p)
         width, height = self.get_width_height(p, args)
-        initial_noise_multiplier=self.get_initial_noise_multiplier(p, args)
+        initial_noise_multiplier = self.get_initial_noise_multiplier(p, args)
         steps = self.get_steps(p, args)
         cfg_scale = self.get_cfg_scale(p, args)
 

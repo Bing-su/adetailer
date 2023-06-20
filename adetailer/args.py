@@ -151,7 +151,10 @@ _all_args = [
     ("ad_model", "ADetailer model"),
     ("ad_prompt", "ADetailer prompt"),
     ("ad_negative_prompt", "ADetailer negative prompt"),
-    ("ad_use_initial_noise_multiplier", "ADetailer use separate Noise Multiplier for img2img"),
+    (
+        "ad_use_initial_noise_multiplier",
+        "ADetailer use separate Noise Multiplier for img2img",
+    ),
     ("ad_initial_noise_multiplier", "ADetailer Noise Multiplier for img2img"),
     ("ad_confidence", "ADetailer confidence"),
     ("ad_mask_min_ratio", "ADetailer mask min ratio"),
