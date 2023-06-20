@@ -402,7 +402,7 @@ def inpainting(w: Widgets, n: int, is_img2img: bool):
                 )
 
                 w.ad_initial_noise_multiplier = gr.Slider(
-                    label="Inpaint noise multiplier" + suffix(n),
+                    label="Noise multiplier for img2img" + suffix(n),
                     minimum=0.5,
                     maximum=1.5,
                     step=0.01,
