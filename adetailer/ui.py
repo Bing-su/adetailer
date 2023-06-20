@@ -398,7 +398,7 @@ def inpainting(w: Widgets, n: int, is_img2img: bool):
                     label="Use separate noise multiplier" + suffix(n),
                     value=False,
                     visible=True,
-                    elem_id=eid("ad_use_initial_noise_multiplier"),
+                    elem_id=eid("ad_use_noise_multiplier"),
                 )
 
                 w.ad_initial_noise_multiplier = gr.Slider(
@@ -408,7 +408,7 @@ def inpainting(w: Widgets, n: int, is_img2img: bool):
                     step=0.01,
                     value=1.0,
                     visible=True,
-                    elem_id=eid("ad_initial_noise_multiplier"),
+                    elem_id=eid("ad_noise_multiplier"),
                 )
 
                 w.ad_use_initial_noise_multiplier.change(

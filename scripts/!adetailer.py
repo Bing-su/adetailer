@@ -281,10 +281,10 @@ class AfterDetailerScript(scripts.Script):
             return args.ad_cfg_scale
         return p.cfg_scale
 
-    def get_initial_noise_multiplier(self, p, args: ADetailerArgs) -> float:
-        if args.ad_use_initial_noise_multiplier:
-            return args.ad_initial_noise_multiplier
-        return p.initial_noise_multiplier
+    def get_initial_noise_multiplier(self, p, args: ADetailerArgs) -> float | None:
+        if args.ad_use_noise_multiplier:
+            return args.ad_noise_multiplier
+        return None
 
     def infotext(self, p) -> str:
         return create_infotext(
@@ -342,9 +342,9 @@ class AfterDetailerScript(scripts.Script):
     def get_i2i_p(self, p, args: ADetailerArgs, image):
         seed, subseed = self.get_seed(p)
         width, height = self.get_width_height(p, args)
-        initial_noise_multiplier = self.get_initial_noise_multiplier(p, args)
         steps = self.get_steps(p, args)
         cfg_scale = self.get_cfg_scale(p, args)
+        initial_noise_multiplier = self.get_initial_noise_multiplier(p, args)
 
         sampler_name = p.sampler_name
         if sampler_name in ["PLMS", "UniPC"]:
@@ -354,13 +354,13 @@ class AfterDetailerScript(scripts.Script):
             init_images=[image],
             resize_mode=0,
             denoising_strength=args.ad_denoising_strength,
-            initial_noise_multiplier=initial_noise_multiplier,
             mask=None,
             mask_blur=args.ad_mask_blur,
             inpainting_fill=1,
             inpaint_full_res=args.ad_inpaint_only_masked,
             inpaint_full_res_padding=args.ad_inpaint_only_masked_padding,
             inpainting_mask_invert=0,
+            initial_noise_multiplier=initial_noise_multiplier,
             sd_model=p.sd_model,
             outpath_samples=p.outpath_samples,
             outpath_grids=p.outpath_grids,

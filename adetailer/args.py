@@ -37,8 +37,6 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
     ad_model: str = "None"
     ad_prompt: str = ""
     ad_negative_prompt: str = ""
-    ad_use_initial_noise_multiplier: bool = False
-    ad_initial_noise_multiplier: confloat(ge=0.5, le=1.5) = 1
     ad_confidence: confloat(ge=0.0, le=1.0) = 0.3
     ad_mask_min_ratio: confloat(ge=0.0, le=1.0) = 0.0
     ad_mask_max_ratio: confloat(ge=0.0, le=1.0) = 1.0
@@ -57,6 +55,8 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
     ad_steps: PositiveInt = 28
     ad_use_cfg_scale: bool = False
     ad_cfg_scale: NonNegativeFloat = 7.0
+    ad_use_noise_multiplier: bool = False
+    ad_noise_multiplier: confloat(ge=0.5, le=1.5) = 1.0
     ad_restore_face: bool = False
     ad_controlnet_model: constr(regex=cn_model_regex) = "None"
     ad_controlnet_weight: confloat(ge=0.0, le=1.0) = 1.0
@@ -151,11 +151,6 @@ _all_args = [
     ("ad_model", "ADetailer model"),
     ("ad_prompt", "ADetailer prompt"),
     ("ad_negative_prompt", "ADetailer negative prompt"),
-    (
-        "ad_use_initial_noise_multiplier",
-        "ADetailer use separate Noise Multiplier for img2img",
-    ),
-    ("ad_initial_noise_multiplier", "ADetailer Noise Multiplier for img2img"),
     ("ad_confidence", "ADetailer confidence"),
     ("ad_mask_min_ratio", "ADetailer mask min ratio"),
     ("ad_mask_max_ratio", "ADetailer mask max ratio"),
@@ -174,6 +169,8 @@ _all_args = [
     ("ad_steps", "ADetailer steps"),
     ("ad_use_cfg_scale", "ADetailer use separate CFG scale"),
     ("ad_cfg_scale", "ADetailer CFG scale"),
+    ("ad_use_noise_multiplier", "ADetailer use separate noise multiplier"),
+    ("ad_noise_multiplier", "ADetailer noise multiplier"),
     ("ad_restore_face", "ADetailer restore face"),
     ("ad_controlnet_model", "ADetailer ControlNet model"),
     ("ad_controlnet_weight", "ADetailer ControlNet weight"),
