@@ -48,8 +48,10 @@ def on_generate_click(state: dict, *values: Any):
 
 def on_cn_model_update(cn_model: str):
     if "inpaint" in cn_model:
-        return gr.update(visible=True, choices=cn_module_choices)
-    return gr.update(visible=False, choices=["None"])
+        return gr.update(
+            visible=True, choices=cn_module_choices, value=cn_module_choices[0]
+        )
+    return gr.update(visible=False, choices=["None"], value="None")
 
 
 def elem_id(item_id: str, n: int, is_img2img: bool) -> str:
