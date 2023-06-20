@@ -405,6 +405,31 @@ def inpainting(w: Widgets, n: int, is_img2img: bool):
                 )
 
         with gr.Row():
+            with gr.Column(variant="compact"):
+                w.ad_use_initial_noise_multiplier = gr.Checkbox(
+                    label="Use separate noise multiplier" + suffix(n),
+                    value=False,
+                    visible=True,
+                    elem_id=eid("ad_use_noise_multiplier"),
+                )
+
+                w.ad_initial_noise_multiplier = gr.Slider(
+                    label="Noise multiplier for img2img" + suffix(n),
+                    minimum=0.5,
+                    maximum=1.5,
+                    step=0.01,
+                    value=1.0,
+                    visible=True,
+                    elem_id=eid("ad_noise_multiplier"),
+                )
+
+                w.ad_use_initial_noise_multiplier.change(
+                    gr_interactive,
+                    inputs=w.ad_use_initial_noise_multiplier,
+                    outputs=w.ad_initial_noise_multiplier,
+                    queue=False,
+                )
+
             w.ad_restore_face = gr.Checkbox(
                 label="Restore faces after ADetailer" + suffix(n),
                 value=False,

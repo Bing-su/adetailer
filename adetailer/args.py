@@ -56,6 +56,8 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
     ad_steps: PositiveInt = 28
     ad_use_cfg_scale: bool = False
     ad_cfg_scale: NonNegativeFloat = 7.0
+    ad_use_noise_multiplier: bool = False
+    ad_noise_multiplier: confloat(ge=0.5, le=1.5) = 1.0
     ad_restore_face: bool = False
     ad_controlnet_model: constr(regex=cn_model_regex) = "None"
     ad_controlnet_module: Optional[constr(regex=r".*inpaint.*|^None$")] = None
@@ -179,6 +181,8 @@ _all_args = [
     ("ad_steps", "ADetailer steps"),
     ("ad_use_cfg_scale", "ADetailer use separate CFG scale"),
     ("ad_cfg_scale", "ADetailer CFG scale"),
+    ("ad_use_noise_multiplier", "ADetailer use separate noise multiplier"),
+    ("ad_noise_multiplier", "ADetailer noise multiplier"),
     ("ad_restore_face", "ADetailer restore face"),
     ("ad_controlnet_model", "ADetailer ControlNet model"),
     ("ad_controlnet_module", "ADetailer ControlNet module"),
