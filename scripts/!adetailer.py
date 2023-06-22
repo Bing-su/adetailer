@@ -201,15 +201,16 @@ class AfterDetailerScript(scripts.Script):
 
     @staticmethod
     def get_ultralytics_device() -> str:
-        '`device = ""` means autodetect'
-        device = ""
+        if "adetailer" in shared.cmd_opts.use_cpu:
+            return "cpu"
+
         if platform.system() == "Darwin":
-            return device
+            return ""
 
         if any(getattr(cmd_opts, vram, False) for vram in ["lowvram", "medvram"]):
-            device = "cpu"
+            return "cpu"
 
-        return device
+        return ""
 
     def prompt_blank_replacement(
         self, all_prompts: list[str], i: int, default: str
