@@ -423,8 +423,7 @@ class AfterDetailerScript(scripts.Script):
     def sort_bboxes(self, pred: PredictOutput) -> PredictOutput:
         sortby = opts.data.get("ad_bbox_sortby", BBOX_SORTBY[0])
         sortby_idx = BBOX_SORTBY.index(sortby)
-        pred = sort_bboxes(pred, sortby_idx)
-        return pred
+        return sort_bboxes(pred, sortby_idx)
 
     def pred_preprocessing(self, pred: PredictOutput, args: ADetailerArgs):
         pred = filter_by_ratio(
