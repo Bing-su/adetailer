@@ -592,7 +592,7 @@ def on_ui_settings():
             default=2,
             label="Max models",
             component=gr.Slider,
-            component_args={"minimum": 1, "maximum": 5, "step": 1},
+            component_args={"minimum": 1, "maximum": 10, "step": 1},
             section=section,
         ),
     )
