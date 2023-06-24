@@ -148,7 +148,7 @@ class AfterDetailerScript(scripts.Script):
             )
 
     def is_ad_enabled(self, *args_) -> bool:
-        if len(args_) == 0 or (len(args_) == 1 and isinstance(args_[0], bool)):
+        if len(args_) == 0 or (len(args_) == 1 and not isinstance(args_[0], dict)):
             message = f"""
                        [-] ADetailer: Not enough arguments passed to ADetailer.
                            input: {args_!r}
