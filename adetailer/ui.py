@@ -137,7 +137,9 @@ def one_ui_group(
                 label="ad_prompt" + suffix(n),
                 show_label=False,
                 lines=3,
-                placeholder="ADetailer prompt" + suffix(n),
+                placeholder="ADetailer prompt"
+                + suffix(n)
+                + "\nIf blank, the main prompt is used.",
                 elem_id=eid("ad_prompt"),
             )
 
@@ -146,7 +148,9 @@ def one_ui_group(
                 label="ad_negative_prompt" + suffix(n),
                 show_label=False,
                 lines=2,
-                placeholder="ADetailer negative prompt" + suffix(n),
+                placeholder="ADetailer negative prompt"
+                + suffix(n)
+                + "\nIf blank, the main negative prompt is used.",
                 elem_id=eid("ad_negative_prompt"),
             )
 
