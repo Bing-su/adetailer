@@ -10,7 +10,7 @@ body:
 
   - type: textarea
     attributes:
-      label: The entire console log, including python version information, webui version, and commit hash.
+      label: The entire console log, including python version information, webui version, commit hash, commandline arguments and error traces.
       description: |
         The full console log of your terminal.
         From `Python ..., Version: ..., Commit hash: ...` to the end.
