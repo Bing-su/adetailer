@@ -151,16 +151,14 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
 
 
 class EnableChecker(BaseModel):
-    a0: Union[bool, dict]
-    a1: Any
+    enable: bool
+    arg_list: list[dict[str, Any]]
 
     def is_enabled(self) -> bool:
         ad_model = ALL_ARGS[0].attr
-        if isinstance(self.a0, dict):
-            return self.a0.get(ad_model, "None") != "None"
-        if not isinstance(self.a1, dict):
+        if not self.enable:
             return False
-        return self.a0 and self.a1.get(ad_model, "None") != "None"
+        return any(arg.get(ad_model, "None") != "None" for arg in self.arg_list)
 
 
 _all_args = [

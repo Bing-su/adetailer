@@ -148,15 +148,15 @@ class AfterDetailerScript(scripts.Script):
             )
 
     def is_ad_enabled(self, *args_) -> bool:
-        if len(args_) == 0 or (len(args_) == 1 and not isinstance(args_[0], dict)):
+        arg_list = [arg for arg in args_ if isinstance(arg, dict)]
+        if not args_ or not arg_list or not isinstance(args_[0], (bool, dict)):
             message = f"""
-                       [-] ADetailer: Not enough arguments passed to ADetailer.
+                       [-] ADetailer: Invalid arguments passed to ADetailer.
                            input: {args_!r}
                        """
             raise ValueError(dedent(message))
-        a0 = args_[0]
-        a1 = args_[1] if len(args_) > 1 else None
-        checker = EnableChecker(a0=a0, a1=a1)
+        enable = args_[0] if isinstance(args_[0], bool) else True
+        checker = EnableChecker(enable=enable, arg_list=arg_list)
         return checker.is_enabled()
 
     def get_args(self, p, *args_) -> list[ADetailerArgs]:
