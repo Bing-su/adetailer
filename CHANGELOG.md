@@ -1,5 +1,14 @@
 # Changelog
 
+## 2023-06-28
+
+- v23.6.4
+- 최대 모델 수 5 -> 10개
+- ad_prompt와 ad_negative_prompt에 빈칸으로 놔두면 입력 프롬프트가 사용된다는 문구 추가
+- huggingface 모델 다운로드 실패시 로깅
+- 1st 모델이 `None`일 경우 나머지 입력을 무시하던 문제 수정
+- `--use-cpu` 에 `adetailer` 입력 시 cpu로 yolo모델을 사용함
+
 ## 2023-06-20
 
 - v23.6.3

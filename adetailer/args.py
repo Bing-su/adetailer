@@ -41,14 +41,14 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
     ad_confidence: confloat(ge=0.0, le=1.0) = 0.3
     ad_mask_min_ratio: confloat(ge=0.0, le=1.0) = 0.0
     ad_mask_max_ratio: confloat(ge=0.0, le=1.0) = 1.0
-    ad_dilate_erode: int = 32
+    ad_dilate_erode: int = 4
     ad_x_offset: int = 0
     ad_y_offset: int = 0
     ad_mask_merge_invert: Literal["None", "Merge", "Merge and Invert"] = "None"
     ad_mask_blur: NonNegativeInt = 4
     ad_denoising_strength: confloat(ge=0.0, le=1.0) = 0.4
     ad_inpaint_only_masked: bool = True
-    ad_inpaint_only_masked_padding: NonNegativeInt = 0
+    ad_inpaint_only_masked_padding: NonNegativeInt = 32
     ad_use_inpaint_width_height: bool = False
     ad_inpaint_width: PositiveInt = 512
     ad_inpaint_height: PositiveInt = 512
@@ -79,7 +79,7 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
         key: str,
         pops: list[str] | None = None,
         cond: Any = None,
-    ):
+    ) -> None:
         if pops is None:
             pops = [key]
         if key not in p:
@@ -91,7 +91,7 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
             for k in pops:
                 p.pop(k, None)
 
-    def extra_params(self, suffix: str = ""):
+    def extra_params(self, suffix: str = "") -> dict[str, Any]:
         if self.ad_model == "None":
             return {}
 
@@ -151,16 +151,14 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
 
 
 class EnableChecker(BaseModel):
-    a0: Union[bool, dict]
-    a1: Any
+    enable: bool
+    arg_list: list[dict[str, Any]]
 
     def is_enabled(self) -> bool:
         ad_model = ALL_ARGS[0].attr
-        if isinstance(self.a0, dict):
-            return self.a0.get(ad_model, "None") != "None"
-        if not isinstance(self.a1, dict):
+        if not self.enable:
             return False
-        return self.a0 and self.a1.get(ad_model, "None") != "None"
+        return any(arg.get(ad_model, "None") != "None" for arg in self.arg_list)
 
 
 _all_args = [

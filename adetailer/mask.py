@@ -129,9 +129,7 @@ def mask_preprocess(
         masks = [dilate_erode(m, kernel) for m in masks]
         masks = [m for m in masks if not is_all_black(m)]
 
-    masks = mask_merge_invert(masks, mode=merge_invert)
-
-    return masks
+    return mask_merge_invert(masks, mode=merge_invert)
 
 
 # Bbox sorting

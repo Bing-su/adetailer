@@ -137,7 +137,9 @@ def one_ui_group(
                 label="ad_prompt" + suffix(n),
                 show_label=False,
                 lines=3,
-                placeholder="ADetailer prompt" + suffix(n),
+                placeholder="ADetailer prompt"
+                + suffix(n)
+                + "\nIf blank, the main prompt is used.",
                 elem_id=eid("ad_prompt"),
             )
 
@@ -146,7 +148,9 @@ def one_ui_group(
                 label="ad_negative_prompt" + suffix(n),
                 show_label=False,
                 lines=2,
-                placeholder="ADetailer negative prompt" + suffix(n),
+                placeholder="ADetailer negative prompt"
+                + suffix(n)
+                + "\nIf blank, the main negative prompt is used.",
                 elem_id=eid("ad_negative_prompt"),
             )
 
@@ -174,9 +178,7 @@ def one_ui_group(
     for attr in ALL_ARGS.attrs:
         widget = getattr(w, attr)
         on_change = partial(on_widget_change, attr=attr)
-        widget.change(
-            fn=on_change, inputs=[state, widget], outputs=[state], queue=False
-        )
+        widget.change(fn=on_change, inputs=[state, widget], outputs=state, queue=False)
 
     all_inputs = [state, *w.tolist()]
     target_button = i2i_button if is_img2img else t2i_button

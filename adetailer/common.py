@@ -22,6 +22,8 @@ def hf_download(file: str):
     try:
         path = hf_hub_download(repo_id, file)
     except Exception:
+        msg = f"[-] ADetailer: Failed to load model {file!r}"
+        print(msg)
         path = "INVALID"
     return path
 

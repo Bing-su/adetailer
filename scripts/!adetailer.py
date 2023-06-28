@@ -148,15 +148,15 @@ class AfterDetailerScript(scripts.Script):
             )
 
     def is_ad_enabled(self, *args_) -> bool:
-        if len(args_) == 0 or (len(args_) == 1 and isinstance(args_[0], bool)):
+        arg_list = [arg for arg in args_ if isinstance(arg, dict)]
+        if not args_ or not arg_list or not isinstance(args_[0], (bool, dict)):
             message = f"""
-                       [-] ADetailer: Not enough arguments passed to ADetailer.
+                       [-] ADetailer: Invalid arguments passed to ADetailer.
                            input: {args_!r}
                        """
             raise ValueError(dedent(message))
-        a0 = args_[0]
-        a1 = args_[1] if len(args_) > 1 else None
-        checker = EnableChecker(a0=a0, a1=a1)
+        enable = args_[0] if isinstance(args_[0], bool) else True
+        checker = EnableChecker(enable=enable, arg_list=arg_list)
         return checker.is_enabled()
 
     def get_args(self, p, *args_) -> list[ADetailerArgs]:
@@ -201,15 +201,16 @@ class AfterDetailerScript(scripts.Script):
 
     @staticmethod
     def get_ultralytics_device() -> str:
-        '`device = ""` means autodetect'
-        device = ""
+        if "adetailer" in shared.cmd_opts.use_cpu:
+            return "cpu"
+
         if platform.system() == "Darwin":
-            return device
+            return ""
 
         if any(getattr(cmd_opts, vram, False) for vram in ["lowvram", "medvram"]):
-            device = "cpu"
+            return "cpu"
 
-        return device
+        return ""
 
     def prompt_blank_replacement(
         self, all_prompts: list[str], i: int, default: str
@@ -423,8 +424,7 @@ class AfterDetailerScript(scripts.Script):
     def sort_bboxes(self, pred: PredictOutput) -> PredictOutput:
         sortby = opts.data.get("ad_bbox_sortby", BBOX_SORTBY[0])
         sortby_idx = BBOX_SORTBY.index(sortby)
-        pred = sort_bboxes(pred, sortby_idx)
-        return pred
+        return sort_bboxes(pred, sortby_idx)
 
     def pred_preprocessing(self, pred: PredictOutput, args: ADetailerArgs):
         pred = filter_by_ratio(
@@ -592,7 +592,7 @@ def on_ui_settings():
             default=2,
             label="Max models",
             component=gr.Slider,
-            component_args={"minimum": 1, "maximum": 5, "step": 1},
+            component_args={"minimum": 1, "maximum": 10, "step": 1},
             section=section,
         ),
     )
