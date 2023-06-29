@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections import UserList
 from functools import cached_property, partial
-from typing import Any, Literal, NamedTuple, Optional, Union
+from typing import Any, Literal, NamedTuple, Optional, Union, List, Dict
 
 import pydantic
 from pydantic import (
@@ -75,9 +75,9 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
 
     @staticmethod
     def ppop(
-        p: dict[str, Any],
+        p: Dict[str, Any],
         key: str,
-        pops: list[str] | None = None,
+        pops: List[str] | None = None,
         cond: Any = None,
     ) -> None:
         if pops is None:
@@ -152,7 +152,7 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
 
 class EnableChecker(BaseModel):
     enable: bool
-    arg_list: list[dict[str, Any]]
+    arg_list: List[Dict[str, Any]]
 
     def is_enabled(self) -> bool:
         ad_model = ALL_ARGS[0].attr
