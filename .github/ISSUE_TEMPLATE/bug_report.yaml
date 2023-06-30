@@ -7,6 +7,15 @@ body:
     attributes:
       label: Describe the bug
       description: A clear and concise description of what the bug is.
+      placeholder: |
+        Any language accepted
+        아무 언어 사용가능
+        すべての言語に対応
+        接受所有语言
+        Se aceptan todos los idiomas
+        Alle Sprachen werden akzeptiert
+        Toutes les langues sont acceptées
+        Принимаются все языки
 
   - type: textarea
     attributes:
