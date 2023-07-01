@@ -8,6 +8,8 @@ from rich.panel import Panel
 from rich.table import Table
 from rich.traceback import Traceback
 
+from adetailer.__version__ import __version__
+
 
 def processing(*args):
     try:
@@ -29,14 +31,34 @@ def processing(*args):
     if not p:
         return {}
 
-    return {
+    info = {
         "prompt": p.prompt,
         "negative_prompt": p.negative_prompt,
         "n_iter": p.n_iter,
         "batch_size": p.batch_size,
         "width": p.width,
         "height": p.height,
+        "sampler_name": p.sampler_name,
         "enable_hr": getattr(p, "enable_hr", False),
+        "hr_upscaler": getattr(p, "hr_upscaler", ""),
+    }
+
+    info.update(sd_models())
+    return info
+
+
+def sd_models():
+    try:
+        from modules import shared
+
+        opts = shared.opts
+    except Exception:
+        return {}
+
+    return {
+        "checkpoint": getattr(opts, "sd_model_checkpoint", "------"),
+        "vae": getattr(opts, "sd_vae", "------"),
+        "unet": getattr(opts, "sd_unet", "------"),
     }
 
 
@@ -51,6 +73,7 @@ def ad_args(*args):
 
     arg0 = args[0]
     return {
+        "version": __version__,
         "ad_model": arg0["ad_model"],
         "ad_prompt": arg0.get("ad_prompt", ""),
         "ad_negative_prompt": arg0.get("ad_negative_prompt", ""),
@@ -60,6 +83,7 @@ def ad_args(*args):
 
 def sys_info():
     import platform
+    import sys
 
     try:
         import launch
@@ -67,18 +91,21 @@ def sys_info():
         version = launch.git_tag()
         commit = launch.commit_hash()
     except Exception:
-        return {}
+        version = commit = "------"
 
     return {
         "Platform": platform.platform(),
-        "Python": platform.python_version(),
+        "Python": sys.version,
         "Version": version,
         "Commit": commit,
+        "Commandline": sys.argv,
     }
 
 
 def get_table(title: str, data: dict[str, Any]) -> Table:
     table = Table(title=title, highlight=True)
+    table.add_column(" ", style="dim")
+    table.add_column("Value")
     for key, value in data.items():
         if not isinstance(value, str):
             value = repr(value)
