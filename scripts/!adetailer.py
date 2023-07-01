@@ -1,11 +1,12 @@
 from __future__ import annotations
 
+import io
 import os
 import platform
 import re
 import sys
 import traceback
-from contextlib import contextmanager, suppress
+from contextlib import contextmanager
 from copy import copy, deepcopy
 from functools import partial
 from pathlib import Path
@@ -14,6 +15,8 @@ from typing import Any
 
 import gradio as gr
 import torch
+from rich import print
+from rich.console import Console
 
 import modules
 from adetailer import (
@@ -41,10 +44,6 @@ from sd_webui.processing import (
     process_images,
 )
 from sd_webui.shared import cmd_opts, opts, state
-
-with suppress(ImportError):
-    from rich import print
-
 
 no_huggingface = getattr(cmd_opts, "ad_no_huggingface", False)
 adetailer_dir = Path(models_path, "adetailer")
@@ -82,6 +81,18 @@ def pause_total_tqdm():
         yield
     finally:
         opts.data["multiple_tqdm"] = orig
+
+
+@contextmanager
+def rich_traceback():
+    string = io.StringIO()
+    console = Console(file=string, force_terminal=True)
+    try:
+        yield
+    except Exception as e:
+        console.print_exception(show_locals=True)
+        output = "\n" + string.getvalue()
+        raise RuntimeError(output) from e
 
 
 class AfterDetailerScript(scripts.Script):
@@ -519,6 +530,9 @@ class AfterDetailerScript(scripts.Script):
         if is_mediapipe:
             print(f"mediapipe: {steps} detected.")
 
+        _user_pt = p.prompt
+        _user_ng = p.negative_prompt
+
         p2 = copy(i2i)
         for j in range(steps):
             p2.image_mask = masks[j]
@@ -541,6 +555,7 @@ class AfterDetailerScript(scripts.Script):
 
         return False
 
+    @rich_traceback()
     def postprocess_image(self, p, pp, *args_):
         if getattr(p, "_disable_adetailer", False):
             return
