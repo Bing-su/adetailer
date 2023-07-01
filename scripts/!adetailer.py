@@ -29,6 +29,7 @@ from adetailer import (
 from adetailer.args import ALL_ARGS, BBOX_SORTBY, ADetailerArgs, EnableChecker
 from adetailer.common import PredictOutput
 from adetailer.mask import filter_by_ratio, mask_preprocess, sort_bboxes
+from adetailer.traceback import rich_traceback
 from adetailer.ui import adui, ordinal, suffix
 from controlnet_ext import ControlNetExt, controlnet_exists, get_cn_models
 from controlnet_ext.restore import (
@@ -81,18 +82,6 @@ def pause_total_tqdm():
         yield
     finally:
         opts.data["multiple_tqdm"] = orig
-
-
-@contextmanager
-def rich_traceback():
-    string = io.StringIO()
-    console = Console(file=string, force_terminal=True)
-    try:
-        yield
-    except Exception as e:
-        console.print_exception(show_locals=True)
-        output = "\n" + string.getvalue()
-        raise RuntimeError(output) from e
 
 
 class AfterDetailerScript(scripts.Script):
@@ -476,6 +465,7 @@ class AfterDetailerScript(scripts.Script):
         bs = p.batch_size
         return (i == (n_iter + 1) * bs - 1) and (i != len(p.all_prompts) - 1)
 
+    @rich_traceback
     def process(self, p, *args_):
         if getattr(p, "_disable_adetailer", False):
             return
@@ -566,7 +556,7 @@ class AfterDetailerScript(scripts.Script):
 
         return False
 
-    @rich_traceback()
+    @rich_traceback
     def postprocess_image(self, p, pp, *args_):
         if getattr(p, "_disable_adetailer", False):
             return
