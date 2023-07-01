@@ -460,6 +460,16 @@ class AfterDetailerScript(scripts.Script):
         i2i.prompt = prompt
         i2i.negative_prompt = negative_prompt
 
+    @staticmethod
+    def compare_prompt(p, processed):
+        if p.prompt != processed.all_prompts[0]:
+            print(f"[-] ADetailer: applied ad_prompt: {processed.all_prompts[0]!r}")
+
+        if p.negative_prompt != processed.all_negative_prompts[0]:
+            print(
+                f"[-] ADetailer: applied ad_negative_prompt: {processed.all_negative_prompts[0]!r}"
+            )
+
     def is_need_call_process(self, p) -> bool:
         i = p._idx
         n_iter = p.iteration
@@ -543,6 +553,7 @@ class AfterDetailerScript(scripts.Script):
                     cn_restore_unet_hook(p2, self.cn_latest_network)
                 processed = process_images(p2)
 
+                self.compare_prompt(p2, processed)
                 p2 = copy(i2i)
                 p2.init_images = [processed.images[0]]
 
