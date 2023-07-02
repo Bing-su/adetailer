@@ -48,6 +48,7 @@ def install():
         ("mediapipe", "0.10.0", None),
         ("huggingface_hub", None, None),
         ("pydantic", "1.10.8", None),
+        ("rich", "13.4.2", None),
         # mediapipe
         ("protobuf", "3.20.0", "3.20.9999"),
     ]

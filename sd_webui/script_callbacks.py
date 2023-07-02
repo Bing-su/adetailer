@@ -5,6 +5,9 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from typing import Callable
 
+    def on_app_started(callback: Callable):
+        pass
+
     def on_ui_settings(callback: Callable):
         pass
 
@@ -17,6 +20,7 @@ if TYPE_CHECKING:
 else:
     from modules.script_callbacks import (
         on_after_component,
+        on_app_started,
         on_before_ui,
         on_ui_settings,
     )

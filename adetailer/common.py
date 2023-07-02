@@ -7,6 +7,7 @@ from typing import Optional, Union
 
 from huggingface_hub import hf_hub_download
 from PIL import Image, ImageDraw
+from rich import print
 
 repo_id = "Bingsu/adetailer"
 
@@ -22,7 +23,7 @@ def hf_download(file: str):
     try:
         path = hf_hub_download(repo_id, file)
     except Exception:
-        msg = f"[-] ADetailer: Failed to load model {file!r}"
+        msg = f"[-] ADetailer: Failed to load model {file!r} from huggingface"
         print(msg)
         path = "INVALID"
     return path

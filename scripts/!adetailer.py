@@ -5,7 +5,7 @@ import platform
 import re
 import sys
 import traceback
-from contextlib import contextmanager, suppress
+from contextlib import contextmanager
 from copy import copy, deepcopy
 from functools import partial
 from pathlib import Path
@@ -14,6 +14,7 @@ from typing import Any
 
 import gradio as gr
 import torch
+from rich import print
 
 import modules
 from adetailer import (
@@ -26,6 +27,7 @@ from adetailer import (
 from adetailer.args import ALL_ARGS, BBOX_SORTBY, ADetailerArgs, EnableChecker
 from adetailer.common import PredictOutput
 from adetailer.mask import filter_by_ratio, mask_preprocess, sort_bboxes
+from adetailer.traceback import rich_traceback
 from adetailer.ui import adui, ordinal, suffix
 from controlnet_ext import ControlNetExt, controlnet_exists, get_cn_models
 from controlnet_ext.restore import (
@@ -34,6 +36,7 @@ from controlnet_ext.restore import (
     cn_restore_unet_hook,
 )
 from sd_webui import images, safe, script_callbacks, scripts, shared
+from sd_webui.devices import NansException
 from sd_webui.paths import data_path, models_path
 from sd_webui.processing import (
     StableDiffusionProcessingImg2Img,
@@ -41,10 +44,6 @@ from sd_webui.processing import (
     process_images,
 )
 from sd_webui.shared import cmd_opts, opts, state
-
-with suppress(ImportError):
-    from rich import print
-
 
 no_huggingface = getattr(cmd_opts, "ad_no_huggingface", False)
 adetailer_dir = Path(models_path, "adetailer")
@@ -92,6 +91,9 @@ class AfterDetailerScript(scripts.Script):
         self.controlnet_ext = None
         self.cn_script = None
         self.cn_latest_network = None
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}(version={__version__})"
 
     def title(self):
         return AFTER_DETAILER
@@ -449,12 +451,25 @@ class AfterDetailerScript(scripts.Script):
         i2i.prompt = prompt
         i2i.negative_prompt = negative_prompt
 
+    @staticmethod
+    def compare_prompt(p, processed, n: int = 0):
+        if p.prompt != processed.all_prompts[0]:
+            print(
+                f"[-] ADetailer: applied {ordinal(n + 1)} ad_prompt: {processed.all_prompts[0]!r}"
+            )
+
+        if p.negative_prompt != processed.all_negative_prompts[0]:
+            print(
+                f"[-] ADetailer: applied {ordinal(n + 1)} ad_negative_prompt: {processed.all_negative_prompts[0]!r}"
+            )
+
     def is_need_call_process(self, p) -> bool:
         i = p._idx
         n_iter = p.iteration
         bs = p.batch_size
         return (i == (n_iter + 1) * bs - 1) and (i != len(p.all_prompts) - 1)
 
+    @rich_traceback
     def process(self, p, *args_):
         if getattr(p, "_disable_adetailer", False):
             return
@@ -519,6 +534,9 @@ class AfterDetailerScript(scripts.Script):
         if is_mediapipe:
             print(f"mediapipe: {steps} detected.")
 
+        _user_pt = p.prompt
+        _user_ng = p.negative_prompt
+
         p2 = copy(i2i)
         for j in range(steps):
             p2.image_mask = masks[j]
@@ -527,8 +545,15 @@ class AfterDetailerScript(scripts.Script):
             if not re.match(r"^\s*\[SKIP\]\s*$", p2.prompt):
                 if args.ad_controlnet_model == "None":
                     cn_restore_unet_hook(p2, self.cn_latest_network)
-                processed = process_images(p2)
 
+                try:
+                    processed = process_images(p2)
+                except NansException as e:
+                    msg = f"[-] ADetailer: 'NansException' occurred with {ordinal(n + 1)} settings.\n{e}"
+                    print(msg, file=sys.stderr)
+                    return False
+
+                self.compare_prompt(p2, processed, n=n)
                 p2 = copy(i2i)
                 p2.init_images = [processed.images[0]]
 
@@ -541,6 +566,7 @@ class AfterDetailerScript(scripts.Script):
 
         return False
 
+    @rich_traceback
     def postprocess_image(self, p, pp, *args_):
         if getattr(p, "_disable_adetailer", False):
             return
