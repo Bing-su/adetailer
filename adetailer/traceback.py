@@ -64,7 +64,7 @@ def sd_models() -> dict[str, str]:
     }
 
 
-def ad_args(*args: Any) -> dict[str, str]:
+def ad_args(*args: Any) -> dict[str, Any]:
     ad_args = [
         arg
         for arg in args
@@ -80,6 +80,7 @@ def ad_args(*args: Any) -> dict[str, str]:
         "ad_prompt": arg0.get("ad_prompt", ""),
         "ad_negative_prompt": arg0.get("ad_negative_prompt", ""),
         "ad_controlnet_model": arg0.get("ad_controlnet_model", "None"),
+        "is_api": "is_api" not in arg0 or type(arg0["is_api"]) is not object,
     }
 
 
