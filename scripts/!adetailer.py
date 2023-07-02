@@ -542,23 +542,25 @@ class AfterDetailerScript(scripts.Script):
             p2.image_mask = masks[j]
             self.i2i_prompts_replace(p2, ad_prompts, ad_negatives, j)
 
-            if not re.match(r"^\s*\[SKIP\]\s*$", p2.prompt):
-                if args.ad_controlnet_model == "None":
-                    cn_restore_unet_hook(p2, self.cn_latest_network)
+            if re.match(r"^\s*\[SKIP\]\s*$", p2.prompt):
+                continue
 
-                try:
-                    processed = process_images(p2)
-                except NansException as e:
-                    msg = f"[-] ADetailer: 'NansException' occurred with {ordinal(n + 1)} settings.\n{e}"
-                    print(msg, file=sys.stderr)
-                    return False
+            p2.seed = seed + j
+            p2.subseed = subseed + j
 
-                self.compare_prompt(p2, processed, n=n)
-                p2 = copy(i2i)
-                p2.init_images = [processed.images[0]]
+            if args.ad_controlnet_model == "None":
+                cn_restore_unet_hook(p2, self.cn_latest_network)
 
-            p2.seed = seed + j + 1
-            p2.subseed = subseed + j + 1
+            try:
+                processed = process_images(p2)
+            except NansException as e:
+                msg = f"[-] ADetailer: 'NansException' occurred with {ordinal(n + 1)} settings.\n{e}"
+                print(msg, file=sys.stderr)
+                continue
+
+            self.compare_prompt(p2, processed, n=n)
+            p2 = copy(i2i)
+            p2.init_images = [processed.images[0]]
 
         if processed is not None:
             pp.image = processed.images[0]
