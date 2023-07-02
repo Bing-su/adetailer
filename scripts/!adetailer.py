@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import io
 import os
 import platform
 import re
@@ -16,7 +15,6 @@ from typing import Any
 import gradio as gr
 import torch
 from rich import print
-from rich.console import Console
 
 import modules
 from adetailer import (
@@ -93,6 +91,9 @@ class AfterDetailerScript(scripts.Script):
         self.controlnet_ext = None
         self.cn_script = None
         self.cn_latest_network = None
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}(version={__version__})"
 
     def title(self):
         return AFTER_DETAILER
@@ -451,13 +452,15 @@ class AfterDetailerScript(scripts.Script):
         i2i.negative_prompt = negative_prompt
 
     @staticmethod
-    def compare_prompt(p, processed):
+    def compare_prompt(p, processed, n: int = 0):
         if p.prompt != processed.all_prompts[0]:
-            print(f"[-] ADetailer: applied ad_prompt: {processed.all_prompts[0]!r}")
+            print(
+                f"[-] ADetailer: applied {ordinal(n + 1)} ad_prompt: {processed.all_prompts[0]!r}"
+            )
 
         if p.negative_prompt != processed.all_negative_prompts[0]:
             print(
-                f"[-] ADetailer: applied ad_negative_prompt: {processed.all_negative_prompts[0]!r}"
+                f"[-] ADetailer: applied {ordinal(n + 1)} ad_negative_prompt: {processed.all_negative_prompts[0]!r}"
             )
 
     def is_need_call_process(self, p) -> bool:
@@ -547,10 +550,10 @@ class AfterDetailerScript(scripts.Script):
                     processed = process_images(p2)
                 except NansException as e:
                     msg = f"[-] ADetailer: 'NansException' occurred with {ordinal(n + 1)} settings.\n{e}"
-                    print(msg)
+                    print(msg, file=sys.stderr)
                     return False
 
-                self.compare_prompt(p2, processed)
+                self.compare_prompt(p2, processed, n=n)
                 p2 = copy(i2i)
                 p2.init_images = [processed.images[0]]
 

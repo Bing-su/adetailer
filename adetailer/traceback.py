@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import io
-from typing import Any
+import platform
+import sys
+from typing import Any, Callable
 
 from rich.console import Console, Group
 from rich.panel import Panel
@@ -11,7 +13,7 @@ from rich.traceback import Traceback
 from adetailer.__version__ import __version__
 
 
-def processing(*args):
+def processing(*args: Any) -> dict[str, Any]:
     try:
         from modules.processing import (
             StableDiffusionProcessingImg2Img,
@@ -28,7 +30,7 @@ def processing(*args):
             p = arg
             break
 
-    if not p:
+    if p is None:
         return {}
 
     info = {
@@ -47,7 +49,7 @@ def processing(*args):
     return info
 
 
-def sd_models():
+def sd_models() -> dict[str, str]:
     try:
         from modules import shared
 
@@ -62,16 +64,16 @@ def sd_models():
     }
 
 
-def ad_args(*args):
-    args = [
+def ad_args(*args: Any) -> dict[str, str]:
+    ad_args = [
         arg
         for arg in args
         if isinstance(arg, dict) and arg.get("ad_model", "None") != "None"
     ]
-    if not args:
+    if not ad_args:
         return {}
 
-    arg0 = args[0]
+    arg0 = ad_args[0]
     return {
         "version": __version__,
         "ad_model": arg0["ad_model"],
@@ -81,10 +83,7 @@ def ad_args(*args):
     }
 
 
-def sys_info():
-    import platform
-    import sys
-
+def sys_info() -> dict[str, Any]:
     try:
         import launch
 
@@ -104,7 +103,7 @@ def sys_info():
 
 def get_table(title: str, data: dict[str, Any]) -> Table:
     table = Table(title=title, highlight=True)
-    table.add_column(" ", style="dim")
+    table.add_column(" ", justify="right", style="dim")
     table.add_column("Value")
     for key, value in data.items():
         if not isinstance(value, str):
@@ -114,12 +113,23 @@ def get_table(title: str, data: dict[str, Any]) -> Table:
     return table
 
 
-def rich_traceback(func):
+def force_terminal_value():
+    try:
+        from modules.shared import cmd_opts
+
+        return True if hasattr(cmd_opts, "skip_torch_cuda_test") else None
+    except Exception:
+        return None
+
+
+def rich_traceback(func: Callable) -> Callable:
+    force_terminal = force_terminal_value()
+
     def wrapper(*args, **kwargs):
         string = io.StringIO()
         width = Console().width
         width = width - 4 if width > 4 else None
-        console = Console(file=string, force_terminal=True, width=width)
+        console = Console(file=string, force_terminal=force_terminal, width=width)
         try:
             return func(*args, **kwargs)
         except Exception as e:
