@@ -390,6 +390,7 @@ class AfterDetailerScript(scripts.Script):
             do_not_save_grid=True,
         )
 
+        i2i.close()
         i2i.scripts, i2i.script_args = self.script_filter(p, args)
         i2i._disable_adetailer = True
 
