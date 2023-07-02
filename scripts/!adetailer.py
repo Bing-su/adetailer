@@ -38,6 +38,7 @@ from controlnet_ext.restore import (
     cn_restore_unet_hook,
 )
 from sd_webui import images, safe, script_callbacks, scripts, shared
+from sd_webui.devices import NansException
 from sd_webui.paths import data_path, models_path
 from sd_webui.processing import (
     StableDiffusionProcessingImg2Img,
@@ -541,7 +542,13 @@ class AfterDetailerScript(scripts.Script):
             if not re.match(r"^\s*\[SKIP\]\s*$", p2.prompt):
                 if args.ad_controlnet_model == "None":
                     cn_restore_unet_hook(p2, self.cn_latest_network)
-                processed = process_images(p2)
+
+                try:
+                    processed = process_images(p2)
+                except NansException as e:
+                    msg = f"[-] ADetailer: 'NansException' occurred with {ordinal(n + 1)} settings.\n{e}"
+                    print(msg)
+                    return False
 
                 self.compare_prompt(p2, processed)
                 p2 = copy(i2i)
