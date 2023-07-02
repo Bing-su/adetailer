@@ -557,6 +557,8 @@ class AfterDetailerScript(scripts.Script):
                 msg = f"[-] ADetailer: 'NansException' occurred with {ordinal(n + 1)} settings.\n{e}"
                 print(msg, file=sys.stderr)
                 continue
+            finally:
+                p2.close()
 
             self.compare_prompt(p2, processed, n=n)
             p2 = copy(i2i)

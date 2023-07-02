@@ -65,6 +65,9 @@ if TYPE_CHECKING:
         iteration: int = 1
         is_hr_pass: bool = False
 
+        def close(self) -> None:
+            pass
+
     @dataclass
     class StableDiffusionProcessingTxt2Img(StableDiffusionProcessing):
         sampler: Callable | None = None
