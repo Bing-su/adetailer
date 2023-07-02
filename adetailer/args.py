@@ -14,6 +14,7 @@ from pydantic import (
     confloat,
     constr,
     root_validator,
+    validator,
 )
 
 cn_model_regex = r".*(inpaint|tile|scribble|lineart|openpose).*|^None$"
@@ -64,6 +65,7 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
     ad_controlnet_weight: confloat(ge=0.0, le=1.0) = 1.0
     ad_controlnet_guidance_start: confloat(ge=0.0, le=1.0) = 0.0
     ad_controlnet_guidance_end: confloat(ge=0.0, le=1.0) = 1.0
+    is_api: bool = True
 
     @root_validator
     def ad_controlnt_module_validator(cls, values):  # noqa: N805
@@ -72,6 +74,10 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
         if "inpaint" not in cn_model or cn_module == "None":
             values["ad_controlnet_module"] = None
         return values
+
+    @validator("is_api", pre=True)
+    def is_api_validator(cls, v):  # noqa: N805
+        return type(v) is not object
 
     @staticmethod
     def ppop(

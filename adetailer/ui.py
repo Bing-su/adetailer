@@ -43,6 +43,7 @@ def on_widget_change(state: dict, value: Any, *, attr: str):
 def on_generate_click(state: dict, *values: Any):
     for attr, value in zip(ALL_ARGS.attrs, values):
         state[attr] = value
+    state["is_api"] = object()
     return state
 
 
