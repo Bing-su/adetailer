@@ -1,5 +1,12 @@
 # Changelog
 
+## 2023-07-03
+
+- v23.7.1
+- `process_images`를 진행한 뒤 `StableDiffusionProcessing` 오브젝트의 close를 호출함
+- api 호출로 사용했는지 확인하는 속성 추가
+- `NansException`이 발생했을 때 중지하지 않고 남은 과정 계속 진행함
+
 ## 2023-07-02
 
 - v23.7.0
@@ -7,6 +14,7 @@
 - `rich`를 사용한 에러 트레이싱
   - install.py에 `rich` 추가
 - 생성 중에 컴포넌트의 값을 변경하면 args의 값도 함께 변경되는 문제 수정 (issue #180)
+- 터미널 로그로 ad_prompt와 ad_negative_prompt에 적용된 실제 프롬프트 확인할 수 있음 (입력과 다를 경우에만)
 
 ## 2023-06-28
 
