@@ -175,11 +175,6 @@ def one_ui_group(
     with gr.Group():
         controlnet(w, n, is_img2img)
 
-    for attr in ALL_ARGS.attrs:
-        widget = getattr(w, attr)
-        on_change = partial(on_widget_change, attr=attr)
-        widget.change(fn=on_change, inputs=[state, widget], outputs=state, queue=False)
-
     all_inputs = [state, *w.tolist()]
     target_button = i2i_button if is_img2img else t2i_button
     target_button.click(
