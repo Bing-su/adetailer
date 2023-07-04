@@ -1,5 +1,14 @@
 # Changelog
 
+## 2023-07-04
+
+- v23.7.2
+- `mediapipe_face_mesh_eyes_only` 모델 추가: `mediapipe_face_mesh`로 감지한 뒤 눈만 사용함.
+- 매 배치 시작 전에 `scripts.postprocess`를, 후에 `scripts.process`를 호출함.
+  - 컨트롤넷을 사용하면 소요 시간이 조금 늘어나지만 몇몇 문제 해결에 도움이 됨.
+- `lora_block_weight`를 스크립트 화이트리스트에 추가함.
+  - 한번이라도 ADetailer를 사용한 사람은 수동으로 추가해야함.
+
 ## 2023-07-03
 
 - v23.7.1
