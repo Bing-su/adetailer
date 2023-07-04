@@ -49,7 +49,7 @@ no_huggingface = getattr(cmd_opts, "ad_no_huggingface", False)
 adetailer_dir = Path(models_path, "adetailer")
 model_mapping = get_models(adetailer_dir, huggingface=not no_huggingface)
 txt2img_submit_button = img2img_submit_button = None
-SCRIPT_DEFAULT = "dynamic_prompting,dynamic_thresholding,wildcard_recursive,wildcards"
+SCRIPT_DEFAULT = "dynamic_prompting,dynamic_thresholding,wildcard_recursive,wildcards,lora_block_weight"
 
 if (
     not adetailer_dir.exists()
@@ -595,8 +595,8 @@ class AfterDetailerScript(scripts.Script):
                 p, init_image, condition="ad_save_images_before", suffix="-ad-before"
             )
 
-        if self.cn_script is not None and self.is_need_call_process(p):
-            self.cn_script.process(p)
+        if p.scripts is not None and self.is_need_call_process(p):
+            p.scripts.process(p)
 
         try:
             if p._idx == len(p.all_prompts) - 1:
