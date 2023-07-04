@@ -58,6 +58,7 @@ def get_models(
             "mediapipe_face_full": None,
             "mediapipe_face_short": None,
             "mediapipe_face_mesh": None,
+            "mediapipe_face_mesh_eyes_only": None,
         }
     )
 

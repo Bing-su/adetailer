@@ -16,6 +16,7 @@ def mediapipe_predict(
         "mediapipe_face_short": partial(mediapipe_face_detection, 0),
         "mediapipe_face_full": partial(mediapipe_face_detection, 1),
         "mediapipe_face_mesh": mediapipe_face_mesh,
+        "mediapipe_face_mesh_eyes_only": mediapipe_face_mesh_eyes_only,
     }
     if model_type in mapping:
         func = mapping[model_type]
@@ -66,9 +67,25 @@ def mediapipe_face_detection(
     return PredictOutput(bboxes=bboxes, masks=masks, preview=preview)
 
 
+def get_convexhull(points: np.ndarray) -> list[tuple[int, int]]:
+    """
+    Parameters
+    ----------
+      points: An ndarray of shape (n, 2) containing the 2D points.
+
+    Returns
+    -------
+      list[tuple[int, int]]: Input for the draw.polygon function
+    """
+    from scipy.spatial import ConvexHull
+
+    hull = ConvexHull(points)
+    vertices = hull.vertices
+    return list(zip(points[vertices, 0], points[vertices, 1]))
+
+
 def mediapipe_face_mesh(image: Image.Image, confidence: float = 0.3) -> PredictOutput:
     import mediapipe as mp
-    from scipy.spatial import ConvexHull
 
     mp_face_mesh = mp.solutions.face_mesh
     draw_util = mp.solutions.drawing_utils
@@ -98,9 +115,7 @@ def mediapipe_face_mesh(image: Image.Image, confidence: float = 0.3) -> PredictO
             )
 
             points = np.array([(land.x * w, land.y * h) for land in landmarks.landmark])
-            hull = ConvexHull(points)
-            vertices = hull.vertices
-            outline = list(zip(points[vertices, 0], points[vertices, 1]))
+            outline = get_convexhull(points)
 
             mask = Image.new("L", image.size, "black")
             draw = ImageDraw.Draw(mask)
@@ -110,3 +125,60 @@ def mediapipe_face_mesh(image: Image.Image, confidence: float = 0.3) -> PredictO
         bboxes = create_bbox_from_mask(masks, image.size)
         preview = Image.fromarray(preview)
         return PredictOutput(bboxes=bboxes, masks=masks, preview=preview)
+
+
+def mediapipe_face_mesh_eyes_only(
+    image: Image.Image, confidence: float = 0.3
+) -> PredictOutput:
+    import mediapipe as mp
+
+    mp_face_mesh = mp.solutions.face_mesh
+
+    left_idx = np.array(list(mp_face_mesh.FACEMESH_LEFT_EYE)).flatten()
+    right_idx = np.array(list(mp_face_mesh.FACEMESH_RIGHT_EYE)).flatten()
+
+    w, h = image.size
+
+    with mp_face_mesh.FaceMesh(
+        static_image_mode=True, max_num_faces=20, min_detection_confidence=confidence
+    ) as face_mesh:
+        arr = np.array(image)
+        pred = face_mesh.process(arr)
+
+        if pred.multi_face_landmarks is None:
+            return PredictOutput()
+
+        preview = image.copy()
+        masks = []
+
+        for landmarks in pred.multi_face_landmarks:
+            points = np.array([(land.x * w, land.y * h) for land in landmarks.landmark])
+            left_eyes = points[left_idx]
+            right_eyes = points[right_idx]
+            left_outline = get_convexhull(left_eyes)
+            right_outline = get_convexhull(right_eyes)
+
+            mask = Image.new("L", image.size, "black")
+            draw = ImageDraw.Draw(mask)
+            for outline in (left_outline, right_outline):
+                draw.polygon(outline, fill="white")
+            masks.append(mask)
+
+        bboxes = create_bbox_from_mask(masks, image.size)
+        preview = draw_preview(preview, bboxes, masks)
+        return PredictOutput(bboxes=bboxes, masks=masks, preview=preview)
+
+
+def draw_preview(
+    preview: Image.Image, bboxes: list[list[int]], masks: list[Image.Image]
+) -> Image.Image:
+    for mask in masks:
+        red = Image.new("RGB", preview.size, "red")
+        masked = Image.composite(red, preview, mask)
+        preview = Image.blend(preview, masked, 0.25)
+
+    draw = ImageDraw.Draw(preview)
+    for bbox in bboxes:
+        draw.rectangle(bbox, outline="red", width=2)
+
+    return preview
