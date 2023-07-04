@@ -167,6 +167,7 @@ if TYPE_CHECKING:
 
 else:
     from modules.processing import (
+        Processed,
         StableDiffusionProcessing,
         StableDiffusionProcessingImg2Img,
         StableDiffusionProcessingTxt2Img,

@@ -39,6 +39,7 @@ from sd_webui import images, safe, script_callbacks, scripts, shared
 from sd_webui.devices import NansException
 from sd_webui.paths import data_path, models_path
 from sd_webui.processing import (
+    Processed,
     StableDiffusionProcessingImg2Img,
     create_infotext,
     process_images,
@@ -464,11 +465,17 @@ class AfterDetailerScript(scripts.Script):
                 f"[-] ADetailer: applied {ordinal(n + 1)} ad_negative_prompt: {processed.all_negative_prompts[0]!r}"
             )
 
-    def is_need_call_process(self, p) -> bool:
+    def need_call_process(self, p) -> bool:
         i = p._idx
         n_iter = p.iteration
         bs = p.batch_size
         return (i == (n_iter + 1) * bs - 1) and (i != len(p.all_prompts) - 1)
+
+    def need_call_postprocess(self, p) -> bool:
+        i = p._idx
+        n_iter = p.iteration
+        bs = p.batch_size
+        return i == n_iter * bs
 
     @rich_traceback
     def process(self, p, *args_):
@@ -583,6 +590,10 @@ class AfterDetailerScript(scripts.Script):
         init_image = copy(pp.image)
         arg_list = self.get_args(p, *args_)
 
+        if p.scripts is not None and self.need_call_postprocess(p):
+            dummy = Processed(p, [], p.seed, "")
+            p.scripts.postprocess(p, dummy)
+
         is_processed = False
         with CNHijackRestore(), pause_total_tqdm(), cn_allow_script_control():
             for n, args in enumerate(arg_list):
@@ -595,7 +606,7 @@ class AfterDetailerScript(scripts.Script):
                 p, init_image, condition="ad_save_images_before", suffix="-ad-before"
             )
 
-        if p.scripts is not None and self.is_need_call_process(p):
+        if p.scripts is not None and self.need_call_process(p):
             p.scripts.process(p)
 
         try:
