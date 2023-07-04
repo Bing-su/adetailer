@@ -39,6 +39,7 @@ from sd_webui import images, safe, script_callbacks, scripts, shared
 from sd_webui.devices import NansException
 from sd_webui.paths import data_path, models_path
 from sd_webui.processing import (
+    Processed,
     StableDiffusionProcessingImg2Img,
     create_infotext,
     process_images,
@@ -49,7 +50,7 @@ no_huggingface = getattr(cmd_opts, "ad_no_huggingface", False)
 adetailer_dir = Path(models_path, "adetailer")
 model_mapping = get_models(adetailer_dir, huggingface=not no_huggingface)
 txt2img_submit_button = img2img_submit_button = None
-SCRIPT_DEFAULT = "dynamic_prompting,dynamic_thresholding,wildcard_recursive,wildcards"
+SCRIPT_DEFAULT = "dynamic_prompting,dynamic_thresholding,wildcard_recursive,wildcards,lora_block_weight"
 
 if (
     not adetailer_dir.exists()
@@ -235,7 +236,7 @@ class AfterDetailerScript(scripts.Script):
         return prompts
 
     def get_prompt(self, p, args: ADetailerArgs) -> tuple[list[str], list[str]]:
-        i = p._idx
+        i = p._ad_idx
 
         prompt = self._get_prompt(args.ad_prompt, p.all_prompts, i, p.prompt)
         negative_prompt = self._get_prompt(
@@ -245,7 +246,7 @@ class AfterDetailerScript(scripts.Script):
         return prompt, negative_prompt
 
     def get_seed(self, p) -> tuple[int, int]:
-        i = p._idx
+        i = p._ad_idx
 
         if not p.all_seeds:
             seed = p.seed
@@ -402,7 +403,7 @@ class AfterDetailerScript(scripts.Script):
         return i2i
 
     def save_image(self, p, image, *, condition: str, suffix: str) -> None:
-        i = p._idx
+        i = p._ad_idx
         seed, _ = self.get_seed(p)
 
         if opts.data.get(condition, False):
@@ -464,11 +465,14 @@ class AfterDetailerScript(scripts.Script):
                 f"[-] ADetailer: applied {ordinal(n + 1)} ad_negative_prompt: {processed.all_negative_prompts[0]!r}"
             )
 
-    def is_need_call_process(self, p) -> bool:
-        i = p._idx
-        n_iter = p.iteration
+    def need_call_process(self, p) -> bool:
+        i = p._ad_idx
         bs = p.batch_size
-        return (i == (n_iter + 1) * bs - 1) and (i != len(p.all_prompts) - 1)
+        return i == bs - 1
+
+    def need_call_postprocess(self, p) -> bool:
+        i = p._ad_idx
+        return i == 0
 
     @rich_traceback
     def process(self, p, *args_):
@@ -480,7 +484,7 @@ class AfterDetailerScript(scripts.Script):
             extra_params = self.extra_params(arg_list)
             p.extra_generation_params.update(extra_params)
 
-            p._idx = -1
+            p._ad_idx = -1
 
     def _postprocess_image(self, p, pp, args: ADetailerArgs, *, n: int = 0) -> bool:
         """
@@ -493,7 +497,7 @@ class AfterDetailerScript(scripts.Script):
         if state.interrupted:
             return False
 
-        i = p._idx
+        i = p._ad_idx
 
         i2i = self.get_i2i_p(p, args, pp.image)
         seed, subseed = self.get_seed(p)
@@ -549,9 +553,6 @@ class AfterDetailerScript(scripts.Script):
             p2.seed = seed + j
             p2.subseed = subseed + j
 
-            if args.ad_controlnet_model == "None":
-                cn_restore_unet_hook(p2, self.cn_latest_network)
-
             try:
                 processed = process_images(p2)
             except NansException as e:
@@ -579,9 +580,14 @@ class AfterDetailerScript(scripts.Script):
         if not self.is_ad_enabled(*args_):
             return
 
-        p._idx = getattr(p, "_idx", -1) + 1
+        p._ad_idx = getattr(p, "_ad_idx", -1) + 1
+        p._ad_idx_all = getattr(p, "_ad_idx_all", -1) + 1
         init_image = copy(pp.image)
         arg_list = self.get_args(p, *args_)
+
+        if p.scripts is not None and self.need_call_postprocess(p):
+            dummy = Processed(p, [], p.seed, "")
+            p.scripts.postprocess(p, dummy)
 
         is_processed = False
         with CNHijackRestore(), pause_total_tqdm(), cn_allow_script_control():
@@ -595,11 +601,13 @@ class AfterDetailerScript(scripts.Script):
                 p, init_image, condition="ad_save_images_before", suffix="-ad-before"
             )
 
-        if self.cn_script is not None and self.is_need_call_process(p):
-            self.cn_script.process(p)
+        if p.scripts is not None and self.need_call_process(p):
+            p.scripts.process(p)
 
         try:
-            if p._idx == len(p.all_prompts) - 1:
+            ia = p._ad_idx_all
+            lenp = len(p.all_prompts)
+            if ia % lenp == lenp - 1:
                 self.write_params_txt(p)
         except Exception:
             pass
