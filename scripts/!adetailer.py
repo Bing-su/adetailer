@@ -84,6 +84,17 @@ def pause_total_tqdm():
         opts.data["multiple_tqdm"] = orig
 
 
+@contextmanager
+def preseve_prompts(p):
+    all_pt = copy(p.all_prompts)
+    all_ng = copy(p.all_negative_prompts)
+    try:
+        yield
+    finally:
+        p.all_prompts = all_pt
+        p.all_negative_prompts = all_ng
+
+
 class AfterDetailerScript(scripts.Script):
     def __init__(self):
         super().__init__()
@@ -587,7 +598,8 @@ class AfterDetailerScript(scripts.Script):
 
         if p.scripts is not None and self.need_call_postprocess(p):
             dummy = Processed(p, [], p.seed, "")
-            p.scripts.postprocess(p, dummy)
+            with preseve_prompts(p):
+                p.scripts.postprocess(p, dummy)
 
         is_processed = False
         with CNHijackRestore(), pause_total_tqdm(), cn_allow_script_control():
@@ -602,7 +614,8 @@ class AfterDetailerScript(scripts.Script):
             )
 
         if p.scripts is not None and self.need_call_process(p):
-            p.scripts.process(p)
+            with preseve_prompts(p):
+                p.scripts.process(p)
 
         try:
             ia = p._ad_idx_all
