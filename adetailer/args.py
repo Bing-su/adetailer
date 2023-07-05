@@ -67,7 +67,7 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
     ad_controlnet_guidance_end: confloat(ge=0.0, le=1.0) = 1.0
     is_api: bool = True
 
-    @root_validator
+    @root_validator(skip_on_failure=True)
     def ad_controlnt_module_validator(cls, values):  # noqa: N805
         cn_model = values.get("ad_controlnet_model", "None")
         cn_module = values.get("ad_controlnet_module", None)
@@ -76,8 +76,9 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
         return values
 
     @validator("is_api", pre=True)
-    def is_api_validator(cls, v):  # noqa: N805
-        return type(v) is not object
+    def is_api_validator(cls, v: Any):  # noqa: N805
+        "tuple is json serializable but cannot be made with json deserialize."
+        return type(v) is not tuple
 
     @staticmethod
     def ppop(

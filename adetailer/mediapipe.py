@@ -172,8 +172,8 @@ def mediapipe_face_mesh_eyes_only(
 def draw_preview(
     preview: Image.Image, bboxes: list[list[int]], masks: list[Image.Image]
 ) -> Image.Image:
+    red = Image.new("RGB", preview.size, "red")
     for mask in masks:
-        red = Image.new("RGB", preview.size, "red")
         masked = Image.composite(red, preview, mask)
         preview = Image.blend(preview, masked, 0.25)
 

@@ -84,6 +84,17 @@ def pause_total_tqdm():
         opts.data["multiple_tqdm"] = orig
 
 
+@contextmanager
+def preseve_prompts(p):
+    all_pt = copy(p.all_prompts)
+    all_ng = copy(p.all_negative_prompts)
+    try:
+        yield
+    finally:
+        p.all_prompts = all_pt
+        p.all_negative_prompts = all_ng
+
+
 class AfterDetailerScript(scripts.Script):
     def __init__(self):
         super().__init__()
@@ -403,7 +414,12 @@ class AfterDetailerScript(scripts.Script):
         return i2i
 
     def save_image(self, p, image, *, condition: str, suffix: str) -> None:
-        i = p._ad_idx
+        i = p._ad_idx_all
+        if p.all_prompts:
+            i %= len(p.all_prompts)
+            save_prompt = p.all_prompts[i]
+        else:
+            save_prompt = p.prompt
         seed, _ = self.get_seed(p)
 
         if opts.data.get(condition, False):
@@ -412,7 +428,7 @@ class AfterDetailerScript(scripts.Script):
                 path=p.outpath_samples,
                 basename="",
                 seed=seed,
-                prompt=p.all_prompts[i] if i < len(p.all_prompts) else p.prompt,
+                prompt=save_prompt,
                 extension=opts.samples_format,
                 info=self.infotext(p),
                 p=p,
@@ -587,7 +603,8 @@ class AfterDetailerScript(scripts.Script):
 
         if p.scripts is not None and self.need_call_postprocess(p):
             dummy = Processed(p, [], p.seed, "")
-            p.scripts.postprocess(p, dummy)
+            with preseve_prompts(p):
+                p.scripts.postprocess(p, dummy)
 
         is_processed = False
         with CNHijackRestore(), pause_total_tqdm(), cn_allow_script_control():
@@ -602,7 +619,8 @@ class AfterDetailerScript(scripts.Script):
             )
 
         if p.scripts is not None and self.need_call_process(p):
-            p.scripts.process(p)
+            with preseve_prompts(p):
+                p.scripts.process(p)
 
         try:
             ia = p._ad_idx_all
