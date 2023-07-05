@@ -1,5 +1,14 @@
 # Changelog
 
+## 2023-07-05
+
+- v23.7.3
+- 버그 수정
+  - `object()`가 json 직렬화 안되는 문제
+  - `process`를 호출함에 따라 배치 카운트가 2이상일 때, all_prompts가 고정되는 문제
+  - `ad-before`와 `ad-preview` 이미지 파일명이 실제 파일명과 다른 문제
+  - pydantic 2.0 호환성 문제
+
 ## 2023-07-04
 
 - v23.7.2
