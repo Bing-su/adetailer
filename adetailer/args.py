@@ -76,8 +76,9 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
         return values
 
     @validator("is_api", pre=True)
-    def is_api_validator(cls, v):  # noqa: N805
-        return type(v) is not object
+    def is_api_validator(cls, v: Any):  # noqa: N805
+        "tuple is json serializable but cannot be made with json deserialize."
+        return type(v) is not tuple
 
     @staticmethod
     def ppop(

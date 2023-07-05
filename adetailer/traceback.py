@@ -74,13 +74,14 @@ def ad_args(*args: Any) -> dict[str, Any]:
         return {}
 
     arg0 = ad_args[0]
+    is_api = arg0.get("is_api", True)
     return {
         "version": __version__,
         "ad_model": arg0["ad_model"],
         "ad_prompt": arg0.get("ad_prompt", ""),
         "ad_negative_prompt": arg0.get("ad_negative_prompt", ""),
         "ad_controlnet_model": arg0.get("ad_controlnet_model", "None"),
-        "is_api": "is_api" not in arg0 or type(arg0["is_api"]) is not object,
+        "is_api": type(is_api) is not tuple,
     }
 
 
