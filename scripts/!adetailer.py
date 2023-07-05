@@ -414,7 +414,12 @@ class AfterDetailerScript(scripts.Script):
         return i2i
 
     def save_image(self, p, image, *, condition: str, suffix: str) -> None:
-        i = p._ad_idx
+        i = p._ad_idx_all
+        if p.all_prompts:
+            i %= len(p.all_prompts)
+            save_prompt = p.all_prompts[i]
+        else:
+            save_prompt = p.prompt
         seed, _ = self.get_seed(p)
 
         if opts.data.get(condition, False):
@@ -423,7 +428,7 @@ class AfterDetailerScript(scripts.Script):
                 path=p.outpath_samples,
                 basename="",
                 seed=seed,
-                prompt=p.all_prompts[i] if i < len(p.all_prompts) else p.prompt,
+                prompt=save_prompt,
                 extension=opts.samples_format,
                 info=self.infotext(p),
                 p=p,
