@@ -604,7 +604,7 @@ class AfterDetailerScript(scripts.Script):
         if p.scripts is not None and self.need_call_postprocess(p):
             dummy = Processed(p, [], p.seed, "")
             with preseve_prompts(p):
-                p.scripts.postprocess(p, dummy)
+                p.scripts.postprocess(copy(p), dummy)
 
         is_processed = False
         with CNHijackRestore(), pause_total_tqdm(), cn_allow_script_control():
@@ -620,7 +620,7 @@ class AfterDetailerScript(scripts.Script):
 
         if p.scripts is not None and self.need_call_process(p):
             with preseve_prompts(p):
-                p.scripts.process(p)
+                p.scripts.process(copy(p))
 
         try:
             ia = p._ad_idx_all
