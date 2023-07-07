@@ -482,13 +482,14 @@ class AfterDetailerScript(scripts.Script):
             )
 
     def need_call_process(self, p) -> bool:
-        i = p._ad_idx_batch
+        i = p._ad_idx
         bs = p.batch_size
-        return i == bs - 1
+        return i % bs == bs - 1
 
     def need_call_postprocess(self, p) -> bool:
-        i = p._ad_idx_batch
-        return i == 0
+        i = p._ad_idx
+        bs = p.batch_size
+        return i % bs == 0
 
     @rich_traceback
     def process(self, p, *args_):
@@ -499,8 +500,6 @@ class AfterDetailerScript(scripts.Script):
             arg_list = self.get_args(p, *args_)
             extra_params = self.extra_params(arg_list)
             p.extra_generation_params.update(extra_params)
-
-            p._ad_idx_batch = -1
 
     def _postprocess_image(self, p, pp, args: ADetailerArgs, *, n: int = 0) -> bool:
         """
@@ -597,7 +596,6 @@ class AfterDetailerScript(scripts.Script):
             return
 
         p._ad_idx = getattr(p, "_ad_idx", -1) + 1
-        p._ad_idx_batch = getattr(p, "_ad_idx_batch", -1) + 1
         init_image = copy(pp.image)
         arg_list = self.get_args(p, *args_)
 
