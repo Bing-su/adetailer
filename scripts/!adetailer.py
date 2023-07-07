@@ -414,7 +414,7 @@ class AfterDetailerScript(scripts.Script):
         return i2i
 
     def save_image(self, p, image, *, condition: str, suffix: str) -> None:
-        i = p._ad_idx_all
+        i = p._ad_idx
         if p.all_prompts:
             i %= len(p.all_prompts)
             save_prompt = p.all_prompts[i]
@@ -484,11 +484,12 @@ class AfterDetailerScript(scripts.Script):
     def need_call_process(self, p) -> bool:
         i = p._ad_idx
         bs = p.batch_size
-        return i == bs - 1
+        return i % bs == bs - 1
 
     def need_call_postprocess(self, p) -> bool:
         i = p._ad_idx
-        return i == 0
+        bs = p.batch_size
+        return i % bs == 0
 
     @rich_traceback
     def process(self, p, *args_):
@@ -499,8 +500,6 @@ class AfterDetailerScript(scripts.Script):
             arg_list = self.get_args(p, *args_)
             extra_params = self.extra_params(arg_list)
             p.extra_generation_params.update(extra_params)
-
-            p._ad_idx = -1
 
     def _postprocess_image(self, p, pp, args: ADetailerArgs, *, n: int = 0) -> bool:
         """
@@ -597,7 +596,6 @@ class AfterDetailerScript(scripts.Script):
             return
 
         p._ad_idx = getattr(p, "_ad_idx", -1) + 1
-        p._ad_idx_all = getattr(p, "_ad_idx_all", -1) + 1
         init_image = copy(pp.image)
         arg_list = self.get_args(p, *args_)
 
@@ -623,7 +621,7 @@ class AfterDetailerScript(scripts.Script):
                 p.scripts.process(copy(p))
 
         try:
-            ia = p._ad_idx_all
+            ia = p._ad_idx
             lenp = len(p.all_prompts)
             if ia % lenp == lenp - 1:
                 self.write_params_txt(p)
