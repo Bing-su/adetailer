@@ -5,6 +5,9 @@
 - v23.7.4
 - batch count > 1일때 프롬프트의 인덱스 문제 수정
 
+- v23.7.5
+- i2i의 `cached_uc`와 `cached_c`가 p의 `cached_uc`와 `cached_c`가 다른 인스턴스가 되도록 수정
+
 ## 2023-07-05
 
 - v23.7.3
