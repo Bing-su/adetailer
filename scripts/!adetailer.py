@@ -33,7 +33,6 @@ from controlnet_ext import ControlNetExt, controlnet_exists, get_cn_models
 from controlnet_ext.restore import (
     CNHijackRestore,
     cn_allow_script_control,
-    cn_restore_unet_hook,
 )
 from sd_webui import images, safe, script_callbacks, scripts, shared
 from sd_webui.devices import NansException
@@ -302,7 +301,8 @@ class AfterDetailerScript(scripts.Script):
             return args.ad_noise_multiplier
         return None
 
-    def infotext(self, p) -> str:
+    @staticmethod
+    def infotext(p) -> str:
         return create_infotext(
             p, p.all_prompts, p.all_seeds, p.all_subseeds, None, 0, 0
         )
@@ -460,8 +460,15 @@ class AfterDetailerScript(scripts.Script):
             merge_invert=args.ad_mask_merge_invert,
         )
 
+    @staticmethod
+    def ensure_rgb_image(image: Any):
+        if hasattr(image, "mode") and image.mode != "RGB":
+            image = image.convert("RGB")
+        return image
+
+    @staticmethod
     def i2i_prompts_replace(
-        self, i2i, prompts: list[str], negative_prompts: list[str], j: int
+        i2i, prompts: list[str], negative_prompts: list[str], j: int
     ) -> None:
         i1 = min(j, len(prompts) - 1)
         i2 = min(j, len(negative_prompts) - 1)
@@ -482,15 +489,16 @@ class AfterDetailerScript(scripts.Script):
                 f"[-] ADetailer: applied {ordinal(n + 1)} ad_negative_prompt: {processed.all_negative_prompts[0]!r}"
             )
 
-    def need_call_process(self, p) -> bool:
-        i = p._ad_idx
+    @staticmethod
+    def need_call_process(p) -> bool:
+        i = p.batch_index
         bs = p.batch_size
-        return i % bs == bs - 1
+        return i == bs - 1
 
-    def need_call_postprocess(self, p) -> bool:
-        i = p._ad_idx
-        bs = p.batch_size
-        return i % bs == 0
+    @staticmethod
+    def need_call_postprocess(p) -> bool:
+        i = p.batch_index
+        return i == 0
 
     @rich_traceback
     def process(self, p, *args_):
@@ -555,12 +563,10 @@ class AfterDetailerScript(scripts.Script):
         if is_mediapipe:
             print(f"mediapipe: {steps} detected.")
 
-        _user_pt = p.prompt
-        _user_ng = p.negative_prompt
-
         p2 = copy(i2i)
         for j in range(steps):
             p2.image_mask = masks[j]
+            p2.init_images[0] = self.ensure_rgb_image(p2.init_images[0])
             self.i2i_prompts_replace(p2, ad_prompts, ad_negatives, j)
 
             if re.match(r"^\s*\[SKIP\]\s*$", p2.prompt):
