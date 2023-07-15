@@ -7,12 +7,15 @@ from importlib.metadata import version  # python >= 3.8
 
 from packaging.version import parse
 
+import_name = {"py-cpuinfo": "cpuinfo"}
+
 
 def is_installed(
     package: str, min_version: str | None = None, max_version: str | None = None
 ):
+    name = import_name.get(package, package)
     try:
-        spec = importlib.util.find_spec(package)
+        spec = importlib.util.find_spec(name)
     except ModuleNotFoundError:
         return False
 
@@ -26,9 +29,6 @@ def is_installed(
         min_version = "0.0.0"
     if not max_version:
         max_version = "99999999.99999999.99999999"
-
-    if package == "google.protobuf":
-        package = "protobuf"
 
     try:
         pkg_version = version(package)
@@ -49,15 +49,12 @@ def install():
         ("huggingface_hub", None, None),
         ("pydantic", "1.10.8", None),
         ("rich", "13.4.2", None),
-        # mediapipe
-        ("protobuf", "3.20.0", "3.20.9999"),
+        # ultralytics
+        ("py-cpuinfo", None, None),
     ]
 
     for pkg, low, high in deps:
-        # https://github.com/protocolbuffers/protobuf/tree/main/python
-        name = "google.protobuf" if pkg == "protobuf" else pkg
-
-        if not is_installed(name, low, high):
+        if not is_installed(pkg, low, high):
             if low and high:
                 cmd = f"{pkg}>={low},<={high}"
             elif low:
