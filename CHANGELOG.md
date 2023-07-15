@@ -1,5 +1,11 @@
 # Changelog
 
+## 2023-07-16
+
+- v23.7.6
+- `ultralytics 8.0.135`에 추가된 cpuinfo 기능을 위해 `py-cpuinfo`를 미리 설치하게 함. (미리 설치 안하면 cpu나 mps사용할 때 재시작해야함)
+- init_image가 RGB 모드가 아닐 때 RGB로 변경.
+
 ## 2023-07-07
 
 - v23.7.4
