@@ -417,6 +417,7 @@ def inpainting(w: Widgets, n: int, is_img2img: bool, samplers: list[str]):
                 )
 
                 w.ad_sampler = gr.Dropdown(
+                    label="ADetailer sampler" + suffix(n),
                     choices=samplers,
                     value="DPM++ 2M Karras",
                     visible=True,
