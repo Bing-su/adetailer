@@ -92,7 +92,8 @@ def sys_info() -> dict[str, Any]:
         version = launch.git_tag()
         commit = launch.commit_hash()
     except Exception:
-        version = commit = "------"
+        version = "Unknown (too old or vladmandic)"
+        commit = "-------"
 
     return {
         "Platform": platform.platform(),
