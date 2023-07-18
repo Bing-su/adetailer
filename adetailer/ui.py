@@ -65,6 +65,7 @@ def adui(
     num_models: int,
     is_img2img: bool,
     model_list: list[str],
+    samplers: list[str],
     t2i_button: gr.Button,
     i2i_button: gr.Button,
 ):
@@ -97,6 +98,7 @@ def adui(
                         n=n,
                         is_img2img=is_img2img,
                         model_list=model_list,
+                        samplers=samplers,
                         t2i_button=t2i_button,
                         i2i_button=i2i_button,
                     )
@@ -113,6 +115,7 @@ def one_ui_group(
     n: int,
     is_img2img: bool,
     model_list: list[str],
+    samplers: list[str],
     t2i_button: gr.Button,
     i2i_button: gr.Button,
 ):
@@ -171,7 +174,7 @@ def one_ui_group(
         with gr.Accordion(
             "Inpainting", open=False, elem_id=eid("ad_inpainting_accordion")
         ):
-            inpainting(w, n, is_img2img)
+            inpainting(w, n, is_img2img, samplers)
 
     with gr.Group():
         controlnet(w, n, is_img2img)
@@ -268,7 +271,7 @@ def mask_preprocessing(w: Widgets, n: int, is_img2img: bool):
             )
 
 
-def inpainting(w: Widgets, n: int, is_img2img: bool):
+def inpainting(w: Widgets, n: int, is_img2img: bool, samplers: list[str]):
     eid = partial(elem_id, n=n, is_img2img=is_img2img)
 
     with gr.Group():
@@ -406,6 +409,29 @@ def inpainting(w: Widgets, n: int, is_img2img: bool):
 
         with gr.Row():
             with gr.Column(variant="compact"):
+                w.ad_use_sampler = gr.Checkbox(
+                    label="Use separate sampler" + suffix(n),
+                    value=False,
+                    visible=True,
+                    elem_id=eid("ad_use_sampler"),
+                )
+
+                w.ad_sampler = gr.Dropdown(
+                    choices=samplers,
+                    value="DPM++ 2M Karras",
+                    visible=True,
+                    interactive=False,
+                    elem_id=eid("ad_sampler"),
+                )
+
+                w.ad_use_sampler.change(
+                    gr_interactive,
+                    inputs=w.ad_use_sampler,
+                    outputs=w.ad_sampler,
+                    queue=False,
+                )
+
+            with gr.Column(variant="compact"):
                 w.ad_use_noise_multiplier = gr.Checkbox(
                     label="Use separate noise multiplier" + suffix(n),
                     value=False,
@@ -430,6 +456,7 @@ def inpainting(w: Widgets, n: int, is_img2img: bool):
                     queue=False,
                 )
 
+        with gr.Row():
             w.ad_restore_face = gr.Checkbox(
                 label="Restore faces after ADetailer" + suffix(n),
                 value=False,

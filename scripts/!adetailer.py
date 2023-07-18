@@ -43,6 +43,7 @@ from sd_webui.processing import (
     create_infotext,
     process_images,
 )
+from sd_webui.sd_samplers import all_samplers
 from sd_webui.shared import cmd_opts, opts, state
 
 no_huggingface = getattr(cmd_opts, "ad_no_huggingface", False)
@@ -115,11 +116,13 @@ class AfterDetailerScript(scripts.Script):
     def ui(self, is_img2img):
         num_models = opts.data.get("ad_max_models", 2)
         model_list = list(model_mapping.keys())
+        samplers = [sampler.name for sampler in all_samplers]
 
         components, infotext_fields = adui(
             num_models,
             is_img2img,
             model_list,
+            samplers,
             txt2img_submit_button,
             img2img_submit_button,
         )
@@ -296,6 +299,13 @@ class AfterDetailerScript(scripts.Script):
             return args.ad_cfg_scale
         return p.cfg_scale
 
+    def get_sampler(self, p, args: ADetailerArgs) -> str:
+        sampler = args.ad_sampler if args.ad_use_sampler else p.sampler
+
+        if sampler in ["PLMS", "UniPC"]:
+            sampler = "Euler"
+        return sampler
+
     def get_initial_noise_multiplier(self, p, args: ADetailerArgs) -> float | None:
         if args.ad_use_noise_multiplier:
             return args.ad_noise_multiplier
@@ -361,10 +371,7 @@ class AfterDetailerScript(scripts.Script):
         steps = self.get_steps(p, args)
         cfg_scale = self.get_cfg_scale(p, args)
         initial_noise_multiplier = self.get_initial_noise_multiplier(p, args)
-
-        sampler_name = p.sampler_name
-        if sampler_name in ["PLMS", "UniPC"]:
-            sampler_name = "Euler"
+        sampler_name = self.get_sampler(p, args)
 
         i2i = StableDiffusionProcessingImg2Img(
             init_images=[image],
