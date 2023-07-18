@@ -725,6 +725,7 @@ def make_axis_on_xyz_grid():
         return
 
     model_list = ["None", *model_mapping.keys()]
+    samplers = [sampler.name for sampler in all_samplers]
 
     def set_value(p, x, xs, *, field: str):
         if not hasattr(p, "adetailer_xyz"):
@@ -768,6 +769,12 @@ def make_axis_on_xyz_grid():
             "[ADetailer] Inpaint only masked padding 1st",
             int,
             partial(set_value, field="ad_inpaint_only_masked_padding"),
+        ),
+        xyz_grid.AxisOption(
+            "[ADetailer] ADetailer sampler 1st",
+            str,
+            partial(set_value, field="ad_sampler"),
+            choices=lambda: samplers,
         ),
         xyz_grid.AxisOption(
             "[ADetailer] ControlNet model 1st",
