@@ -498,14 +498,15 @@ class AfterDetailerScript(scripts.Script):
 
     @staticmethod
     def need_call_process(p) -> bool:
-        i = p.batch_index
+        i = p._ad_idx
         bs = p.batch_size
-        return i == bs - 1
+        return i % bs == bs - 1
 
     @staticmethod
     def need_call_postprocess(p) -> bool:
-        i = p.batch_index
-        return i == 0
+        i = p._ad_idx
+        bs = p.batch_size
+        return i % bs == 0
 
     @rich_traceback
     def process(self, p, *args_):
