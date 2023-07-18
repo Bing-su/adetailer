@@ -128,6 +128,7 @@ class AfterDetailerScript(scripts.Script):
         )
 
         self.infotext_fields = infotext_fields
+        self.paste_field_names = [name for _, name in infotext_fields]
         return components
 
     def init_controlnet_ext(self) -> None:
