@@ -301,11 +301,11 @@ class AfterDetailerScript(scripts.Script):
         return p.cfg_scale
 
     def get_sampler(self, p, args: ADetailerArgs) -> str:
-        sampler = args.ad_sampler if args.ad_use_sampler else p.sampler
+        sampler_name = args.ad_sampler if args.ad_use_sampler else p.sampler_name
 
-        if sampler in ["PLMS", "UniPC"]:
-            sampler = "Euler"
-        return sampler
+        if sampler_name in ["PLMS", "UniPC"]:
+            sampler_name = "Euler"
+        return sampler_name
 
     def get_initial_noise_multiplier(self, p, args: ADetailerArgs) -> float | None:
         if args.ad_use_noise_multiplier:
