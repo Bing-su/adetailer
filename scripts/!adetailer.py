@@ -43,6 +43,7 @@ from sd_webui.processing import (
     create_infotext,
     process_images,
 )
+from sd_webui.sd_samplers import all_samplers
 from sd_webui.shared import cmd_opts, opts, state
 
 no_huggingface = getattr(cmd_opts, "ad_no_huggingface", False)
@@ -115,16 +116,19 @@ class AfterDetailerScript(scripts.Script):
     def ui(self, is_img2img):
         num_models = opts.data.get("ad_max_models", 2)
         model_list = list(model_mapping.keys())
+        samplers = [sampler.name for sampler in all_samplers]
 
         components, infotext_fields = adui(
             num_models,
             is_img2img,
             model_list,
+            samplers,
             txt2img_submit_button,
             img2img_submit_button,
         )
 
         self.infotext_fields = infotext_fields
+        self.paste_field_names = [name for _, name in infotext_fields]
         return components
 
     def init_controlnet_ext(self) -> None:
@@ -296,6 +300,13 @@ class AfterDetailerScript(scripts.Script):
             return args.ad_cfg_scale
         return p.cfg_scale
 
+    def get_sampler(self, p, args: ADetailerArgs) -> str:
+        sampler = args.ad_sampler if args.ad_use_sampler else p.sampler
+
+        if sampler in ["PLMS", "UniPC"]:
+            sampler = "Euler"
+        return sampler
+
     def get_initial_noise_multiplier(self, p, args: ADetailerArgs) -> float | None:
         if args.ad_use_noise_multiplier:
             return args.ad_noise_multiplier
@@ -361,10 +372,7 @@ class AfterDetailerScript(scripts.Script):
         steps = self.get_steps(p, args)
         cfg_scale = self.get_cfg_scale(p, args)
         initial_noise_multiplier = self.get_initial_noise_multiplier(p, args)
-
-        sampler_name = p.sampler_name
-        if sampler_name in ["PLMS", "UniPC"]:
-            sampler_name = "Euler"
+        sampler_name = self.get_sampler(p, args)
 
         i2i = StableDiffusionProcessingImg2Img(
             init_images=[image],
@@ -491,14 +499,15 @@ class AfterDetailerScript(scripts.Script):
 
     @staticmethod
     def need_call_process(p) -> bool:
-        i = p.batch_index
+        i = p._ad_idx
         bs = p.batch_size
-        return i == bs - 1
+        return i % bs == bs - 1
 
     @staticmethod
     def need_call_postprocess(p) -> bool:
-        i = p.batch_index
-        return i == 0
+        i = p._ad_idx
+        bs = p.batch_size
+        return i % bs == 0
 
     @rich_traceback
     def process(self, p, *args_):
@@ -718,6 +727,7 @@ def make_axis_on_xyz_grid():
         return
 
     model_list = ["None", *model_mapping.keys()]
+    samplers = [sampler.name for sampler in all_samplers]
 
     def set_value(p, x, xs, *, field: str):
         if not hasattr(p, "adetailer_xyz"):
@@ -761,6 +771,12 @@ def make_axis_on_xyz_grid():
             "[ADetailer] Inpaint only masked padding 1st",
             int,
             partial(set_value, field="ad_inpaint_only_masked_padding"),
+        ),
+        xyz_grid.AxisOption(
+            "[ADetailer] ADetailer sampler 1st",
+            str,
+            partial(set_value, field="ad_sampler"),
+            choices=lambda: samplers,
         ),
         xyz_grid.AxisOption(
             "[ADetailer] ControlNet model 1st",
