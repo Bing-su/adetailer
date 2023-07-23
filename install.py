@@ -47,7 +47,7 @@ def install():
         ("ultralytics", "8.0.97", None),
         ("mediapipe", "0.10.0", None),
         ("huggingface_hub", None, None),
-        ("pydantic", "1.10.8", None),
+        ("pydantic", "1.10.8", "1.999999.999999"),
         ("rich", "13.4.2", None),
         # ultralytics
         ("py-cpuinfo", None, None),
