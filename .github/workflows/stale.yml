@@ -9,5 +9,5 @@ jobs:
     steps:
       - uses: actions/stale@v8
         with:
-          days-before-stale: 30
-          days-before-close: 5
+          days-before-stale: 23
+          days-before-close: 3

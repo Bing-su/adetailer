@@ -1,0 +1,10 @@
+name: Question
+description: Write a question
+labels:
+  - question
+
+body:
+  - type: textarea
+    attributes:
+      label: Question
+      description: Please do not write bug reports or feature requests here.

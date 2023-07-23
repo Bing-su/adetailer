@@ -1,5 +1,11 @@
 # Changelog
 
+## 2023-07-23
+
+- v23.7.9
+- `ultralytics.utils` ModuleNotFoundError 해결 (https://github.com/ultralytics/ultralytics/issues/3856)
+- `pydantic` 2.0 이상 버전 설치안되도록 함
+
 ## 2023-07-20
 
 - v23.7.8
