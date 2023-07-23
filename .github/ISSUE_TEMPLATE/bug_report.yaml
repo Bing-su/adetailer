@@ -1,6 +1,8 @@
 name: Bug report
 description: Create a report
 title: "[Bug]: "
+labels:
+  - bug
 
 body:
   - type: textarea
@@ -19,10 +21,14 @@ body:
 
   - type: textarea
     attributes:
-      label: The entire console log, including python version information, webui version, commit hash, commandline arguments and error traces.
+      label: Screenshots
+      description: Screenshots related to the issue.
+
+  - type: textarea
+    attributes:
+      label: Console logs, from start to end.
       description: |
         The full console log of your terminal.
-        From `Python ..., Version: ..., Commit hash: ...` to the end.
       placeholder: |
         Python ...
         Version: ...
@@ -32,6 +38,11 @@ body:
 
         Launching Web UI with arguments: ...
         [-] ADetailer initialized. version: ...
+        ...
+        ...
+
+        Traceback (most recent call last):
+        ...
         ...
       render: Shell
     validations:
