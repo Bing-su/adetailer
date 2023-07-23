@@ -15,6 +15,7 @@ def load_yolo(model_path: str | Path):
     try:
         return YOLO(model_path)
     except ModuleNotFoundError:
+        # https://github.com/ultralytics/ultralytics/issues/3856
         YOLO("yolov8n.pt")
         return YOLO(model_path)
 
