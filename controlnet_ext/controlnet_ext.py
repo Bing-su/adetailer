@@ -88,7 +88,7 @@ def get_cn_model_dirs() -> list[Path]:
     else:
         cn_model_dir_old = None
     ext_dir1 = shared.opts.data.get("control_net_models_path", "")
-    ext_dir2 = shared.opts.data.get("controlnet_dir", "")
+    ext_dir2 = getattr(shared.cmd_opts, "controlnet_dir", "")
 
     dirs = [cn_model_dir]
     for ext_dir in [cn_model_dir_old, ext_dir1, ext_dir2]:
