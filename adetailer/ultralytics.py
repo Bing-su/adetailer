@@ -4,14 +4,14 @@ from pathlib import Path
 
 import cv2
 from PIL import Image
+from torchvision.transforms.functional import to_pil_image
+from ultralytics import YOLO
 
 from adetailer import PredictOutput
 from adetailer.common import create_mask_from_bbox
 
 
 def load_yolo(model_path: str | Path):
-    from ultralytics import YOLO
-
     try:
         return YOLO(model_path)
     except ModuleNotFoundError:
@@ -57,7 +57,5 @@ def mask_to_pil(masks, shape: tuple[int, int]) -> list[Image.Image]:
     shape: tuple[int, int]
         (width, height) of the original image
     """
-    from torchvision.transforms.functional import to_pil_image
-
     n = masks.shape[0]
     return [to_pil_image(masks[i], mode="L").resize(shape) for i in range(n)]
