@@ -101,8 +101,6 @@ class AfterDetailerScript(scripts.Script):
         self.ultralytics_device = self.get_ultralytics_device()
 
         self.controlnet_ext = None
-        self.cn_script = None
-        self.cn_latest_network = None
 
     def __repr__(self):
         return f"{self.__class__.__name__}(version={__version__})"
@@ -347,9 +345,6 @@ class AfterDetailerScript(scripts.Script):
             filename = Path(filepath).stem
             if filename in script_names_set:
                 filtered_alwayson.append(script_object)
-            if filename == "controlnet":
-                self.cn_script = script_object
-                self.cn_latest_network = script_object.latest_network
 
         script_runner.alwayson_scripts = filtered_alwayson
         return script_runner, script_args
