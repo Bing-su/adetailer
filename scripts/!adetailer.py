@@ -305,6 +305,11 @@ class AfterDetailerScript(scripts.Script):
         if sampler_name in ["PLMS", "UniPC"]:
             sampler_name = "Euler"
         return sampler_name
+    
+    def get_clip_skip(self, p, args: ADetailerArgs) -> int:
+        if args.ad_use_clip_skip:
+            return args.ad_clip_skip
+        return opts.data.get('CLIP_stop_at_last_layers', 1)
 
     def get_initial_noise_multiplier(self, p, args: ADetailerArgs) -> float | None:
         if args.ad_use_noise_multiplier:
@@ -372,6 +377,7 @@ class AfterDetailerScript(scripts.Script):
         cfg_scale = self.get_cfg_scale(p, args)
         initial_noise_multiplier = self.get_initial_noise_multiplier(p, args)
         sampler_name = self.get_sampler(p, args)
+        clip_skip = self.get_clip_skip(p, args)
 
         i2i = StableDiffusionProcessingImg2Img(
             init_images=[image],
@@ -407,6 +413,9 @@ class AfterDetailerScript(scripts.Script):
             extra_generation_params=p.extra_generation_params,
             do_not_save_samples=True,
             do_not_save_grid=True,
+            override_settings={
+                "CLIP_stop_at_last_layers": clip_skip
+            }
         )
 
         i2i.cached_c = [None, None]

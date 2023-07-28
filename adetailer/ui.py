@@ -457,12 +457,37 @@ def inpainting(w: Widgets, n: int, is_img2img: bool, samplers: list[str]):
                 )
 
         with gr.Row():
-            w.ad_restore_face = gr.Checkbox(
-                label="Restore faces after ADetailer" + suffix(n),
-                value=False,
-                elem_id=eid("ad_restore_face"),
-            )
+            with gr.Column(variant="compact"):
+                w.ad_restore_face = gr.Checkbox(
+                    label="Restore faces after ADetailer" + suffix(n),
+                    value=False,
+                    elem_id=eid("ad_restore_face"),
+                )
 
+            with gr.Column(variant="compact"):
+                w.ad_use_clip_skip = gr.Checkbox(
+                    label="Use separate CLIP skip" + suffix(n),
+                    value=False,
+                    visible=True,
+                    elem_id=eid("ad_use_clip_skip"),
+                )
+
+                w.ad_clip_skip = gr.Slider(
+                    label="ADetailer CLIP skip" + suffix(n),
+                    minimum=1,
+                    maximum=12,
+                    step=1,
+                    value=1,
+                    visible=True,
+                    elem_id=eid("ad_clip_skip"),
+                )
+
+                w.ad_use_clip_skip.change(
+                    gr_interactive,
+                    inputs=w.ad_use_clip_skip,
+                    outputs=w.ad_clip_skip,
+                    queue=False,
+                )
 
 def controlnet(w: Widgets, n: int, is_img2img: bool):
     eid = partial(elem_id, n=n, is_img2img=is_img2img)
