@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from functools import partial
 
+import mediapipe as mp
 import numpy as np
 from PIL import Image, ImageDraw
 
@@ -28,8 +29,6 @@ def mediapipe_predict(
 def mediapipe_face_detection(
     model_type: int, image: Image.Image, confidence: float = 0.3
 ) -> PredictOutput:
-    import mediapipe as mp
-
     img_width, img_height = image.size
 
     mp_face_detection = mp.solutions.face_detection
@@ -85,8 +84,6 @@ def get_convexhull(points: np.ndarray) -> list[tuple[int, int]]:
 
 
 def mediapipe_face_mesh(image: Image.Image, confidence: float = 0.3) -> PredictOutput:
-    import mediapipe as mp
-
     mp_face_mesh = mp.solutions.face_mesh
     draw_util = mp.solutions.drawing_utils
     drawing_styles = mp.solutions.drawing_styles
@@ -130,8 +127,6 @@ def mediapipe_face_mesh(image: Image.Image, confidence: float = 0.3) -> PredictO
 def mediapipe_face_mesh_eyes_only(
     image: Image.Image, confidence: float = 0.3
 ) -> PredictOutput:
-    import mediapipe as mp
-
     mp_face_mesh = mp.solutions.face_mesh
 
     left_idx = np.array(list(mp_face_mesh.FACEMESH_LEFT_EYE)).flatten()

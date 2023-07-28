@@ -5,12 +5,6 @@ from contextlib import contextmanager
 from modules import img2img, processing, shared
 
 
-def cn_restore_unet_hook(p, cn_latest_network):
-    if cn_latest_network is not None:
-        unet = p.sd_model.model.diffusion_model
-        cn_latest_network.restore(unet)
-
-
 class CNHijackRestore:
     def __init__(self):
         self.process = hasattr(processing, "__controlnet_original_process_images_inner")
