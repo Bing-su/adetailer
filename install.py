@@ -44,8 +44,8 @@ def run_pip(*args):
 def install():
     deps = [
         # requirements
-        ("ultralytics", "8.0.97", None),
-        ("mediapipe", "0.10.0", None),
+        ("ultralytics", "8.0.143", None),
+        ("mediapipe", "0.10.2", None),
         ("rich", "13.4.2", None),
         # ultralytics
         ("py-cpuinfo", None, None),

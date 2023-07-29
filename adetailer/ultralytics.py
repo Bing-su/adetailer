@@ -11,24 +11,13 @@ from adetailer import PredictOutput
 from adetailer.common import create_mask_from_bbox
 
 
-def load_yolo(model_path: str | Path):
-    try:
-        return YOLO(model_path)
-    except ModuleNotFoundError:
-        # https://github.com/ultralytics/ultralytics/issues/3856
-        YOLO("yolov8n.pt")
-        return YOLO(model_path)
-
-
 def ultralytics_predict(
     model_path: str | Path,
     image: Image.Image,
     confidence: float = 0.3,
     device: str = "",
 ) -> PredictOutput:
-    model_path = str(model_path)
-
-    model = load_yolo(model_path)
+    model = YOLO(model_path)
     pred = model(image, conf=confidence, device=device)
 
     bboxes = pred[0].boxes.xyxy.cpu().numpy()
