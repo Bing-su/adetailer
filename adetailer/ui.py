@@ -489,6 +489,7 @@ def inpainting(w: Widgets, n: int, is_img2img: bool, samplers: list[str]):
                     queue=False,
                 )
 
+
 def controlnet(w: Widgets, n: int, is_img2img: bool):
     eid = partial(elem_id, n=n, is_img2img=is_img2img)
     cn_models = ["None", *get_cn_models()]
