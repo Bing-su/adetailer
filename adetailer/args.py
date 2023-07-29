@@ -12,6 +12,7 @@ from pydantic import (
     NonNegativeInt,
     PositiveInt,
     confloat,
+    conint,
     constr,
     root_validator,
     validator,
@@ -61,14 +62,14 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
     ad_sampler: str = "DPM++ 2M Karras"
     ad_use_noise_multiplier: bool = False
     ad_noise_multiplier: confloat(ge=0.5, le=1.5) = 1.0
+    ad_use_clip_skip: bool = False
+    ad_clip_skip: conint(ge=1, le=12) = 1
     ad_restore_face: bool = False
     ad_controlnet_model: constr(regex=cn_model_regex) = "None"
     ad_controlnet_module: Optional[constr(regex=r".*inpaint.*|^None$")] = None
     ad_controlnet_weight: confloat(ge=0.0, le=1.0) = 1.0
     ad_controlnet_guidance_start: confloat(ge=0.0, le=1.0) = 0.0
     ad_controlnet_guidance_end: confloat(ge=0.0, le=1.0) = 1.0
-    ad_use_clip_skip: bool = False
-    ad_clip_skip: int = 1
     is_api: bool = True
 
     @root_validator(skip_on_failure=True)
@@ -142,6 +143,11 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
             ["ADetailer use separate noise multiplier", "ADetailer noise multiplier"],
         )
 
+        ppop(
+            "ADetailer use separate CLIP skip",
+            ["ADetailer use separate CLIP skip", "ADetailer CLIP skip"],
+        )
+
         ppop("ADetailer restore face")
         ppop(
             "ADetailer ControlNet model",
@@ -203,14 +209,14 @@ _all_args = [
     ("ad_sampler", "ADetailer sampler"),
     ("ad_use_noise_multiplier", "ADetailer use separate noise multiplier"),
     ("ad_noise_multiplier", "ADetailer noise multiplier"),
+    ("ad_use_clip_skip", "ADetailer use separate CLIP skip"),
+    ("ad_clip_skip", "ADetailer CLIP skip"),
     ("ad_restore_face", "ADetailer restore face"),
     ("ad_controlnet_model", "ADetailer ControlNet model"),
     ("ad_controlnet_module", "ADetailer ControlNet module"),
     ("ad_controlnet_weight", "ADetailer ControlNet weight"),
     ("ad_controlnet_guidance_start", "ADetailer ControlNet guidance start"),
     ("ad_controlnet_guidance_end", "ADetailer ControlNet guidance end"),
-    ("ad_use_clip_skip", "ADetailer use separate CLIP skip"),
-    ("ad_clip_skip", "ADetailer CLIP skip"),
 ]
 
 AD_ENABLE = Arg(*_all_args[0])

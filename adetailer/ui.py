@@ -458,13 +458,6 @@ def inpainting(w: Widgets, n: int, is_img2img: bool, samplers: list[str]):
 
         with gr.Row():
             with gr.Column(variant="compact"):
-                w.ad_restore_face = gr.Checkbox(
-                    label="Restore faces after ADetailer" + suffix(n),
-                    value=False,
-                    elem_id=eid("ad_restore_face"),
-                )
-
-            with gr.Column(variant="compact"):
                 w.ad_use_clip_skip = gr.Checkbox(
                     label="Use separate CLIP skip" + suffix(n),
                     value=False,
@@ -487,6 +480,13 @@ def inpainting(w: Widgets, n: int, is_img2img: bool, samplers: list[str]):
                     inputs=w.ad_use_clip_skip,
                     outputs=w.ad_clip_skip,
                     queue=False,
+                )
+
+            with gr.Column(variant="compact"):
+                w.ad_restore_face = gr.Checkbox(
+                    label="Restore faces after ADetailer" + suffix(n),
+                    value=False,
+                    elem_id=eid("ad_restore_face"),
                 )
 
 
