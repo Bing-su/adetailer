@@ -7,7 +7,7 @@ from importlib.metadata import version  # python >= 3.8
 
 from packaging.version import parse
 
-import_name = {"py-cpuinfo": "cpuinfo"}
+import_name = {"py-cpuinfo": "cpuinfo", "protobuf": "google.protobuf"}
 
 
 def is_installed(
@@ -44,11 +44,13 @@ def run_pip(*args):
 def install():
     deps = [
         # requirements
-        ("ultralytics", "8.0.143", None),
+        ("ultralytics", "8.0.145", None),
         ("mediapipe", "0.10.2", None),
         ("rich", "13.4.2", None),
         # ultralytics
         ("py-cpuinfo", None, None),
+        # mediapipe
+        ("protobuf", "3.20", "3.9999"),
     ]
 
     for pkg, low, high in deps:
