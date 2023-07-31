@@ -1,5 +1,11 @@
 # Changelog
 
+## 2023-07-31
+
+- v23.7.11
+- separate clip skip 옵션 추가
+- install requirements 정리 (ultralytics 새 버전, mediapipe~=3.20)
+
 ## 2023-07-28
 
 - v23.7.10
