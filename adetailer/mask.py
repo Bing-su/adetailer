@@ -216,7 +216,6 @@ def filter_by_ratio(pred: PredictOutput, low: float, high: float) -> PredictOutp
 
 
 def filter_take_largest(pred: PredictOutput, k: int) -> PredictOutput:
-    print(pred, k)
     if not pred.bboxes or k == 0:
         return pred
     areas = [bbox_area(bbox) for bbox in pred.bboxes]
