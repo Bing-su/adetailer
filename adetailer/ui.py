@@ -211,7 +211,7 @@ def detection(w: Widgets, n: int, is_img2img: bool):
                 step=1,
                 value=0,
                 visible=True,
-                elem_id=eid("ad_mask_k_largest")
+                elem_id=eid("ad_mask_k_largest"),
             )
 
         with gr.Column(variant="compact"):
@@ -233,7 +233,6 @@ def detection(w: Widgets, n: int, is_img2img: bool):
                 visible=True,
                 elem_id=eid("ad_mask_max_ratio"),
             )
-
 
 
 def mask_preprocessing(w: Widgets, n: int, is_img2img: bool):
