@@ -70,6 +70,7 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
     ad_controlnet_weight: confloat(ge=0.0, le=1.0) = 1.0
     ad_controlnet_guidance_start: confloat(ge=0.0, le=1.0) = 0.0
     ad_controlnet_guidance_end: confloat(ge=0.0, le=1.0) = 1.0
+    ad_mask_k_largest: NonNegativeInt = 0
     is_api: bool = True
 
     @root_validator(skip_on_failure=True)
@@ -190,6 +191,7 @@ _all_args = [
     ("ad_confidence", "ADetailer confidence"),
     ("ad_mask_min_ratio", "ADetailer mask min ratio"),
     ("ad_mask_max_ratio", "ADetailer mask max ratio"),
+    ("ad_mask_k_largest", "ADetailer mask only top k largest"),
     ("ad_x_offset", "ADetailer x offset"),
     ("ad_y_offset", "ADetailer y offset"),
     ("ad_dilate_erode", "ADetailer dilate/erode"),

@@ -215,6 +215,16 @@ def filter_by_ratio(pred: PredictOutput, low: float, high: float) -> PredictOutp
     return pred
 
 
+def filter_take_largest(pred: PredictOutput, k: int) -> PredictOutput:
+    if not pred.bboxes or k == 0:
+        return pred
+    areas = [bbox_area(bbox) for bbox in pred.bboxes]
+    idx = np.argsort(areas)[-k:]
+    pred.bboxes = [pred.bboxes[i] for i in idx]
+    pred.masks = [pred.masks[i] for i in idx]
+    return pred
+
+
 # Merge / Invert
 def mask_merge(masks: list[Image.Image]) -> list[Image.Image]:
     arrs = [np.array(m) for m in masks]
