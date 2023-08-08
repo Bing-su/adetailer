@@ -244,8 +244,8 @@ class AfterDetailerScript(scripts.Script):
         for n in range(len(prompts)):
             if not prompts[n]:
                 prompts[n] = blank_replacement
-            elif '{prompt}' in prompts[n]:
-                prompts[n] = prompts[n].replace('{prompt}', f' {blank_replacement} ')
+            elif "[PROMPT]" in prompts[n]:
+                prompts[n] = prompts[n].replace("[PROMPT]", f" {blank_replacement} ")
         return prompts
 
     def get_prompt(self, p, args: ADetailerArgs) -> tuple[list[str], list[str]]:
