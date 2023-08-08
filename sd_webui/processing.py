@@ -157,6 +157,9 @@ if TYPE_CHECKING:
         comments: Any,
         iteration: int = 0,
         position_in_batch: int = 0,
+        use_main_prompt: bool = False,
+        index: int | None = None,
+        all_negative_prompts: list[str] | None = None,
     ) -> str:
         pass
 

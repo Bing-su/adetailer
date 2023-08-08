@@ -3,6 +3,7 @@ from __future__ import annotations
 import io
 import platform
 import sys
+from importlib.metadata import version
 from typing import Any, Callable
 
 from rich.console import Console, Group
@@ -85,6 +86,17 @@ def ad_args(*args: Any) -> dict[str, Any]:
     }
 
 
+def library_version():
+    libraries = ["torch", "torchvision", "ultralytics", "mediapipe"]
+    d = {}
+    for lib in libraries:
+        try:
+            d[lib] = version(lib)
+        except Exception:
+            d[lib] = "Unknown"
+    return d
+
+
 def sys_info() -> dict[str, Any]:
     try:
         import launch
@@ -93,7 +105,7 @@ def sys_info() -> dict[str, Any]:
         commit = launch.commit_hash()
     except Exception:
         version = "Unknown (too old or vladmandic)"
-        commit = "-------"
+        commit = "Unknown"
 
     return {
         "Platform": platform.platform(),
@@ -101,6 +113,7 @@ def sys_info() -> dict[str, Any]:
         "Version": version,
         "Commit": commit,
         "Commandline": sys.argv,
+        "Libraries": library_version(),
     }
 
 
@@ -116,23 +129,12 @@ def get_table(title: str, data: dict[str, Any]) -> Table:
     return table
 
 
-def force_terminal_value():
-    try:
-        from modules.shared import cmd_opts
-
-        return True if hasattr(cmd_opts, "skip_torch_cuda_test") else None
-    except Exception:
-        return None
-
-
 def rich_traceback(func: Callable) -> Callable:
-    force_terminal = force_terminal_value()
-
     def wrapper(*args, **kwargs):
         string = io.StringIO()
         width = Console().width
         width = width - 4 if width > 4 else None
-        console = Console(file=string, force_terminal=force_terminal, width=width)
+        console = Console(file=string, width=width)
         try:
             return func(*args, **kwargs)
         except Exception as e:

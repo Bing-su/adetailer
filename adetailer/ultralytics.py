@@ -4,20 +4,11 @@ from pathlib import Path
 
 import cv2
 from PIL import Image
+from torchvision.transforms.functional import to_pil_image
+from ultralytics import YOLO
 
 from adetailer import PredictOutput
 from adetailer.common import create_mask_from_bbox
-
-
-def load_yolo(model_path: str | Path):
-    from ultralytics import YOLO
-
-    try:
-        return YOLO(model_path)
-    except ModuleNotFoundError:
-        # https://github.com/ultralytics/ultralytics/issues/3856
-        YOLO("yolov8n.pt")
-        return YOLO(model_path)
 
 
 def ultralytics_predict(
@@ -26,9 +17,7 @@ def ultralytics_predict(
     confidence: float = 0.3,
     device: str = "",
 ) -> PredictOutput:
-    model_path = str(model_path)
-
-    model = load_yolo(model_path)
+    model = YOLO(model_path)
     pred = model(image, conf=confidence, device=device)
 
     bboxes = pred[0].boxes.xyxy.cpu().numpy()
@@ -57,7 +46,5 @@ def mask_to_pil(masks, shape: tuple[int, int]) -> list[Image.Image]:
     shape: tuple[int, int]
         (width, height) of the original image
     """
-    from torchvision.transforms.functional import to_pil_image
-
     n = masks.shape[0]
     return [to_pil_image(masks[i], mode="L").resize(shape) for i in range(n)]

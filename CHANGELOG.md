@@ -1,10 +1,26 @@
 # Changelog
 
+## 2023-07-31
+
+- v23.7.11
+- separate clip skip 옵션 추가
+- install requirements 정리 (ultralytics 새 버전, mediapipe~=3.20)
+
+## 2023-07-28
+
+- v23.7.10
+- ultralytics, mediapipe import문 정리
+- traceback에서 컬러를 없앰 (api 때문), 라이브러리 버전도 보여주게 설정.
+- huggingface_hub, pydantic을 install.py에서 없앰
+- 안쓰는 컨트롤넷 관련 코드 삭제
+
+
 ## 2023-07-23
 
 - v23.7.9
 - `ultralytics.utils` ModuleNotFoundError 해결 (https://github.com/ultralytics/ultralytics/issues/3856)
 - `pydantic` 2.0 이상 버전 설치안되도록 함
+- `controlnet_dir` cmd args 문제 수정 (PR #107)
 
 ## 2023-07-20
 
