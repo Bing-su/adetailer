@@ -28,7 +28,7 @@ from adetailer.args import ALL_ARGS, BBOX_SORTBY, ADetailerArgs, EnableChecker
 from adetailer.common import PredictOutput
 from adetailer.mask import (
     filter_by_ratio,
-    filter_take_largest,
+    filter_k_largest,
     mask_preprocess,
     sort_bboxes,
 )
@@ -468,7 +468,7 @@ class AfterDetailerScript(scripts.Script):
         pred = filter_by_ratio(
             pred, low=args.ad_mask_min_ratio, high=args.ad_mask_max_ratio
         )
-        pred = filter_take_largest(pred, k=args.ad_mask_k_largest)
+        pred = filter_k_largest(pred, k=args.ad_mask_k_largest)
         pred = self.sort_bboxes(pred)
         return mask_preprocess(
             pred.masks,

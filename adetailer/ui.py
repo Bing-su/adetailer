@@ -207,7 +207,7 @@ def detection(w: Widgets, n: int, is_img2img: bool):
             w.ad_mask_k_largest = gr.Slider(
                 label="Mask only the top k largest (0 to disable)" + suffix(n),
                 minumum=0,
-                maximum=5,
+                maximum=10,
                 step=1,
                 value=0,
                 visible=True,
