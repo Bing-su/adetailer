@@ -194,7 +194,7 @@ def detection(w: Widgets, n: int, is_img2img: bool):
     eid = partial(elem_id, n=n, is_img2img=is_img2img)
 
     with gr.Row():
-        with gr.Column():
+        with gr.Column(variant="compact"):
             w.ad_confidence = gr.Slider(
                 label="Detection model confidence threshold" + suffix(n),
                 minimum=0.0,
@@ -203,6 +203,15 @@ def detection(w: Widgets, n: int, is_img2img: bool):
                 value=0.3,
                 visible=True,
                 elem_id=eid("ad_confidence"),
+            )
+            w.ad_mask_k_largest = gr.Slider(
+                label="Mask only the top k largest (0 to disable)" + suffix(n),
+                minumum=0,
+                maximum=10,
+                step=1,
+                value=0,
+                visible=True,
+                elem_id=eid("ad_mask_k_largest"),
             )
 
         with gr.Column(variant="compact"):

@@ -26,7 +26,12 @@ from adetailer import (
 )
 from adetailer.args import ALL_ARGS, BBOX_SORTBY, ADetailerArgs, EnableChecker
 from adetailer.common import PredictOutput
-from adetailer.mask import filter_by_ratio, mask_preprocess, sort_bboxes
+from adetailer.mask import (
+    filter_by_ratio,
+    filter_k_largest,
+    mask_preprocess,
+    sort_bboxes,
+)
 from adetailer.traceback import rich_traceback
 from adetailer.ui import adui, ordinal, suffix
 from controlnet_ext import ControlNetExt, controlnet_exists, get_cn_models
@@ -244,6 +249,8 @@ class AfterDetailerScript(scripts.Script):
         for n in range(len(prompts)):
             if not prompts[n]:
                 prompts[n] = blank_replacement
+            elif "[PROMPT]" in prompts[n]:
+                prompts[n] = prompts[n].replace("[PROMPT]", f" {blank_replacement} ")
         return prompts
 
     def get_prompt(self, p, args: ADetailerArgs) -> tuple[list[str], list[str]]:
@@ -461,6 +468,7 @@ class AfterDetailerScript(scripts.Script):
         pred = filter_by_ratio(
             pred, low=args.ad_mask_min_ratio, high=args.ad_mask_max_ratio
         )
+        pred = filter_k_largest(pred, k=args.ad_mask_k_largest)
         pred = self.sort_bboxes(pred)
         return mask_preprocess(
             pred.masks,
