@@ -1,5 +1,13 @@
 # Changelog
 
+## 2023-08-14
+
+- v23.8.0
+- `[PROMPT]` 키워드 추가. `ad_prompt` 또는 `ad_negative_prompt`에 사용하면 입력 프롬프트로 대체됨 (PR #243)
+- Only top k largest 옵션 추가 (PR #264)
+- ultralytics 버전 업데이트
+
+
 ## 2023-07-31
 
 - v23.7.11
