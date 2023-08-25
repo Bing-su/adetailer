@@ -189,7 +189,7 @@ class AfterDetailerScript(scripts.Script):
             raise ValueError(message)
 
         if hasattr(p, "adetailer_xyz"):
-            args[0].update(p.adetailer_xyz)
+            args[0] = {**args[0], **p.adetailer_xyz}
 
         all_inputs = []
 
