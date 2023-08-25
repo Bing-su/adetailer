@@ -226,7 +226,8 @@ class AfterDetailerScript(scripts.Script):
         if platform.system() == "Darwin":
             return ""
 
-        if any(getattr(cmd_opts, vram, False) for vram in ["lowvram", "medvram"]):
+        vram_args = ["lowvram", "medvram", "medvram_sdxl"]
+        if any(getattr(cmd_opts, vram, False) for vram in vram_args):
             return "cpu"
 
         return ""
