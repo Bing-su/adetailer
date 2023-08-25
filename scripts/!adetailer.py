@@ -537,7 +537,7 @@ class AfterDetailerScript(scripts.Script):
 
             `True` if image was processed, `False` otherwise.
         """
-        if state.interrupted:
+        if state.interrupted or state.skipped:
             return False
 
         i = p._ad_idx
