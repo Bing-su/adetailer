@@ -189,7 +189,7 @@ class AfterDetailerScript(scripts.Script):
             raise ValueError(message)
 
         if hasattr(p, "adetailer_xyz"):
-            args[0].update(p.adetailer_xyz)
+            args[0] = {**args[0], **p.adetailer_xyz}
 
         all_inputs = []
 
@@ -226,7 +226,8 @@ class AfterDetailerScript(scripts.Script):
         if platform.system() == "Darwin":
             return ""
 
-        if any(getattr(cmd_opts, vram, False) for vram in ["lowvram", "medvram"]):
+        vram_args = ["lowvram", "medvram", "medvram_sdxl"]
+        if any(getattr(cmd_opts, vram, False) for vram in vram_args):
             return "cpu"
 
         return ""
@@ -537,7 +538,7 @@ class AfterDetailerScript(scripts.Script):
 
             `True` if image was processed, `False` otherwise.
         """
-        if state.interrupted:
+        if state.interrupted or state.skipped:
             return False
 
         i = p._ad_idx

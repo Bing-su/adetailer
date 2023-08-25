@@ -1,5 +1,12 @@
 # Changelog
 
+## 2023-08-25
+
+- v23.8.1
+- xyz grid에서 model을 `None`으로 설정한 이후에 adetailer가 비활성화 되는 문제 수정
+- skip을 눌렀을 때 진행을 멈춤
+- `--medvram-sdxl`을 설정했을 때에도 cpu를 사용하게 함
+
 ## 2023-08-14
 
 - v23.8.0
