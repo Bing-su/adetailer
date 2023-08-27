@@ -21,6 +21,3 @@ ignore = ["B008", "B905", "E501", "F401", "UP007"]
 
 [tool.ruff.isort]
 known-first-party = ["launch", "modules"]
-
-[tool.ruff.per-file-ignores]
-"sd_webui/*.py" = ["B027", "F403"]

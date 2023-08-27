@@ -39,17 +39,17 @@ from controlnet_ext.restore import (
     CNHijackRestore,
     cn_allow_script_control,
 )
-from sd_webui import images, safe, script_callbacks, scripts, shared
-from sd_webui.devices import NansException
-from sd_webui.paths import data_path, models_path
-from sd_webui.processing import (
+from modules import images, safe, script_callbacks, scripts, shared
+from modules.devices import NansException
+from modules.paths import data_path, models_path
+from modules.processing import (
     Processed,
     StableDiffusionProcessingImg2Img,
     create_infotext,
     process_images,
 )
-from sd_webui.sd_samplers import all_samplers
-from sd_webui.shared import cmd_opts, opts, state
+from modules.sd_samplers import all_samplers
+from modules.shared import cmd_opts, opts, state
 
 no_huggingface = getattr(cmd_opts, "ad_no_huggingface", False)
 adetailer_dir = Path(models_path, "adetailer")
