@@ -33,7 +33,7 @@ from adetailer.mask import (
     sort_bboxes,
 )
 from adetailer.traceback import rich_traceback
-from adetailer.ui import adui, ordinal, suffix
+from adetailer.ui import WebuiInfo, adui, ordinal, suffix
 from controlnet_ext import ControlNetExt, controlnet_exists, get_cn_models
 from controlnet_ext.restore import (
     CNHijackRestore,
@@ -118,17 +118,16 @@ class AfterDetailerScript(scripts.Script):
 
     def ui(self, is_img2img):
         num_models = opts.data.get("ad_max_models", 2)
-        model_list = list(model_mapping.keys())
-        samplers = [sampler.name for sampler in all_samplers]
-
-        components, infotext_fields = adui(
-            num_models,
-            is_img2img,
-            model_list,
-            samplers,
-            txt2img_submit_button,
-            img2img_submit_button,
+        ad_model_list = list(model_mapping.keys())
+        sampler_names = [sampler.name for sampler in all_samplers]
+        webui_info = WebuiInfo(
+            ad_model_list=ad_model_list,
+            sampler_names=sampler_names,
+            t2i_button=txt2img_submit_button,
+            i2i_button=img2img_submit_button,
         )
+
+        components, infotext_fields = adui(num_models, is_img2img, webui_info)
 
         self.infotext_fields = infotext_fields
         return components
