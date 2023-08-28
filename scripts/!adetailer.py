@@ -295,14 +295,10 @@ class AfterDetailerScript(scripts.Script):
         return width, height
 
     def get_steps(self, p, args: ADetailerArgs) -> int:
-        if args.ad_use_steps:
-            return args.ad_steps
-        return p.steps
+        return args.ad_steps if args.ad_use_steps else p.steps
 
     def get_cfg_scale(self, p, args: ADetailerArgs) -> float:
-        if args.ad_use_cfg_scale:
-            return args.ad_cfg_scale
-        return p.cfg_scale
+        return args.ad_cfg_scale if args.ad_use_cfg_scale else p.cfg_scale
 
     def get_sampler(self, p, args: ADetailerArgs) -> str:
         return args.ad_sampler if args.ad_use_sampler else p.sampler_name
@@ -314,9 +310,7 @@ class AfterDetailerScript(scripts.Script):
         return d
 
     def get_initial_noise_multiplier(self, p, args: ADetailerArgs) -> float | None:
-        if args.ad_use_noise_multiplier:
-            return args.ad_noise_multiplier
-        return None
+        return args.ad_noise_multiplier if args.ad_use_noise_multiplier else None
 
     @staticmethod
     def infotext(p) -> str:
