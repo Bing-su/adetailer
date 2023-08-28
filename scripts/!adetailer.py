@@ -422,7 +422,7 @@ class AfterDetailerScript(scripts.Script):
         i2i.cached_c = [None, None]
         i2i.cached_uc = [None, None]
         i2i.scripts, i2i.script_args = self.script_filter(p, args)
-        i2i._disable_adetailer = True
+        i2i._ad_disabled = True
 
         if args.ad_controlnet_model != "None":
             self.update_controlnet_args(i2i, args)
@@ -521,7 +521,7 @@ class AfterDetailerScript(scripts.Script):
 
     @rich_traceback
     def process(self, p, *args_):
-        if getattr(p, "_disable_adetailer", False):
+        if getattr(p, "_ad_disabled", False):
             return
 
         if self.is_ad_enabled(*args_):
@@ -529,7 +529,9 @@ class AfterDetailerScript(scripts.Script):
             extra_params = self.extra_params(arg_list)
             p.extra_generation_params.update(extra_params)
 
-    def _postprocess_image(self, p, pp, args: ADetailerArgs, *, n: int = 0) -> bool:
+    def _postprocess_image_inner(
+        self, p, pp, args: ADetailerArgs, *, n: int = 0
+    ) -> bool:
         """
         Returns
         -------
@@ -615,7 +617,7 @@ class AfterDetailerScript(scripts.Script):
 
     @rich_traceback
     def postprocess_image(self, p, pp, *args_):
-        if getattr(p, "_disable_adetailer", False):
+        if getattr(p, "_ad_disabled", False):
             return
 
         if not self.is_ad_enabled(*args_):
@@ -635,7 +637,7 @@ class AfterDetailerScript(scripts.Script):
             for n, args in enumerate(arg_list):
                 if args.ad_model == "None":
                     continue
-                is_processed |= self._postprocess_image(p, pp, args, n=n)
+                is_processed |= self._postprocess_image_inner(p, pp, args, n=n)
 
         if is_processed:
             self.save_image(
