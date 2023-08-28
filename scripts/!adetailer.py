@@ -171,8 +171,10 @@ class AfterDetailerScript(scripts.Script):
             message = f"""
                        [-] ADetailer: Invalid arguments passed to ADetailer.
                            input: {args_!r}
+                           ADetailer disabled.
                        """
-            raise ValueError(dedent(message))
+            print(dedent(message), file=sys.stderr)
+            return False
         enable = args_[0] if isinstance(args_[0], bool) else True
         checker = EnableChecker(enable=enable, arg_list=arg_list)
         return checker.is_enabled()
