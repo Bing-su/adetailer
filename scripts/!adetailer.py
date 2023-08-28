@@ -305,11 +305,7 @@ class AfterDetailerScript(scripts.Script):
         return p.cfg_scale
 
     def get_sampler(self, p, args: ADetailerArgs) -> str:
-        sampler_name = args.ad_sampler if args.ad_use_sampler else p.sampler_name
-
-        if sampler_name in ["PLMS", "UniPC"]:
-            sampler_name = "Euler"
-        return sampler_name
+        return args.ad_sampler if args.ad_use_sampler else p.sampler_name
 
     def get_override_settings(self, p, args: ADetailerArgs) -> dict[str, Any]:
         d = {}
