@@ -125,6 +125,7 @@ class AfterDetailerScript(scripts.Script):
             sampler_names=sampler_names,
             t2i_button=txt2img_submit_button,
             i2i_button=img2img_submit_button,
+            checkpoints_list=modules.sd_models.checkpoint_tiles,
         )
 
         components, infotext_fields = adui(num_models, is_img2img, webui_info)
@@ -307,8 +308,16 @@ class AfterDetailerScript(scripts.Script):
 
     def get_override_settings(self, p, args: ADetailerArgs) -> dict[str, Any]:
         d = {}
+
         if args.ad_use_clip_skip:
             d["CLIP_stop_at_last_layers"] = args.ad_clip_skip
+
+        if (
+            args.ad_use_checkpoint
+            and args.ad_checkpoint
+            and args.ad_checkpoint not in ("None", "Use same checkpoint")
+        ):
+            d["sd_model_checkpoint"] = args.ad_checkpoint
         return d
 
     def get_initial_noise_multiplier(self, p, args: ADetailerArgs) -> float | None:
