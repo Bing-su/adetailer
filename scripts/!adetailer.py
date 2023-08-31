@@ -33,23 +33,23 @@ from adetailer.mask import (
     sort_bboxes,
 )
 from adetailer.traceback import rich_traceback
-from adetailer.ui import adui, ordinal, suffix
+from adetailer.ui import WebuiInfo, adui, ordinal, suffix
 from controlnet_ext import ControlNetExt, controlnet_exists, get_cn_models
 from controlnet_ext.restore import (
     CNHijackRestore,
     cn_allow_script_control,
 )
-from sd_webui import images, safe, script_callbacks, scripts, shared
-from sd_webui.devices import NansException
-from sd_webui.paths import data_path, models_path
-from sd_webui.processing import (
+from modules import images, safe, script_callbacks, scripts, shared
+from modules.devices import NansException
+from modules.paths import data_path, models_path
+from modules.processing import (
     Processed,
     StableDiffusionProcessingImg2Img,
     create_infotext,
     process_images,
 )
-from sd_webui.sd_samplers import all_samplers
-from sd_webui.shared import cmd_opts, opts, state
+from modules.sd_samplers import all_samplers
+from modules.shared import cmd_opts, opts, state
 
 no_huggingface = getattr(cmd_opts, "ad_no_huggingface", False)
 adetailer_dir = Path(models_path, "adetailer")
@@ -118,17 +118,17 @@ class AfterDetailerScript(scripts.Script):
 
     def ui(self, is_img2img):
         num_models = opts.data.get("ad_max_models", 2)
-        model_list = list(model_mapping.keys())
-        samplers = [sampler.name for sampler in all_samplers]
-
-        components, infotext_fields = adui(
-            num_models,
-            is_img2img,
-            model_list,
-            samplers,
-            txt2img_submit_button,
-            img2img_submit_button,
+        ad_model_list = list(model_mapping.keys())
+        sampler_names = [sampler.name for sampler in all_samplers]
+        webui_info = WebuiInfo(
+            ad_model_list=ad_model_list,
+            sampler_names=sampler_names,
+            t2i_button=txt2img_submit_button,
+            i2i_button=img2img_submit_button,
+            checkpoints_list=modules.sd_models.checkpoint_tiles,
         )
+
+        components, infotext_fields = adui(num_models, is_img2img, webui_info)
 
         self.infotext_fields = infotext_fields
         return components
@@ -172,8 +172,10 @@ class AfterDetailerScript(scripts.Script):
             message = f"""
                        [-] ADetailer: Invalid arguments passed to ADetailer.
                            input: {args_!r}
+                           ADetailer disabled.
                        """
-            raise ValueError(dedent(message))
+            print(dedent(message), file=sys.stderr)
+            return False
         enable = args_[0] if isinstance(args_[0], bool) else True
         checker = EnableChecker(enable=enable, arg_list=arg_list)
         return checker.is_enabled()
@@ -296,32 +298,30 @@ class AfterDetailerScript(scripts.Script):
         return width, height
 
     def get_steps(self, p, args: ADetailerArgs) -> int:
-        if args.ad_use_steps:
-            return args.ad_steps
-        return p.steps
+        return args.ad_steps if args.ad_use_steps else p.steps
 
     def get_cfg_scale(self, p, args: ADetailerArgs) -> float:
-        if args.ad_use_cfg_scale:
-            return args.ad_cfg_scale
-        return p.cfg_scale
+        return args.ad_cfg_scale if args.ad_use_cfg_scale else p.cfg_scale
 
     def get_sampler(self, p, args: ADetailerArgs) -> str:
-        sampler_name = args.ad_sampler if args.ad_use_sampler else p.sampler_name
-
-        if sampler_name in ["PLMS", "UniPC"]:
-            sampler_name = "Euler"
-        return sampler_name
+        return args.ad_sampler if args.ad_use_sampler else p.sampler_name
 
     def get_override_settings(self, p, args: ADetailerArgs) -> dict[str, Any]:
         d = {}
+
         if args.ad_use_clip_skip:
             d["CLIP_stop_at_last_layers"] = args.ad_clip_skip
+
+        if (
+            args.ad_use_checkpoint
+            and args.ad_checkpoint
+            and args.ad_checkpoint not in ("None", "Use same checkpoint")
+        ):
+            d["sd_model_checkpoint"] = args.ad_checkpoint
         return d
 
     def get_initial_noise_multiplier(self, p, args: ADetailerArgs) -> float | None:
-        if args.ad_use_noise_multiplier:
-            return args.ad_noise_multiplier
-        return None
+        return args.ad_noise_multiplier if args.ad_use_noise_multiplier else None
 
     @staticmethod
     def infotext(p) -> str:
@@ -423,7 +423,7 @@ class AfterDetailerScript(scripts.Script):
         i2i.cached_c = [None, None]
         i2i.cached_uc = [None, None]
         i2i.scripts, i2i.script_args = self.script_filter(p, args)
-        i2i._disable_adetailer = True
+        i2i._ad_disabled = True
 
         if args.ad_controlnet_model != "None":
             self.update_controlnet_args(i2i, args)
@@ -522,7 +522,7 @@ class AfterDetailerScript(scripts.Script):
 
     @rich_traceback
     def process(self, p, *args_):
-        if getattr(p, "_disable_adetailer", False):
+        if getattr(p, "_ad_disabled", False):
             return
 
         if self.is_ad_enabled(*args_):
@@ -530,7 +530,9 @@ class AfterDetailerScript(scripts.Script):
             extra_params = self.extra_params(arg_list)
             p.extra_generation_params.update(extra_params)
 
-    def _postprocess_image(self, p, pp, args: ADetailerArgs, *, n: int = 0) -> bool:
+    def _postprocess_image_inner(
+        self, p, pp, args: ADetailerArgs, *, n: int = 0
+    ) -> bool:
         """
         Returns
         -------
@@ -616,7 +618,7 @@ class AfterDetailerScript(scripts.Script):
 
     @rich_traceback
     def postprocess_image(self, p, pp, *args_):
-        if getattr(p, "_disable_adetailer", False):
+        if getattr(p, "_ad_disabled", False):
             return
 
         if not self.is_ad_enabled(*args_):
@@ -636,7 +638,7 @@ class AfterDetailerScript(scripts.Script):
             for n, args in enumerate(arg_list):
                 if args.ad_model == "None":
                     continue
-                is_processed |= self._postprocess_image(p, pp, args, n=n)
+                is_processed |= self._postprocess_image_inner(p, pp, args, n=n)
 
         if is_processed:
             self.save_image(
