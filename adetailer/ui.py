@@ -426,10 +426,11 @@ def inpainting(w: Widgets, n: int, is_img2img: bool, webui_info: WebuiInfo):
                     elem_id=eid("ad_use_checkpoint"),
                 )
 
-                ckpts = [
-                    "Use same checkpoint",
-                    *webui_info.checkpoints_list(use_short=True),
-                ]
+                ckpts = ["Use same checkpoint"]
+                try:
+                    ckpts.extend(webui_info.checkpoints_list(use_short=True))
+                except TypeError:
+                    ckpts.extend(webui_info.checkpoints_list())
 
                 w.ad_checkpoint = gr.Dropdown(
                     label="ADetailer checkpoint" + suffix(n),
