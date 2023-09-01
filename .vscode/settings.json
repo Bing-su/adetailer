@@ -1,0 +1,8 @@
+{
+    "explorer.fileNesting.enabled": true,
+    "explorer.fileNesting.patterns": {
+        "pyproject.toml": ".env, .gitignore, .pre-commit-config.yaml, Taskfile.yml",
+        "README.md": "LICENSE.md, CHANGELOG.md",
+        "install.py": "preload.py"
+    }
+}
