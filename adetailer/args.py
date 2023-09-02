@@ -61,6 +61,8 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
     ad_cfg_scale: NonNegativeFloat = 7.0
     ad_use_checkpoint: bool = False
     ad_checkpoint: Optional[str] = None
+    ad_use_vae: bool = False
+    ad_vae: Optional[str] = None
     ad_use_sampler: bool = False
     ad_sampler: str = "DPM++ 2M Karras"
     ad_use_noise_multiplier: bool = False
@@ -143,6 +145,10 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
             ["ADetailer use separate checkpoint", "ADetailer checkpoint"],
         )
         ppop(
+            "ADetailer use separate VAE",
+            ["ADetailer use separate VAE", "ADetailer VAE"],
+        )
+        ppop(
             "ADetailer use separate sampler",
             ["ADetailer use separate sampler", "ADetailer sampler"],
         )
@@ -216,6 +222,8 @@ _all_args = [
     ("ad_cfg_scale", "ADetailer CFG scale"),
     ("ad_use_checkpoint", "ADetailer use separate checkpoint"),
     ("ad_checkpoint", "ADetailer checkpoint"),
+    ("ad_use_vae", "ADetailer use separate VAE"),
+    ("ad_vae", "ADetailer VAE"),
     ("ad_use_sampler", "ADetailer use separate sampler"),
     ("ad_sampler", "ADetailer sampler"),
     ("ad_use_noise_multiplier", "ADetailer use separate noise multiplier"),
