@@ -21,3 +21,7 @@ tasks:
   lint:
     cmds:
       - pre-commit run -a
+
+  update:
+    cmds:
+      - "{{.PYTHON}} -m pip install -U ultralytics mediapipe ruff pre-commit black"
