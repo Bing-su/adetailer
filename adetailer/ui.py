@@ -29,8 +29,8 @@ class WebuiInfo:
     sampler_names: list[str]
     t2i_button: gr.Button
     i2i_button: gr.Button
-    checkpoints_list: Callable
-    vae_list: Callable
+    checkpoints_list: Callable[..., list[str]]
+    vae_list: Callable[..., list[str]]
 
 
 def gr_interactive(value: bool = True):
@@ -449,11 +449,7 @@ def inpainting(w: Widgets, n: int, is_img2img: bool, webui_info: WebuiInfo):
                     elem_id=eid("ad_use_vae"),
                 )
 
-                vaes = ["Use same VAE"]
-                try:
-                    vaes.extend(webui_info.vae_list())
-                except Exception:
-                    vaes.extend([])
+                vaes = ["Use same VAE", *webui_info.vae_list()]
 
                 w.ad_vae = gr.Dropdown(
                     label="ADetailer VAE" + suffix(n),
