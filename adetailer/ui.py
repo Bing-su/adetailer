@@ -29,8 +29,8 @@ class WebuiInfo:
     sampler_names: list[str]
     t2i_button: gr.Button
     i2i_button: gr.Button
-    checkpoints_list: Callable[..., list[str]]
-    vae_list: Callable[..., list[str]]
+    checkpoints_list: list[str]
+    vae_list: list[str]
 
 
 def gr_interactive(value: bool = True):
@@ -427,11 +427,7 @@ def inpainting(w: Widgets, n: int, is_img2img: bool, webui_info: WebuiInfo):
                     elem_id=eid("ad_use_checkpoint"),
                 )
 
-                ckpts = ["Use same checkpoint"]
-                try:
-                    ckpts.extend(webui_info.checkpoints_list(use_short=True))
-                except TypeError:
-                    ckpts.extend(webui_info.checkpoints_list())
+                ckpts = ["Use same checkpoint", *webui_info.checkpoints_list]
 
                 w.ad_checkpoint = gr.Dropdown(
                     label="ADetailer checkpoint" + suffix(n),
@@ -449,7 +445,7 @@ def inpainting(w: Widgets, n: int, is_img2img: bool, webui_info: WebuiInfo):
                     elem_id=eid("ad_use_vae"),
                 )
 
-                vaes = ["Use same VAE", *webui_info.vae_list()]
+                vaes = ["Use same VAE", *webui_info.vae_list]
 
                 w.ad_vae = gr.Dropdown(
                     label="ADetailer VAE" + suffix(n),
