@@ -29,7 +29,8 @@ class WebuiInfo:
     sampler_names: list[str]
     t2i_button: gr.Button
     i2i_button: gr.Button
-    checkpoints_list: Callable
+    checkpoints_list: list[str]
+    vae_list: list[str]
 
 
 def gr_interactive(value: bool = True):
@@ -426,11 +427,7 @@ def inpainting(w: Widgets, n: int, is_img2img: bool, webui_info: WebuiInfo):
                     elem_id=eid("ad_use_checkpoint"),
                 )
 
-                ckpts = ["Use same checkpoint"]
-                try:
-                    ckpts.extend(webui_info.checkpoints_list(use_short=True))
-                except TypeError:
-                    ckpts.extend(webui_info.checkpoints_list())
+                ckpts = ["Use same checkpoint", *webui_info.checkpoints_list]
 
                 w.ad_checkpoint = gr.Dropdown(
                     label="ADetailer checkpoint" + suffix(n),
@@ -441,27 +438,45 @@ def inpainting(w: Widgets, n: int, is_img2img: bool, webui_info: WebuiInfo):
                 )
 
             with gr.Column(variant="compact"):
-                w.ad_use_sampler = gr.Checkbox(
-                    label="Use separate sampler" + suffix(n),
+                w.ad_use_vae = gr.Checkbox(
+                    label="Use separate VAE (experimental)" + suffix(n),
                     value=False,
                     visible=True,
-                    elem_id=eid("ad_use_sampler"),
+                    elem_id=eid("ad_use_vae"),
                 )
 
-                w.ad_sampler = gr.Dropdown(
-                    label="ADetailer sampler" + suffix(n),
-                    choices=webui_info.sampler_names,
-                    value=webui_info.sampler_names[0],
+                vaes = ["Use same VAE", *webui_info.vae_list]
+
+                w.ad_vae = gr.Dropdown(
+                    label="ADetailer VAE" + suffix(n),
+                    choices=vaes,
+                    value=vaes[0],
                     visible=True,
-                    elem_id=eid("ad_sampler"),
+                    elem_id=eid("ad_vae"),
                 )
 
-                w.ad_use_sampler.change(
-                    gr_interactive,
-                    inputs=w.ad_use_sampler,
-                    outputs=w.ad_sampler,
-                    queue=False,
-                )
+        with gr.Row(), gr.Column(variant="compact"):
+            w.ad_use_sampler = gr.Checkbox(
+                label="Use separate sampler" + suffix(n),
+                value=False,
+                visible=True,
+                elem_id=eid("ad_use_sampler"),
+            )
+
+            w.ad_sampler = gr.Dropdown(
+                label="ADetailer sampler" + suffix(n),
+                choices=webui_info.sampler_names,
+                value=webui_info.sampler_names[0],
+                visible=True,
+                elem_id=eid("ad_sampler"),
+            )
+
+            w.ad_use_sampler.change(
+                gr_interactive,
+                inputs=w.ad_use_sampler,
+                outputs=w.ad_sampler,
+                queue=False,
+            )
 
         with gr.Row():
             with gr.Column(variant="compact"):

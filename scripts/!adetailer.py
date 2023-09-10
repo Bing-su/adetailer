@@ -120,12 +120,20 @@ class AfterDetailerScript(scripts.Script):
         num_models = opts.data.get("ad_max_models", 2)
         ad_model_list = list(model_mapping.keys())
         sampler_names = [sampler.name for sampler in all_samplers]
+
+        try:
+            checkpoint_list = modules.sd_models.checkpoint_tiles(use_shorts=True)
+        except TypeError:
+            checkpoint_list = modules.sd_models.checkpoint_tiles()
+        vae_list = modules.shared_items.sd_vae_items()
+
         webui_info = WebuiInfo(
             ad_model_list=ad_model_list,
             sampler_names=sampler_names,
             t2i_button=txt2img_submit_button,
             i2i_button=img2img_submit_button,
-            checkpoints_list=modules.sd_models.checkpoint_tiles,
+            checkpoints_list=checkpoint_list,
+            vae_list=vae_list,
         )
 
         components, infotext_fields = adui(num_models, is_img2img, webui_info)
@@ -318,6 +326,13 @@ class AfterDetailerScript(scripts.Script):
             and args.ad_checkpoint not in ("None", "Use same checkpoint")
         ):
             d["sd_model_checkpoint"] = args.ad_checkpoint
+
+        if (
+            args.ad_use_vae
+            and args.ad_vae
+            and args.ad_vae not in ("None", "Use same VAE")
+        ):
+            d["sd_vae"] = args.ad_vae
         return d
 
     def get_initial_noise_multiplier(self, p, args: ADetailerArgs) -> float | None:
