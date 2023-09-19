@@ -5,7 +5,6 @@ from pathlib import Path
 import cv2
 from PIL import Image
 from torchvision.transforms.functional import to_pil_image
-from ultralytics import YOLO
 
 from adetailer import PredictOutput
 from adetailer.common import create_mask_from_bbox
@@ -17,6 +16,8 @@ def ultralytics_predict(
     confidence: float = 0.3,
     device: str = "",
 ) -> PredictOutput:
+    from ultralytics import YOLO
+
     model = YOLO(model_path)
     pred = model(image, conf=confidence, device=device)
 
