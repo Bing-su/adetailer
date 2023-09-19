@@ -1,5 +1,11 @@
 # Changelog
 
+## 2023-09-20
+
+- v23.9.3
+- ultralytics 버전 8.0.181로 업데이트 (https://github.com/ultralytics/ultralytics/pull/4891)
+- mediapipe와 ultralytics의 lazy import
+
 ## 2023-09-10
 
 - v23.9.2
