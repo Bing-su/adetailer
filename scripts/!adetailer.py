@@ -579,6 +579,7 @@ class AfterDetailerScript(scripts.Script):
             pred = predictor(ad_model, pp.image, args.ad_confidence, **kwargs)
 
         masks = self.pred_preprocessing(pred, args)
+        shared.state.assign_current_image(pred.preview)
 
         if not masks:
             print(
