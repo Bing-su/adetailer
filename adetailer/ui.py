@@ -430,7 +430,7 @@ def inpainting(w: Widgets, n: int, is_img2img: bool, webui_info: WebuiInfo):
         with gr.Row():
             with gr.Column(variant="compact"):
                 w.ad_use_checkpoint = gr.Checkbox(
-                    label="Use separate checkpoint (experimental)" + suffix(n),
+                    label="Use separate checkpoint" + suffix(n),
                     value=False,
                     visible=True,
                     elem_id=eid("ad_use_checkpoint"),
@@ -448,7 +448,7 @@ def inpainting(w: Widgets, n: int, is_img2img: bool, webui_info: WebuiInfo):
 
             with gr.Column(variant="compact"):
                 w.ad_use_vae = gr.Checkbox(
-                    label="Use separate VAE (experimental)" + suffix(n),
+                    label="Use separate VAE" + suffix(n),
                     value=False,
                     visible=True,
                     elem_id=eid("ad_use_vae"),
