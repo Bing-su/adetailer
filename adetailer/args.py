@@ -185,17 +185,6 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
         return p
 
 
-class EnableChecker(BaseModel):
-    enable: bool
-    arg_list: list
-
-    def is_enabled(self) -> bool:
-        ad_model = ALL_ARGS[0].attr
-        if not self.enable:
-            return False
-        return any(arg.get(ad_model, "None") != "None" for arg in self.arg_list)
-
-
 _all_args = [
     ("ad_enable", "ADetailer enable"),
     ("ad_model", "ADetailer model"),

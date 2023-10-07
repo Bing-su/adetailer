@@ -24,7 +24,7 @@ from adetailer import (
     mediapipe_predict,
     ultralytics_predict,
 )
-from adetailer.args import ALL_ARGS, BBOX_SORTBY, ADetailerArgs, EnableChecker
+from adetailer.args import ALL_ARGS, BBOX_SORTBY, ADetailerArgs
 from adetailer.common import PredictOutput
 from adetailer.mask import (
     filter_by_ratio,
@@ -176,7 +176,7 @@ class AfterDetailerScript(scripts.Script):
 
     def is_ad_enabled(self, *args_) -> bool:
         arg_list = [arg for arg in args_ if isinstance(arg, dict)]
-        if not args_ or not arg_list or not isinstance(args_[0], (bool, dict)):
+        if not args_ or not arg_list:
             message = f"""
                        [-] ADetailer: Invalid arguments passed to ADetailer.
                            input: {args_!r}
@@ -184,9 +184,10 @@ class AfterDetailerScript(scripts.Script):
                        """
             print(dedent(message), file=sys.stderr)
             return False
-        enable = args_[0] if isinstance(args_[0], bool) else True
-        checker = EnableChecker(enable=enable, arg_list=arg_list)
-        return checker.is_enabled()
+
+        ad_enabled = args_[0] if isinstance(args_[0], bool) else True
+        not_none = any(arg.get("ad_model", "None") != "None" for arg in arg_list)
+        return ad_enabled and not_none
 
     def get_args(self, p, *args_) -> list[ADetailerArgs]:
         """
@@ -544,6 +545,8 @@ class AfterDetailerScript(scripts.Script):
             arg_list = self.get_args(p, *args_)
             extra_params = self.extra_params(arg_list)
             p.extra_generation_params.update(extra_params)
+        else:
+            p._ad_disabled = True
 
     def _postprocess_image_inner(
         self, p, pp, args: ADetailerArgs, *, n: int = 0
