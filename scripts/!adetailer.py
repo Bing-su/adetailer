@@ -215,7 +215,6 @@ class AfterDetailerScript(scripts.Script):
             message = f"[-] ADetailer: Invalid arguments passed to ADetailer: {args_!r}"
             raise ValueError(message)
 
-        self.check_skip_img2img(p, *args_)
         if hasattr(p, "_ad_xyz"):
             args[0] = {**args[0], **p._ad_xyz}
 
@@ -570,6 +569,7 @@ class AfterDetailerScript(scripts.Script):
 
         if self.is_ad_enabled(*args_):
             arg_list = self.get_args(p, *args_)
+            self.check_skip_img2img(p, *args_)
             extra_params = self.extra_params(arg_list)
             p.extra_generation_params.update(extra_params)
         else:
@@ -665,11 +665,12 @@ class AfterDetailerScript(scripts.Script):
 
     @rich_traceback
     def postprocess_image(self, p, pp, *args_):
-        if getattr(p, "_ad_disabled", False):
+        if getattr(p, "_ad_disabled", False) or not self.is_ad_enabled(*args_):
             return
 
-        if not self.is_ad_enabled(*args_):
-            return
+        if hasattr(p, "_ad_orig_steps"):
+            p.steps = p._ad_orig_steps
+            del p._ad_orig_steps
 
         p._ad_idx = getattr(p, "_ad_idx", -1) + 1
         init_image = copy(pp.image)
