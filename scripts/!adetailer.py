@@ -202,6 +202,8 @@ class AfterDetailerScript(scripts.Script):
             if args_[1]:
                 p._ad_orig_steps = p.steps
                 p.steps = 1
+        else:
+            p._ad_skip_img2img = False
 
     def get_args(self, p, *args_) -> list[ADetailerArgs]:
         """
@@ -685,7 +687,7 @@ class AfterDetailerScript(scripts.Script):
                     continue
                 is_processed |= self._postprocess_image_inner(p, pp, args, n=n)
 
-        if is_processed:
+        if is_processed and not getattr(p, "_ad_skip_img2img", False):
             self.save_image(
                 p, init_image, condition="ad_save_images_before", suffix="-ad-before"
             )
