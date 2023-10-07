@@ -3,12 +3,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from functools import partial
 from types import SimpleNamespace
-from typing import Any, Callable
+from typing import Any
 
 import gradio as gr
 
 from adetailer import AFTER_DETAILER, __version__
-from adetailer.args import AD_ENABLE, ALL_ARGS, MASK_MERGE_INVERT
+from adetailer.args import ALL_ARGS, MASK_MERGE_INVERT
 from controlnet_ext import controlnet_exists, get_cn_models
 
 cn_module_choices = [
@@ -105,7 +105,8 @@ def adui(
                     elem_id=eid("ad_version"),
                 )
 
-        infotext_fields.append((ad_enable, AD_ENABLE.name))
+        infotext_fields.append(("ad_enable", "ADetailer enable"))
+        infotext_fields.append(("ad_skip_img2img", "ADetailer skip img2img"))
 
         with gr.Group(), gr.Tabs():
             for n in range(num_models):
