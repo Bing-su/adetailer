@@ -214,8 +214,8 @@ class AfterDetailerScript(scripts.Script):
             raise ValueError(message)
 
         self.check_skip_img2img(p, *args_)
-        if hasattr(p, "adetailer_xyz"):
-            args[0] = {**args[0], **p.adetailer_xyz}
+        if hasattr(p, "_ad_xyz"):
+            args[0] = {**args[0], **p._ad_xyz}
 
         all_inputs = []
 
@@ -788,9 +788,9 @@ def make_axis_on_xyz_grid():
     samplers = [sampler.name for sampler in all_samplers]
 
     def set_value(p, x, xs, *, field: str):
-        if not hasattr(p, "adetailer_xyz"):
-            p.adetailer_xyz = {}
-        p.adetailer_xyz[field] = x
+        if not hasattr(p, "_ad_xyz"):
+            p._ad_xyz = {}
+        p._ad_xyz[field] = x
 
     axis = [
         xyz_grid.AxisOption(
