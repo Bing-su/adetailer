@@ -91,6 +91,14 @@ def adui(
                     elem_id=eid("ad_enable"),
                 )
 
+            with gr.Column(scale=6):
+                ad_skip_img2img = gr.Checkbox(
+                    label="Skip img2img",
+                    value=False,
+                    visible=is_img2img,
+                    elem_id=eid("ad_skip_img2img"),
+                )
+
             with gr.Column(scale=1, min_width=180):
                 gr.Markdown(
                     f"v{__version__}",
@@ -112,7 +120,7 @@ def adui(
                 infotext_fields.extend(infofields)
 
     # components: [bool, dict, dict, ...]
-    components = [ad_enable, *states]
+    components = [ad_enable, ad_skip_img2img, *states]
     return components, infotext_fields
 
 

@@ -189,6 +189,20 @@ class AfterDetailerScript(scripts.Script):
         not_none = any(arg.get("ad_model", "None") != "None" for arg in arg_list)
         return ad_enabled and not_none
 
+    def check_skip_img2img(self, p, *args_) -> None:
+        if (
+            hasattr(p, "_ad_skip_img2img")
+            or not hasattr(p, "init_images")
+            or not p.init_images
+        ):
+            return
+
+        if len(args_) >= 2 and isinstance(args_[1], bool):
+            p._ad_skip_img2img = args_[1]
+            if args_[1]:
+                p._ad_orig_steps = p.steps
+                p.steps = 1
+
     def get_args(self, p, *args_) -> list[ADetailerArgs]:
         """
         `args_` is at least 1 in length by `is_ad_enabled` immediately above
@@ -199,6 +213,7 @@ class AfterDetailerScript(scripts.Script):
             message = f"[-] ADetailer: Invalid arguments passed to ADetailer: {args_!r}"
             raise ValueError(message)
 
+        self.check_skip_img2img(p, *args_)
         if hasattr(p, "adetailer_xyz"):
             args[0] = {**args[0], **p.adetailer_xyz}
 
@@ -307,7 +322,11 @@ class AfterDetailerScript(scripts.Script):
         return width, height
 
     def get_steps(self, p, args: ADetailerArgs) -> int:
-        return args.ad_steps if args.ad_use_steps else p.steps
+        if args.ad_use_steps:
+            return args.ad_steps
+        if hasattr(p, "_ad_orig_steps"):
+            return p._ad_orig_steps
+        return p.steps
 
     def get_cfg_scale(self, p, args: ADetailerArgs) -> float:
         return args.ad_cfg_scale if args.ad_use_cfg_scale else p.cfg_scale
@@ -536,6 +555,12 @@ class AfterDetailerScript(scripts.Script):
         bs = p.batch_size
         return i % bs == 0
 
+    @staticmethod
+    def get_i2i_init_image(p, pp):
+        if getattr(p, "_ad_skip_img2img", False):
+            return p.init_images[0]
+        return pp.image
+
     @rich_traceback
     def process(self, p, *args_):
         if getattr(p, "_ad_disabled", False):
@@ -563,6 +588,7 @@ class AfterDetailerScript(scripts.Script):
 
         i = p._ad_idx
 
+        pp.image = self.get_i2i_init_image(p, pp)
         i2i = self.get_i2i_p(p, args, pp.image)
         seed, subseed = self.get_seed(p)
         ad_prompts, ad_negatives = self.get_prompt(p, args)
