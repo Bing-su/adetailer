@@ -10,6 +10,7 @@ from PIL import Image, ImageDraw
 from rich import print
 
 repo_id = "Bingsu/adetailer"
+_download_failed = False
 
 
 @dataclass
@@ -20,12 +21,18 @@ class PredictOutput:
 
 
 def hf_download(file: str):
+    global _download_failed
+
+    if _download_failed:
+        return "INVALID"
+
     try:
         path = hf_hub_download(repo_id, file)
     except Exception:
         msg = f"[-] ADetailer: Failed to load model {file!r} from huggingface"
         print(msg)
         path = "INVALID"
+        _download_failed = True
     return path
 
 

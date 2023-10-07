@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections import UserList
 from functools import cached_property, partial
-from typing import Any, Literal, NamedTuple, Optional, Union
+from typing import Any, Literal, NamedTuple, Optional
 
 import pydantic
 from pydantic import (
@@ -185,19 +185,7 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
         return p
 
 
-class EnableChecker(BaseModel):
-    enable: bool
-    arg_list: list
-
-    def is_enabled(self) -> bool:
-        ad_model = ALL_ARGS[0].attr
-        if not self.enable:
-            return False
-        return any(arg.get(ad_model, "None") != "None" for arg in self.arg_list)
-
-
 _all_args = [
-    ("ad_enable", "ADetailer enable"),
     ("ad_model", "ADetailer model"),
     ("ad_prompt", "ADetailer prompt"),
     ("ad_negative_prompt", "ADetailer negative prompt"),
@@ -238,8 +226,7 @@ _all_args = [
     ("ad_controlnet_guidance_end", "ADetailer ControlNet guidance end"),
 ]
 
-AD_ENABLE = Arg(*_all_args[0])
-_args = [Arg(*args) for args in _all_args[1:]]
+_args = [Arg(*args) for args in _all_args]
 ALL_ARGS = ArgsList(_args)
 
 BBOX_SORTBY = [

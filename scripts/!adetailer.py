@@ -5,7 +5,7 @@ import platform
 import re
 import sys
 import traceback
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from copy import copy, deepcopy
 from functools import partial
 from pathlib import Path
@@ -24,7 +24,7 @@ from adetailer import (
     mediapipe_predict,
     ultralytics_predict,
 )
-from adetailer.args import ALL_ARGS, BBOX_SORTBY, ADetailerArgs, EnableChecker
+from adetailer.args import ALL_ARGS, BBOX_SORTBY, ADetailerArgs
 from adetailer.common import PredictOutput
 from adetailer.mask import (
     filter_by_ratio,
@@ -176,7 +176,7 @@ class AfterDetailerScript(scripts.Script):
 
     def is_ad_enabled(self, *args_) -> bool:
         arg_list = [arg for arg in args_ if isinstance(arg, dict)]
-        if not args_ or not arg_list or not isinstance(args_[0], (bool, dict)):
+        if not args_ or not arg_list:
             message = f"""
                        [-] ADetailer: Invalid arguments passed to ADetailer.
                            input: {args_!r}
@@ -184,9 +184,26 @@ class AfterDetailerScript(scripts.Script):
                        """
             print(dedent(message), file=sys.stderr)
             return False
-        enable = args_[0] if isinstance(args_[0], bool) else True
-        checker = EnableChecker(enable=enable, arg_list=arg_list)
-        return checker.is_enabled()
+
+        ad_enabled = args_[0] if isinstance(args_[0], bool) else True
+        not_none = any(arg.get("ad_model", "None") != "None" for arg in arg_list)
+        return ad_enabled and not_none
+
+    def check_skip_img2img(self, p, *args_) -> None:
+        if (
+            hasattr(p, "_ad_skip_img2img")
+            or not hasattr(p, "init_images")
+            or not p.init_images
+        ):
+            return
+
+        if len(args_) >= 2 and isinstance(args_[1], bool):
+            p._ad_skip_img2img = args_[1]
+            if args_[1]:
+                p._ad_orig_steps = p.steps
+                p.steps = 1
+        else:
+            p._ad_skip_img2img = False
 
     def get_args(self, p, *args_) -> list[ADetailerArgs]:
         """
@@ -198,8 +215,8 @@ class AfterDetailerScript(scripts.Script):
             message = f"[-] ADetailer: Invalid arguments passed to ADetailer: {args_!r}"
             raise ValueError(message)
 
-        if hasattr(p, "adetailer_xyz"):
-            args[0] = {**args[0], **p.adetailer_xyz}
+        if hasattr(p, "_ad_xyz"):
+            args[0] = {**args[0], **p._ad_xyz}
 
         all_inputs = []
 
@@ -306,7 +323,11 @@ class AfterDetailerScript(scripts.Script):
         return width, height
 
     def get_steps(self, p, args: ADetailerArgs) -> int:
-        return args.ad_steps if args.ad_use_steps else p.steps
+        if args.ad_use_steps:
+            return args.ad_steps
+        if hasattr(p, "_ad_orig_steps"):
+            return p._ad_orig_steps
+        return p.steps
 
     def get_cfg_scale(self, p, args: ADetailerArgs) -> float:
         return args.ad_cfg_scale if args.ad_use_cfg_scale else p.cfg_scale
@@ -345,9 +366,23 @@ class AfterDetailerScript(scripts.Script):
         )
 
     def write_params_txt(self, p) -> None:
+        i = p._ad_idx
+        lenp = len(p.all_prompts)
+        if i % lenp != lenp - 1:
+            return
+
+        prev = None
+        if hasattr(p, "_ad_orig_steps"):
+            prev = p.steps
+            p.steps = p._ad_orig_steps
+
         infotext = self.infotext(p)
         params_txt = Path(data_path, "params.txt")
-        params_txt.write_text(infotext, encoding="utf-8")
+        with suppress(Exception):
+            params_txt.write_text(infotext, encoding="utf-8")
+
+        if hasattr(p, "_ad_orig_steps"):
+            p.steps = prev
 
     def script_filter(self, p, args: ADetailerArgs):
         script_runner = copy(p.scripts)
@@ -525,15 +560,25 @@ class AfterDetailerScript(scripts.Script):
 
     @staticmethod
     def need_call_process(p) -> bool:
+        if p.scripts is None:
+            return False
         i = p._ad_idx
         bs = p.batch_size
         return i % bs == bs - 1
 
     @staticmethod
     def need_call_postprocess(p) -> bool:
+        if p.scripts is None:
+            return False
         i = p._ad_idx
         bs = p.batch_size
         return i % bs == 0
+
+    @staticmethod
+    def get_i2i_init_image(p, pp):
+        if getattr(p, "_ad_skip_img2img", False):
+            return p.init_images[0]
+        return pp.image
 
     @rich_traceback
     def process(self, p, *args_):
@@ -542,8 +587,11 @@ class AfterDetailerScript(scripts.Script):
 
         if self.is_ad_enabled(*args_):
             arg_list = self.get_args(p, *args_)
+            self.check_skip_img2img(p, *args_)
             extra_params = self.extra_params(arg_list)
             p.extra_generation_params.update(extra_params)
+        else:
+            p._ad_disabled = True
 
     def _postprocess_image_inner(
         self, p, pp, args: ADetailerArgs, *, n: int = 0
@@ -560,6 +608,7 @@ class AfterDetailerScript(scripts.Script):
 
         i = p._ad_idx
 
+        pp.image = self.get_i2i_init_image(p, pp)
         i2i = self.get_i2i_p(p, args, pp.image)
         seed, subseed = self.get_seed(p)
         ad_prompts, ad_negatives = self.get_prompt(p, args)
@@ -579,6 +628,7 @@ class AfterDetailerScript(scripts.Script):
             pred = predictor(ad_model, pp.image, args.ad_confidence, **kwargs)
 
         masks = self.pred_preprocessing(pred, args)
+        shared.state.assign_current_image(pred.preview)
 
         if not masks:
             print(
@@ -633,17 +683,14 @@ class AfterDetailerScript(scripts.Script):
 
     @rich_traceback
     def postprocess_image(self, p, pp, *args_):
-        if getattr(p, "_ad_disabled", False):
-            return
-
-        if not self.is_ad_enabled(*args_):
+        if getattr(p, "_ad_disabled", False) or not self.is_ad_enabled(*args_):
             return
 
         p._ad_idx = getattr(p, "_ad_idx", -1) + 1
         init_image = copy(pp.image)
         arg_list = self.get_args(p, *args_)
 
-        if p.scripts is not None and self.need_call_postprocess(p):
+        if self.need_call_postprocess(p):
             dummy = Processed(p, [], p.seed, "")
             with preseve_prompts(p):
                 p.scripts.postprocess(copy(p), dummy)
@@ -655,22 +702,16 @@ class AfterDetailerScript(scripts.Script):
                     continue
                 is_processed |= self._postprocess_image_inner(p, pp, args, n=n)
 
-        if is_processed:
+        if is_processed and not getattr(p, "_ad_skip_img2img", False):
             self.save_image(
                 p, init_image, condition="ad_save_images_before", suffix="-ad-before"
             )
 
-        if p.scripts is not None and self.need_call_process(p):
+        if self.need_call_process(p):
             with preseve_prompts(p):
                 p.scripts.process(copy(p))
 
-        try:
-            ia = p._ad_idx
-            lenp = len(p.all_prompts)
-            if ia % lenp == lenp - 1:
-                self.write_params_txt(p)
-        except Exception:
-            pass
+        self.write_params_txt(p)
 
 
 def on_after_component(component, **_kwargs):
@@ -758,9 +799,9 @@ def make_axis_on_xyz_grid():
     samplers = [sampler.name for sampler in all_samplers]
 
     def set_value(p, x, xs, *, field: str):
-        if not hasattr(p, "adetailer_xyz"):
-            p.adetailer_xyz = {}
-        p.adetailer_xyz[field] = x
+        if not hasattr(p, "_ad_xyz"):
+            p._ad_xyz = {}
+        p._ad_xyz[field] = x
 
     axis = [
         xyz_grid.AxisOption(
