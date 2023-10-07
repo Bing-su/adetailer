@@ -5,7 +5,7 @@ import platform
 import re
 import sys
 import traceback
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from copy import copy, deepcopy
 from functools import partial
 from pathlib import Path
@@ -366,9 +366,23 @@ class AfterDetailerScript(scripts.Script):
         )
 
     def write_params_txt(self, p) -> None:
+        i = p._ad_idx
+        lenp = len(p.all_prompts)
+        if i % lenp != lenp - 1:
+            return
+
+        prev = None
+        if hasattr(p, "_ad_orig_steps"):
+            prev = p.steps
+            p.steps = p._ad_orig_steps
+
         infotext = self.infotext(p)
         params_txt = Path(data_path, "params.txt")
-        params_txt.write_text(infotext, encoding="utf-8")
+        with suppress(Exception):
+            params_txt.write_text(infotext, encoding="utf-8")
+
+        if hasattr(p, "_ad_orig_steps"):
+            p.steps = prev
 
     def script_filter(self, p, args: ADetailerArgs):
         script_runner = copy(p.scripts)
@@ -546,12 +560,16 @@ class AfterDetailerScript(scripts.Script):
 
     @staticmethod
     def need_call_process(p) -> bool:
+        if p.scripts is None:
+            return False
         i = p._ad_idx
         bs = p.batch_size
         return i % bs == bs - 1
 
     @staticmethod
     def need_call_postprocess(p) -> bool:
+        if p.scripts is None:
+            return False
         i = p._ad_idx
         bs = p.batch_size
         return i % bs == 0
@@ -668,15 +686,11 @@ class AfterDetailerScript(scripts.Script):
         if getattr(p, "_ad_disabled", False) or not self.is_ad_enabled(*args_):
             return
 
-        if hasattr(p, "_ad_orig_steps"):
-            p.steps = p._ad_orig_steps
-            del p._ad_orig_steps
-
         p._ad_idx = getattr(p, "_ad_idx", -1) + 1
         init_image = copy(pp.image)
         arg_list = self.get_args(p, *args_)
 
-        if p.scripts is not None and self.need_call_postprocess(p):
+        if self.need_call_postprocess(p):
             dummy = Processed(p, [], p.seed, "")
             with preseve_prompts(p):
                 p.scripts.postprocess(copy(p), dummy)
@@ -693,17 +707,11 @@ class AfterDetailerScript(scripts.Script):
                 p, init_image, condition="ad_save_images_before", suffix="-ad-before"
             )
 
-        if p.scripts is not None and self.need_call_process(p):
+        if self.need_call_process(p):
             with preseve_prompts(p):
                 p.scripts.process(copy(p))
 
-        try:
-            ia = p._ad_idx
-            lenp = len(p.all_prompts)
-            if ia % lenp == lenp - 1:
-                self.write_params_txt(p)
-        except Exception:
-            pass
+        self.write_params_txt(p)
 
 
 def on_after_component(component, **_kwargs):
