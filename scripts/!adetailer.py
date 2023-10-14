@@ -100,6 +100,22 @@ def preseve_prompts(p):
         p.all_negative_prompts = all_ng
 
 
+@contextmanager
+def change_skip_img2img_args(p):
+    if not hasattr(p, "_ad_skip_img2img"):
+        yield
+    else:
+        steps = p.steps
+        sampler_name = p.sampler_name
+        try:
+            p.steps = p._ad_orig_steps
+            p.sampler_name = p._ad_orig_sampler_name
+            yield
+        finally:
+            p.steps = steps
+            p.sampler_name = sampler_name
+
+
 class AfterDetailerScript(scripts.Script):
     def __init__(self):
         super().__init__()
@@ -390,21 +406,12 @@ class AfterDetailerScript(scripts.Script):
         if i % lenp != lenp - 1:
             return
 
-        prev_steps = prev_sampler_name = None
-        if getattr(p, "_ad_skip_img2img", False):
-            prev_steps = p.steps
-            prev_sampler_name = p.sampler_name
-            p.steps = p._ad_orig_steps
-            p.sampler_name = p._ad_orig_sampler_name
+        with change_skip_img2img_args(p):
+            infotext = self.infotext(p)
 
-        infotext = self.infotext(p)
         params_txt = Path(data_path, "params.txt")
         with suppress(Exception):
             params_txt.write_text(infotext, encoding="utf-8")
-
-        if getattr(p, "_ad_skip_img2img", False):
-            p.steps = prev_steps
-            p.sampler_name = prev_sampler_name
 
     def script_filter(self, p, args: ADetailerArgs):
         script_runner = copy(p.scripts)
