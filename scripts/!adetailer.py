@@ -201,7 +201,9 @@ class AfterDetailerScript(scripts.Script):
             p._ad_skip_img2img = args_[1]
             if args_[1]:
                 p._ad_orig_steps = p.steps
+                p._ad_orig_sampler_name = p.sampler_name
                 p.steps = 1
+                p.sampler_name = "Euler"
         else:
             p._ad_skip_img2img = False
 
@@ -346,7 +348,11 @@ class AfterDetailerScript(scripts.Script):
         return args.ad_cfg_scale if args.ad_use_cfg_scale else p.cfg_scale
 
     def get_sampler(self, p, args: ADetailerArgs) -> str:
-        return args.ad_sampler if args.ad_use_sampler else p.sampler_name
+        if args.ad_use_sampler:
+            return args.ad_sampler
+        if hasattr(p, "_ad_orig_sampler_name"):
+            return p._ad_orig_sampler_name
+        return p.sampler_name
 
     def get_override_settings(self, p, args: ADetailerArgs) -> dict[str, Any]:
         d = {}
@@ -384,18 +390,21 @@ class AfterDetailerScript(scripts.Script):
         if i % lenp != lenp - 1:
             return
 
-        prev = None
-        if hasattr(p, "_ad_orig_steps"):
-            prev = p.steps
+        prev_steps = prev_sampler_name = None
+        if getattr(p, "_ad_skip_img2img", False):
+            prev_steps = p.steps
+            prev_sampler_name = p.sampler_name
             p.steps = p._ad_orig_steps
+            p.sampler_name = p._ad_orig_sampler_name
 
         infotext = self.infotext(p)
         params_txt = Path(data_path, "params.txt")
         with suppress(Exception):
             params_txt.write_text(infotext, encoding="utf-8")
 
-        if hasattr(p, "_ad_orig_steps"):
-            p.steps = prev
+        if getattr(p, "_ad_skip_img2img", False):
+            p.steps = prev_steps
+            p.sampler_name = prev_sampler_name
 
     def script_filter(self, p, args: ADetailerArgs):
         script_runner = copy(p.scripts)
