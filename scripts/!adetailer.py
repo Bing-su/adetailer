@@ -10,7 +10,7 @@ from copy import copy, deepcopy
 from functools import partial
 from pathlib import Path
 from textwrap import dedent
-from typing import Any
+from typing import Any, NamedTuple
 
 import gradio as gr
 import torch
@@ -98,6 +98,22 @@ def preseve_prompts(p):
     finally:
         p.all_prompts = all_pt
         p.all_negative_prompts = all_ng
+
+
+@contextmanager
+def change_skip_img2img_args(p):
+    if not hasattr(p, "_ad_skip_img2img") or not p._ad_skip_img2img:
+        yield
+    else:
+        steps = p.steps
+        sampler_name = p.sampler_name
+        try:
+            p.steps = p._ad_orig_steps
+            p.sampler_name = p._ad_orig_sampler_name
+            yield
+        finally:
+            p.steps = steps
+            p.sampler_name = sampler_name
 
 
 class AfterDetailerScript(scripts.Script):
@@ -201,7 +217,9 @@ class AfterDetailerScript(scripts.Script):
             p._ad_skip_img2img = args_[1]
             if args_[1]:
                 p._ad_orig_steps = p.steps
+                p._ad_orig_sampler_name = p.sampler_name
                 p.steps = 1
+                p.sampler_name = "Euler"
         else:
             p._ad_skip_img2img = False
 
@@ -270,7 +288,12 @@ class AfterDetailerScript(scripts.Script):
         return all_prompts[j]
 
     def _get_prompt(
-        self, ad_prompt: str, all_prompts: list[str], i: int, default: str
+        self,
+        ad_prompt: str,
+        all_prompts: list[str],
+        i: int,
+        default: str,
+        replacements: list[PromptSR],
     ) -> list[str]:
         prompts = re.split(r"\s*\[SEP\]\s*", ad_prompt)
         blank_replacement = self.prompt_blank_replacement(all_prompts, i, default)
@@ -279,14 +302,22 @@ class AfterDetailerScript(scripts.Script):
                 prompts[n] = blank_replacement
             elif "[PROMPT]" in prompts[n]:
                 prompts[n] = prompts[n].replace("[PROMPT]", f" {blank_replacement} ")
+
+            for pair in replacements:
+                prompts[n] = prompts[n].replace(pair.s, pair.r)
         return prompts
 
     def get_prompt(self, p, args: ADetailerArgs) -> tuple[list[str], list[str]]:
         i = p._ad_idx
+        prompt_sr = p._ad_xyz_prompt_sr if hasattr(p, "_ad_xyz_prompt_sr") else []
 
-        prompt = self._get_prompt(args.ad_prompt, p.all_prompts, i, p.prompt)
+        prompt = self._get_prompt(args.ad_prompt, p.all_prompts, i, p.prompt, prompt_sr)
         negative_prompt = self._get_prompt(
-            args.ad_negative_prompt, p.all_negative_prompts, i, p.negative_prompt
+            args.ad_negative_prompt,
+            p.all_negative_prompts,
+            i,
+            p.negative_prompt,
+            prompt_sr,
         )
 
         return prompt, negative_prompt
@@ -333,7 +364,11 @@ class AfterDetailerScript(scripts.Script):
         return args.ad_cfg_scale if args.ad_use_cfg_scale else p.cfg_scale
 
     def get_sampler(self, p, args: ADetailerArgs) -> str:
-        return args.ad_sampler if args.ad_use_sampler else p.sampler_name
+        if args.ad_use_sampler:
+            return args.ad_sampler
+        if hasattr(p, "_ad_orig_sampler_name"):
+            return p._ad_orig_sampler_name
+        return p.sampler_name
 
     def get_override_settings(self, p, args: ADetailerArgs) -> dict[str, Any]:
         d = {}
@@ -371,18 +406,12 @@ class AfterDetailerScript(scripts.Script):
         if i % lenp != lenp - 1:
             return
 
-        prev = None
-        if hasattr(p, "_ad_orig_steps"):
-            prev = p.steps
-            p.steps = p._ad_orig_steps
+        with change_skip_img2img_args(p):
+            infotext = self.infotext(p)
 
-        infotext = self.infotext(p)
         params_txt = Path(data_path, "params.txt")
         with suppress(Exception):
             params_txt.write_text(infotext, encoding="utf-8")
-
-        if hasattr(p, "_ad_orig_steps"):
-            p.steps = prev
 
     def script_filter(self, p, args: ADetailerArgs):
         script_runner = copy(p.scripts)
@@ -785,6 +814,27 @@ def on_ui_settings():
 # xyz_grid
 
 
+class PromptSR(NamedTuple):
+    s: str
+    r: str
+
+
+def set_value(p, x: Any, xs: Any, *, field: str):
+    if not hasattr(p, "_ad_xyz"):
+        p._ad_xyz = {}
+    p._ad_xyz[field] = x
+
+
+def search_and_replace_prompt(p, x: Any, xs: Any, replace_in_main_prompt: bool):
+    if replace_in_main_prompt:
+        p.prompt = p.prompt.replace(xs[0], x)
+        p.negative_prompt = p.negative_prompt.replace(xs[0], x)
+
+    if not hasattr(p, "_ad_xyz_prompt_sr"):
+        p._ad_xyz_prompt_sr = []
+    p._ad_xyz_prompt_sr.append(PromptSR(s=xs[0], r=x))
+
+
 def make_axis_on_xyz_grid():
     xyz_grid = None
     for script in scripts.scripts_data:
@@ -797,11 +847,6 @@ def make_axis_on_xyz_grid():
 
     model_list = ["None", *model_mapping.keys()]
     samplers = [sampler.name for sampler in all_samplers]
-
-    def set_value(p, x, xs, *, field: str):
-        if not hasattr(p, "_ad_xyz"):
-            p._ad_xyz = {}
-        p._ad_xyz[field] = x
 
     axis = [
         xyz_grid.AxisOption(
@@ -819,6 +864,16 @@ def make_axis_on_xyz_grid():
             "[ADetailer] ADetailer negative prompt 1st",
             str,
             partial(set_value, field="ad_negative_prompt"),
+        ),
+        xyz_grid.AxisOption(
+            "[ADetailer] Prompt S/R (AD 1st)",
+            str,
+            partial(search_and_replace_prompt, replace_in_main_prompt=False),
+        ),
+        xyz_grid.AxisOption(
+            "[ADetailer] Prompt S/R (AD 1st and main prompt)",
+            str,
+            partial(search_and_replace_prompt, replace_in_main_prompt=True),
         ),
         xyz_grid.AxisOption(
             "[ADetailer] Mask erosion / dilation 1st",
