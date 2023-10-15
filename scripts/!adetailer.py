@@ -102,7 +102,7 @@ def preseve_prompts(p):
 
 @contextmanager
 def change_skip_img2img_args(p):
-    if not hasattr(p, "_ad_skip_img2img"):
+    if not hasattr(p, "_ad_skip_img2img") or not p._ad_skip_img2img:
         yield
     else:
         steps = p.steps
