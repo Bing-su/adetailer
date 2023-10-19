@@ -123,6 +123,14 @@ class AfterDetailerScript(scripts.Script):
 
         self.controlnet_ext = None
 
+        if not hasattr(self, "before_process"):
+            msg = """
+            [-] ADetailer: `stable-diffusion-webui < 1.4.0` is no longer supported.
+                Please upgrade to stable-diffusion-webui >= 1.4.0.
+                or you can use ADetailer v23.10.1.
+            """
+            raise RuntimeError(dedent(msg))
+
     def __repr__(self):
         return f"{self.__class__.__name__}(version={__version__})"
 
@@ -743,7 +751,9 @@ class AfterDetailerScript(scripts.Script):
 
         if self.need_call_process(p):
             with preseve_prompts(p):
-                p.scripts.process(copy(p))
+                copy_p = copy(p)
+                p.scripts.before_process(copy_p)
+                p.scripts.process(copy_p)
 
         self.write_params_txt(p)
 
