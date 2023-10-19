@@ -6,10 +6,10 @@ from functools import lru_cache
 from pathlib import Path
 
 from modules import extensions, sd_models, shared
-from modules.paths import data_path, models_path, script_path
+from modules.paths import extensions_builtin_dir, extensions_dir, models_path
 
-ext_path = Path(data_path, "extensions")
-ext_builtin_path = Path(script_path, "extensions-builtin")
+ext_path = Path(extensions_dir)
+ext_builtin_path = Path(extensions_builtin_dir)
 controlnet_exists = False
 controlnet_path = None
 cn_base_path = ""
@@ -91,9 +91,9 @@ def get_cn_model_dirs() -> list[Path]:
     ext_dir2 = getattr(shared.cmd_opts, "controlnet_dir", "")
 
     dirs = [cn_model_dir]
-    for ext_dir in [cn_model_dir_old, ext_dir1, ext_dir2]:
-        if ext_dir:
-            dirs.append(Path(ext_dir))
+    dirs += [
+        Path(ext_dir) for ext_dir in [cn_model_dir_old, ext_dir1, ext_dir2] if ext_dir
+    ]
 
     return dirs
 
