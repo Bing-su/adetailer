@@ -29,7 +29,7 @@ cn_model_module = {
     "scribble": "t2ia_sketch_pidi",
     "lineart": "lineart_coarse",
     "openpose": "openpose_full",
-    "tile": None,
+    "tile": "tile_resample",
 }
 cn_model_regex = re.compile("|".join(cn_model_module.keys()))
 
@@ -60,7 +60,7 @@ class ControlNetExt:
         if (not self.cn_available) or model == "None":
             return
 
-        if module is None:
+        if module is None or module == "None":
             for m, v in cn_model_module.items():
                 if m in model:
                     module = v
