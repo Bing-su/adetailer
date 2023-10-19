@@ -510,6 +510,7 @@ class AfterDetailerScript(scripts.Script):
         i2i.cached_uc = [None, None]
         i2i.scripts, i2i.script_args = self.script_filter(p, args)
         i2i._ad_disabled = True
+        i2i._ad_inner = True
 
         if args.ad_controlnet_model != "None":
             self.update_controlnet_args(i2i, args)
