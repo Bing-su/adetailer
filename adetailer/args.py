@@ -71,7 +71,7 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
     ad_clip_skip: conint(ge=1, le=12) = 1
     ad_restore_face: bool = False
     ad_controlnet_model: constr(regex=cn_model_regex) = "None"
-    ad_controlnet_module: Optional[constr(regex=r".*inpaint.*|^None$")] = None
+    ad_controlnet_module: Optional[constr(regex=cn_model_regex)] = None
     ad_controlnet_weight: confloat(ge=0.0, le=1.0) = 1.0
     ad_controlnet_guidance_start: confloat(ge=0.0, le=1.0) = 0.0
     ad_controlnet_guidance_end: confloat(ge=0.0, le=1.0) = 1.0
