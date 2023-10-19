@@ -223,6 +223,13 @@ class AfterDetailerScript(scripts.Script):
         else:
             p._ad_skip_img2img = False
 
+    @staticmethod
+    def get_i(p) -> int:
+        it = p.iteration
+        bs = p.batch_size
+        i = p.batch_index
+        return it * bs + i
+
     def get_args(self, p, *args_) -> list[ADetailerArgs]:
         """
         `args_` is at least 1 in length by `is_ad_enabled` immediately above
@@ -308,7 +315,7 @@ class AfterDetailerScript(scripts.Script):
         return prompts
 
     def get_prompt(self, p, args: ADetailerArgs) -> tuple[list[str], list[str]]:
-        i = p._ad_idx
+        i = self.get_i(p)
         prompt_sr = p._ad_xyz_prompt_sr if hasattr(p, "_ad_xyz_prompt_sr") else []
 
         prompt = self._get_prompt(args.ad_prompt, p.all_prompts, i, p.prompt, prompt_sr)
@@ -323,7 +330,7 @@ class AfterDetailerScript(scripts.Script):
         return prompt, negative_prompt
 
     def get_seed(self, p) -> tuple[int, int]:
-        i = p._ad_idx
+        i = self.get_i(p)
 
         if not p.all_seeds:
             seed = p.seed
@@ -401,7 +408,7 @@ class AfterDetailerScript(scripts.Script):
         )
 
     def write_params_txt(self, p) -> None:
-        i = p._ad_idx
+        i = self.get_i(p)
         lenp = len(p.all_prompts)
         if i % lenp != lenp - 1:
             return
@@ -512,7 +519,7 @@ class AfterDetailerScript(scripts.Script):
         return i2i
 
     def save_image(self, p, image, *, condition: str, suffix: str) -> None:
-        i = p._ad_idx
+        i = self.get_i(p)
         if p.all_prompts:
             i %= len(p.all_prompts)
             save_prompt = p.all_prompts[i]
@@ -591,17 +598,15 @@ class AfterDetailerScript(scripts.Script):
     def need_call_process(p) -> bool:
         if p.scripts is None:
             return False
-        i = p._ad_idx
+        i = p.batch_index
         bs = p.batch_size
-        return i % bs == bs - 1
+        return i == bs - 1
 
     @staticmethod
     def need_call_postprocess(p) -> bool:
         if p.scripts is None:
             return False
-        i = p._ad_idx
-        bs = p.batch_size
-        return i % bs == 0
+        return p.batch_index == 0
 
     @staticmethod
     def get_i2i_init_image(p, pp):
@@ -635,7 +640,7 @@ class AfterDetailerScript(scripts.Script):
         if state.interrupted or state.skipped:
             return False
 
-        i = p._ad_idx
+        i = self.get_i(p)
 
         pp.image = self.get_i2i_init_image(p, pp)
         i2i = self.get_i2i_p(p, args, pp.image)
@@ -715,7 +720,6 @@ class AfterDetailerScript(scripts.Script):
         if getattr(p, "_ad_disabled", False) or not self.is_ad_enabled(*args_):
             return
 
-        p._ad_idx = getattr(p, "_ad_idx", -1) + 1
         init_image = copy(pp.image)
         arg_list = self.get_args(p, *args_)
 
