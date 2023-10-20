@@ -25,6 +25,7 @@ cn_module_choices = {
     ],
     "openpose": ["openpose_full", "dw_openpose_full"],
     "tile": ["tile_resample", "tile_colorfix", "tile_colorfix+sharp"],
+    "scribble": ["t2ia_sketch_pidi"],
 }
 
 

@@ -65,6 +65,8 @@ class ControlNetExt:
                 if m in model:
                     module = v
                     break
+            else:
+                module = None
 
         cn_units = [
             self.external_cn.ControlNetUnit(
