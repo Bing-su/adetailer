@@ -53,7 +53,10 @@ from modules.shared import cmd_opts, opts, state
 
 no_huggingface = getattr(cmd_opts, "ad_no_huggingface", False)
 adetailer_dir = Path(models_path, "adetailer")
-model_mapping = get_models(adetailer_dir, huggingface=not no_huggingface)
+extra_models_dir = Path(shared.opts.data.get("ad_extra_models_dir", ""))
+model_mapping = get_models(
+    adetailer_dir, extra_dir=extra_models_dir, huggingface=not no_huggingface
+)
 txt2img_submit_button = img2img_submit_button = None
 SCRIPT_DEFAULT = "dynamic_prompting,dynamic_thresholding,wildcard_recursive,wildcards,lora_block_weight"
 
@@ -777,6 +780,16 @@ def on_ui_settings():
             label="Max models",
             component=gr.Slider,
             component_args={"minimum": 1, "maximum": 10, "step": 1},
+            section=section,
+        ),
+    )
+
+    shared.opts.add_option(
+        "ad_extra_models_path",
+        shared.OptionInfo(
+            default="",
+            label="Extra path to scan adetailer models",
+            component=gr.Textbox,
             section=section,
         ),
     )
