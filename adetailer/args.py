@@ -14,7 +14,6 @@ from pydantic import (
     confloat,
     conint,
     constr,
-    root_validator,
     validator,
 )
 
@@ -72,19 +71,11 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
     ad_clip_skip: conint(ge=1, le=12) = 1
     ad_restore_face: bool = False
     ad_controlnet_model: constr(regex=cn_model_regex) = "None"
-    ad_controlnet_module: Optional[constr(regex=cn_module_regex)] = None
+    ad_controlnet_module: constr(regex=cn_module_regex) = "None"
     ad_controlnet_weight: confloat(ge=0.0, le=1.0) = 1.0
     ad_controlnet_guidance_start: confloat(ge=0.0, le=1.0) = 0.0
     ad_controlnet_guidance_end: confloat(ge=0.0, le=1.0) = 1.0
     is_api: bool = True
-
-    @root_validator(skip_on_failure=True)
-    def ad_controlnt_module_validator(cls, values):  # noqa: N805
-        cn_model = values.get("ad_controlnet_model", "None")
-        cn_module = values.get("ad_controlnet_module", None)
-        if "inpaint" not in cn_model or cn_module == "None":
-            values["ad_controlnet_module"] = None
-        return values
 
     @validator("is_api", pre=True)
     def is_api_validator(cls, v: Any):  # noqa: N805
@@ -175,7 +166,7 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
             ],
             cond="None",
         )
-        ppop("ADetailer ControlNet module")
+        ppop("ADetailer ControlNet module", cond="None")
         ppop("ADetailer ControlNet weight", cond=1.0)
         ppop("ADetailer ControlNet guidance start", cond=0.0)
         ppop("ADetailer ControlNet guidance end", cond=1.0)
