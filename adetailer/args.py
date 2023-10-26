@@ -123,12 +123,12 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
         ppop("ADetailer mask max ratio", cond=1.0)
         ppop("ADetailer x offset", cond=0)
         ppop("ADetailer y offset", cond=0)
-        ppop("ADetailer mask merge/invert", cond="None")
+        ppop("ADetailer mask merge invert", cond="None")
         ppop("ADetailer inpaint only masked", ["ADetailer inpaint padding"])
         ppop(
-            "ADetailer use inpaint width/height",
+            "ADetailer use inpaint width height",
             [
-                "ADetailer use inpaint width/height",
+                "ADetailer use inpaint width height",
                 "ADetailer inpaint width",
                 "ADetailer inpaint height",
             ],
@@ -196,13 +196,13 @@ _all_args = [
     ("ad_mask_max_ratio", "ADetailer mask max ratio"),
     ("ad_x_offset", "ADetailer x offset"),
     ("ad_y_offset", "ADetailer y offset"),
-    ("ad_dilate_erode", "ADetailer dilate/erode"),
-    ("ad_mask_merge_invert", "ADetailer mask merge/invert"),
+    ("ad_dilate_erode", "ADetailer dilate erode"),
+    ("ad_mask_merge_invert", "ADetailer mask merge invert"),
     ("ad_mask_blur", "ADetailer mask blur"),
     ("ad_denoising_strength", "ADetailer denoising strength"),
     ("ad_inpaint_only_masked", "ADetailer inpaint only masked"),
     ("ad_inpaint_only_masked_padding", "ADetailer inpaint padding"),
-    ("ad_use_inpaint_width_height", "ADetailer use inpaint width/height"),
+    ("ad_use_inpaint_width_height", "ADetailer use inpaint width height"),
     ("ad_inpaint_width", "ADetailer inpaint width"),
     ("ad_inpaint_height", "ADetailer inpaint height"),
     ("ad_use_steps", "ADetailer use separate steps"),
