@@ -53,7 +53,7 @@ from modules.shared import cmd_opts, opts, state
 
 no_huggingface = getattr(cmd_opts, "ad_no_huggingface", False)
 adetailer_dir = Path(models_path, "adetailer")
-extra_models_dir = Path(shared.opts.data.get("ad_extra_models_dir", ""))
+extra_models_dir = shared.opts.data.get("ad_extra_models_dir", "")
 model_mapping = get_models(
     adetailer_dir, extra_dir=extra_models_dir, huggingface=not no_huggingface
 )
