@@ -92,7 +92,7 @@ def library_version():
     for lib in libraries:
         try:
             d[lib] = version(lib)
-        except Exception:
+        except Exception:  # noqa: PERF203
             d[lib] = "Unknown"
     return d
 
