@@ -11,11 +11,22 @@ from adetailer import AFTER_DETAILER, __version__
 from adetailer.args import ALL_ARGS, MASK_MERGE_INVERT
 from controlnet_ext import controlnet_exists, get_cn_models
 
-cn_module_choices = [
-    "inpaint_global_harmonious",
-    "inpaint_only",
-    "inpaint_only+lama",
-]
+cn_module_choices = {
+    "inpaint": [
+        "inpaint_global_harmonious",
+        "inpaint_only",
+        "inpaint_only+lama",
+    ],
+    "lineart": [
+        "lineart_coarse",
+        "lineart_realistic",
+        "lineart_anime",
+        "lineart_anime_denoise",
+    ],
+    "openpose": ["openpose_full", "dw_openpose_full"],
+    "tile": ["tile_resample", "tile_colorfix", "tile_colorfix+sharp"],
+    "scribble": ["t2ia_sketch_pidi"],
+}
 
 
 class Widgets(SimpleNamespace):
@@ -58,11 +69,11 @@ def on_generate_click(state: dict, *values: Any):
     return state
 
 
-def on_cn_model_update(cn_model: str):
-    if "inpaint" in cn_model:
-        return gr.update(
-            visible=True, choices=cn_module_choices, value=cn_module_choices[0]
-        )
+def on_cn_model_update(cn_model_name: str):
+    for t in cn_module_choices:
+        if t in cn_model_name:
+            choices = cn_module_choices[t]
+            return gr.update(visible=True, choices=choices, value=choices[0])
     return gr.update(visible=False, choices=["None"], value="None")
 
 
@@ -564,8 +575,8 @@ def controlnet(w: Widgets, n: int, is_img2img: bool):
 
             w.ad_controlnet_module = gr.Dropdown(
                 label="ControlNet module" + suffix(n),
-                choices=cn_module_choices,
-                value="inpaint_global_harmonious",
+                choices=["None"],
+                value="None",
                 visible=False,
                 type="value",
                 interactive=controlnet_exists,

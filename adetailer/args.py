@@ -14,11 +14,11 @@ from pydantic import (
     confloat,
     conint,
     constr,
-    root_validator,
     validator,
 )
 
 cn_model_regex = r".*(inpaint|tile|scribble|lineart|openpose).*|^None$"
+cn_module_regex = r".*(inpaint|tile|pidi|lineart|openpose).*|^None$"
 
 
 class Arg(NamedTuple):
@@ -71,19 +71,11 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
     ad_clip_skip: conint(ge=1, le=12) = 1
     ad_restore_face: bool = False
     ad_controlnet_model: constr(regex=cn_model_regex) = "None"
-    ad_controlnet_module: Optional[constr(regex=r".*inpaint.*|^None$")] = None
+    ad_controlnet_module: constr(regex=cn_module_regex) = "None"
     ad_controlnet_weight: confloat(ge=0.0, le=1.0) = 1.0
     ad_controlnet_guidance_start: confloat(ge=0.0, le=1.0) = 0.0
     ad_controlnet_guidance_end: confloat(ge=0.0, le=1.0) = 1.0
     is_api: bool = True
-
-    @root_validator(skip_on_failure=True)
-    def ad_controlnt_module_validator(cls, values):  # noqa: N805
-        cn_model = values.get("ad_controlnet_model", "None")
-        cn_module = values.get("ad_controlnet_module", None)
-        if "inpaint" not in cn_model or cn_module == "None":
-            values["ad_controlnet_module"] = None
-        return values
 
     @validator("is_api", pre=True)
     def is_api_validator(cls, v: Any):  # noqa: N805
@@ -122,12 +114,12 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
         ppop("ADetailer mask max ratio", cond=1.0)
         ppop("ADetailer x offset", cond=0)
         ppop("ADetailer y offset", cond=0)
-        ppop("ADetailer mask merge/invert", cond="None")
+        ppop("ADetailer mask merge invert", cond="None")
         ppop("ADetailer inpaint only masked", ["ADetailer inpaint padding"])
         ppop(
-            "ADetailer use inpaint width/height",
+            "ADetailer use inpaint width height",
             [
-                "ADetailer use inpaint width/height",
+                "ADetailer use inpaint width height",
                 "ADetailer inpaint width",
                 "ADetailer inpaint height",
             ],
@@ -174,7 +166,7 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
             ],
             cond="None",
         )
-        ppop("ADetailer ControlNet module")
+        ppop("ADetailer ControlNet module", cond="None")
         ppop("ADetailer ControlNet weight", cond=1.0)
         ppop("ADetailer ControlNet guidance start", cond=0.0)
         ppop("ADetailer ControlNet guidance end", cond=1.0)
@@ -195,13 +187,13 @@ _all_args = [
     ("ad_mask_max_ratio", "ADetailer mask max ratio"),
     ("ad_x_offset", "ADetailer x offset"),
     ("ad_y_offset", "ADetailer y offset"),
-    ("ad_dilate_erode", "ADetailer dilate/erode"),
-    ("ad_mask_merge_invert", "ADetailer mask merge/invert"),
+    ("ad_dilate_erode", "ADetailer dilate erode"),
+    ("ad_mask_merge_invert", "ADetailer mask merge invert"),
     ("ad_mask_blur", "ADetailer mask blur"),
     ("ad_denoising_strength", "ADetailer denoising strength"),
     ("ad_inpaint_only_masked", "ADetailer inpaint only masked"),
     ("ad_inpaint_only_masked_padding", "ADetailer inpaint padding"),
-    ("ad_use_inpaint_width_height", "ADetailer use inpaint width/height"),
+    ("ad_use_inpaint_width_height", "ADetailer use inpaint width height"),
     ("ad_inpaint_width", "ADetailer inpaint width"),
     ("ad_inpaint_height", "ADetailer inpaint height"),
     ("ad_use_steps", "ADetailer use separate steps"),

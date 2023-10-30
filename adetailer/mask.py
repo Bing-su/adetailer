@@ -220,6 +220,7 @@ def filter_k_largest(pred: PredictOutput, k: int = 0) -> PredictOutput:
         return pred
     areas = [bbox_area(bbox) for bbox in pred.bboxes]
     idx = np.argsort(areas)[-k:]
+    idx = idx[::-1]
     pred.bboxes = [pred.bboxes[i] for i in idx]
     pred.masks = [pred.masks[i] for i in idx]
     return pred

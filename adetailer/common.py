@@ -36,18 +36,16 @@ def hf_download(file: str):
     return path
 
 
+def scan_model_dir(path_: str | Path) -> list[Path]:
+    if not path_ or not (path := Path(path_)).is_dir():
+        return []
+    return [p for p in path.rglob("*") if p.is_file() and p.suffix in (".pt", ".pth")]
+
+
 def get_models(
-    model_dir: Union[str, Path], huggingface: bool = True
-) -> OrderedDict[str, Optional[str]]:
-    model_dir = Path(model_dir)
-    if model_dir.is_dir():
-        model_paths = [
-            p
-            for p in model_dir.rglob("*")
-            if p.is_file() and p.suffix in (".pt", ".pth")
-        ]
-    else:
-        model_paths = []
+    model_dir: str | Path, extra_dir: str | Path = "", huggingface: bool = True
+) -> OrderedDict[str, str | None]:
+    model_paths = [*scan_model_dir(model_dir), *scan_model_dir(extra_dir)]
 
     models = OrderedDict()
     if huggingface:

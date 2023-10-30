@@ -53,7 +53,10 @@ from modules.shared import cmd_opts, opts, state
 
 no_huggingface = getattr(cmd_opts, "ad_no_huggingface", False)
 adetailer_dir = Path(models_path, "adetailer")
-model_mapping = get_models(adetailer_dir, huggingface=not no_huggingface)
+extra_models_dir = shared.opts.data.get("ad_extra_models_dir", "")
+model_mapping = get_models(
+    adetailer_dir, extra_dir=extra_models_dir, huggingface=not no_huggingface
+)
 txt2img_submit_button = img2img_submit_button = None
 SCRIPT_DEFAULT = "dynamic_prompting,dynamic_thresholding,wildcard_recursive,wildcards,lora_block_weight"
 
@@ -223,6 +226,13 @@ class AfterDetailerScript(scripts.Script):
         else:
             p._ad_skip_img2img = False
 
+    @staticmethod
+    def get_i(p) -> int:
+        it = p.iteration
+        bs = p.batch_size
+        i = p.batch_index
+        return it * bs + i
+
     def get_args(self, p, *args_) -> list[ADetailerArgs]:
         """
         `args_` is at least 1 in length by `is_ad_enabled` immediately above
@@ -308,7 +318,7 @@ class AfterDetailerScript(scripts.Script):
         return prompts
 
     def get_prompt(self, p, args: ADetailerArgs) -> tuple[list[str], list[str]]:
-        i = p._ad_idx
+        i = self.get_i(p)
         prompt_sr = p._ad_xyz_prompt_sr if hasattr(p, "_ad_xyz_prompt_sr") else []
 
         prompt = self._get_prompt(args.ad_prompt, p.all_prompts, i, p.prompt, prompt_sr)
@@ -323,7 +333,7 @@ class AfterDetailerScript(scripts.Script):
         return prompt, negative_prompt
 
     def get_seed(self, p) -> tuple[int, int]:
-        i = p._ad_idx
+        i = self.get_i(p)
 
         if not p.all_seeds:
             seed = p.seed
@@ -401,7 +411,7 @@ class AfterDetailerScript(scripts.Script):
         )
 
     def write_params_txt(self, p) -> None:
-        i = p._ad_idx
+        i = self.get_i(p)
         lenp = len(p.all_prompts)
         if i % lenp != lenp - 1:
             return
@@ -503,6 +513,7 @@ class AfterDetailerScript(scripts.Script):
         i2i.cached_uc = [None, None]
         i2i.scripts, i2i.script_args = self.script_filter(p, args)
         i2i._ad_disabled = True
+        i2i._ad_inner = True
 
         if args.ad_controlnet_model != "None":
             self.update_controlnet_args(i2i, args)
@@ -512,7 +523,7 @@ class AfterDetailerScript(scripts.Script):
         return i2i
 
     def save_image(self, p, image, *, condition: str, suffix: str) -> None:
-        i = p._ad_idx
+        i = self.get_i(p)
         if p.all_prompts:
             i %= len(p.all_prompts)
             save_prompt = p.all_prompts[i]
@@ -591,23 +602,26 @@ class AfterDetailerScript(scripts.Script):
     def need_call_process(p) -> bool:
         if p.scripts is None:
             return False
-        i = p._ad_idx
+        i = p.batch_index
         bs = p.batch_size
-        return i % bs == bs - 1
+        return i == bs - 1
 
     @staticmethod
     def need_call_postprocess(p) -> bool:
         if p.scripts is None:
             return False
-        i = p._ad_idx
-        bs = p.batch_size
-        return i % bs == 0
+        return p.batch_index == 0
 
     @staticmethod
     def get_i2i_init_image(p, pp):
         if getattr(p, "_ad_skip_img2img", False):
             return p.init_images[0]
         return pp.image
+
+    @staticmethod
+    def get_each_tap_seed(seed: int, i: int):
+        use_same_seed = shared.opts.data.get("ad_same_seed_for_each_tap", False)
+        return seed if use_same_seed else seed + i
 
     @rich_traceback
     def process(self, p, *args_):
@@ -635,7 +649,7 @@ class AfterDetailerScript(scripts.Script):
         if state.interrupted or state.skipped:
             return False
 
-        i = p._ad_idx
+        i = self.get_i(p)
 
         pp.image = self.get_i2i_init_image(p, pp)
         i2i = self.get_i2i_p(p, args, pp.image)
@@ -688,8 +702,8 @@ class AfterDetailerScript(scripts.Script):
             if re.match(r"^\s*\[SKIP\]\s*$", p2.prompt):
                 continue
 
-            p2.seed = seed + j
-            p2.subseed = subseed + j
+            p2.seed = self.get_each_tap_seed(seed, j)
+            p2.subseed = self.get_each_tap_seed(subseed, j)
 
             try:
                 processed = process_images(p2)
@@ -715,7 +729,6 @@ class AfterDetailerScript(scripts.Script):
         if getattr(p, "_ad_disabled", False) or not self.is_ad_enabled(*args_):
             return
 
-        p._ad_idx = getattr(p, "_ad_idx", -1) + 1
         init_image = copy(pp.image)
         arg_list = self.get_args(p, *args_)
 
@@ -738,7 +751,10 @@ class AfterDetailerScript(scripts.Script):
 
         if self.need_call_process(p):
             with preseve_prompts(p):
-                p.scripts.process(copy(p))
+                copy_p = copy(p)
+                if hasattr(p.scripts, "before_process"):
+                    p.scripts.before_process(copy_p)
+                p.scripts.process(copy_p)
 
         self.write_params_txt(p)
 
@@ -762,6 +778,16 @@ def on_ui_settings():
             label="Max models",
             component=gr.Slider,
             component_args={"minimum": 1, "maximum": 10, "step": 1},
+            section=section,
+        ),
+    )
+
+    shared.opts.add_option(
+        "ad_extra_models_dir",
+        shared.OptionInfo(
+            default="",
+            label="Extra path to scan adetailer models",
+            component=gr.Textbox,
             section=section,
         ),
     )
@@ -807,6 +833,13 @@ def on_ui_settings():
             component=gr.Radio,
             component_args={"choices": BBOX_SORTBY},
             section=section,
+        ),
+    )
+
+    shared.opts.add_option(
+        "ad_same_seed_for_each_tap",
+        shared.OptionInfo(
+            False, "Use same seed for each tab in adetailer", section=section
         ),
     )
 
