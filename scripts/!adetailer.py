@@ -618,6 +618,11 @@ class AfterDetailerScript(scripts.Script):
             return p.init_images[0]
         return pp.image
 
+    @staticmethod
+    def get_each_tap_seed(seed: int, i: int):
+        use_same_seed = shared.opts.data.get("ad_same_seed_for_each_tap", False)
+        return seed if use_same_seed else seed + i
+
     @rich_traceback
     def process(self, p, *args_):
         if getattr(p, "_ad_disabled", False):
@@ -697,8 +702,8 @@ class AfterDetailerScript(scripts.Script):
             if re.match(r"^\s*\[SKIP\]\s*$", p2.prompt):
                 continue
 
-            p2.seed = seed + j
-            p2.subseed = subseed + j
+            p2.seed = self.get_each_tap_seed(seed, j)
+            p2.subseed = self.get_each_tap_seed(subseed, j)
 
             try:
                 processed = process_images(p2)
@@ -828,6 +833,13 @@ def on_ui_settings():
             component=gr.Radio,
             component_args={"choices": BBOX_SORTBY},
             section=section,
+        ),
+    )
+
+    shared.opts.add_option(
+        "ad_same_seed_for_each_tap",
+        shared.OptionInfo(
+            False, "Use same seed for each tab in adetailer", section=section
         ),
     )
 
