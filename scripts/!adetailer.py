@@ -778,7 +778,7 @@ def on_ui_settings():
     )
 
     shared.opts.add_option(
-        "ad_extra_models_path",
+        "ad_extra_models_dir",
         shared.OptionInfo(
             default="",
             label="Extra path to scan adetailer models",
