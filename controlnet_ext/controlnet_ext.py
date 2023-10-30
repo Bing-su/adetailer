@@ -90,7 +90,13 @@ class ControlNetExt:
             )
         ]
 
-        self.external_cn.update_cn_script_in_processing(p, cn_units)
+        try:
+            self.external_cn.update_cn_script_in_processing(p, cn_units)
+        except AttributeError as e:
+            if "script_args_value" not in str(e):
+                raise
+            msg = "[-] Adetailer: ControlNet option not available in WEBUI version lower than 1.6.0 due to updates in ControlNet"
+            raise RuntimeError(msg) from e
 
 
 def get_cn_model_dirs() -> list[Path]:
