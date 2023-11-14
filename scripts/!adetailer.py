@@ -616,7 +616,7 @@ class AfterDetailerScript(scripts.Script):
     def get_i2i_init_image(p, pp):
         if getattr(p, "_ad_skip_img2img", False) and not getattr(p, "_ad_skipped_img2img", False):
             setattr(p, "_ad_skipped_img2img", True)
-            if type(p.init_images[0]) == "<class 'numpy.ndarray'>":             
+            if str(type(p.init_images[0])) == "<class 'numpy.ndarray'>":             
                 # Fix for vladmandic/automatic converting image to ndarray
                 from PIL import Image
                 import numpy
@@ -626,7 +626,7 @@ class AfterDetailerScript(scripts.Script):
             else:
                 return p.init_images[0]
         return pp.image
-        
+    
     @staticmethod
     def get_each_tap_seed(seed: int, i: int):
         use_same_seed = shared.opts.data.get("ad_same_seed_for_each_tap", False)
