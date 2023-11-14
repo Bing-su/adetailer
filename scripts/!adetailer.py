@@ -651,7 +651,6 @@ class AfterDetailerScript(scripts.Script):
 
         i = self.get_i(p)
 
-        pp.image = self.get_i2i_init_image(p, pp)
         i2i = self.get_i2i_p(p, args, pp.image)
         seed, subseed = self.get_seed(p)
         ad_prompts, ad_negatives = self.get_prompt(p, args)
@@ -729,6 +728,7 @@ class AfterDetailerScript(scripts.Script):
         if getattr(p, "_ad_disabled", False) or not self.is_ad_enabled(*args_):
             return
 
+        pp.image = self.get_i2i_init_image(p, pp)
         init_image = copy(pp.image)
         arg_list = self.get_args(p, *args_)
 
