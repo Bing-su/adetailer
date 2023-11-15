@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib
 import re
+import sys
 from functools import lru_cache
 from pathlib import Path
 from textwrap import dedent
@@ -33,6 +34,13 @@ for extension in extensions.active():
         controlnet_path = Path(extension.path)
         cn_base_path = ".".join(controlnet_path.parts[-2:])
         break
+
+if controlnet_path is not None:
+    sd_webui_controlnet_path = controlnet_path.resolve().parent
+    if sd_webui_controlnet_path.stem in ("extensions", "extensions-builtin"):
+        target_path = str(sd_webui_controlnet_path.parent)
+        if target_path not in sys.path:
+            sys.path.append(target_path)
 
 cn_model_module = {
     "inpaint": "inpaint_global_harmonious",
