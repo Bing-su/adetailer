@@ -14,7 +14,9 @@ from typing import Any, NamedTuple
 
 import gradio as gr
 import torch
+from PIL import Image
 from rich import print
+from torchvision.transforms.functional import to_pil_image
 
 import modules
 from adetailer import (
@@ -571,7 +573,9 @@ class AfterDetailerScript(scripts.Script):
 
     @staticmethod
     def ensure_rgb_image(image: Any):
-        if hasattr(image, "mode") and image.mode != "RGB":
+        if not isinstance(image, Image.Image):
+            image = to_pil_image(image)
+        if image.mode != "RGB":
             image = image.convert("RGB")
         return image
 
@@ -729,6 +733,7 @@ class AfterDetailerScript(scripts.Script):
             return
 
         pp.image = self.get_i2i_init_image(p, pp)
+        pp.image = self.ensure_rgb_image(pp.image)
         init_image = copy(pp.image)
         arg_list = self.get_args(p, *args_)
 
