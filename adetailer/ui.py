@@ -226,6 +226,15 @@ def detection(w: Widgets, n: int, is_img2img: bool):
                 visible=True,
                 elem_id=eid("ad_confidence"),
             )
+            w.ad_classes = gr.Slider(
+                label="Class to detect" + suffix(n),
+                minimum=0,
+                maximum=600,
+                step=1,
+                value=0,
+                visible=True,
+                elem_id=eid("ad_classes"),
+            )
             w.ad_mask_k_largest = gr.Slider(
                 label="Mask only the top k largest (0 to disable)" + suffix(n),
                 minimum=0,

@@ -14,6 +14,7 @@ def ultralytics_predict(
     model_path: str | Path,
     image: Image.Image,
     confidence: float = 0.3,
+    classes: int = 0,
     device: str = "",
 ) -> PredictOutput:
     from ultralytics import YOLO
@@ -21,7 +22,7 @@ def ultralytics_predict(
     model = YOLO(model_path)
     pred = model(image, conf=confidence, device=device)
 
-    bboxes = pred[0].boxes.xyxy.cpu().numpy()
+    bboxes = pred[0].boxes[pred[0].boxes.cls == classes].xyxy.cpu().numpy()
     if bboxes.size == 0:
         return PredictOutput()
     bboxes = bboxes.tolist()

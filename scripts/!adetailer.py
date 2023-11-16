@@ -668,7 +668,7 @@ class AfterDetailerScript(scripts.Script):
             kwargs["device"] = self.ultralytics_device
 
         with change_torch_load():
-            pred = predictor(ad_model, pp.image, args.ad_confidence, **kwargs)
+            pred = predictor(ad_model, pp.image, args.ad_confidence, args.ad_classes, **kwargs)
 
         masks = self.pred_preprocessing(pred, args)
         shared.state.assign_current_image(pred.preview)
