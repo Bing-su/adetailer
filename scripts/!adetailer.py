@@ -14,7 +14,9 @@ from typing import Any, NamedTuple
 
 import gradio as gr
 import torch
+from PIL import Image
 from rich import print
+from torchvision.transforms.functional import to_pil_image
 
 import modules
 from adetailer import (
@@ -58,7 +60,7 @@ model_mapping = get_models(
     adetailer_dir, extra_dir=extra_models_dir, huggingface=not no_huggingface
 )
 txt2img_submit_button = img2img_submit_button = None
-SCRIPT_DEFAULT = "dynamic_prompting,dynamic_thresholding,wildcard_recursive,wildcards,lora_block_weight"
+SCRIPT_DEFAULT = "dynamic_prompting,dynamic_thresholding,wildcard_recursive,wildcards,lora_block_weight,negpip"
 
 if (
     not adetailer_dir.exists()
@@ -571,7 +573,9 @@ class AfterDetailerScript(scripts.Script):
 
     @staticmethod
     def ensure_rgb_image(image: Any):
-        if hasattr(image, "mode") and image.mode != "RGB":
+        if not isinstance(image, Image.Image):
+            image = to_pil_image(image)
+        if image.mode != "RGB":
             image = image.convert("RGB")
         return image
 
@@ -651,7 +655,6 @@ class AfterDetailerScript(scripts.Script):
 
         i = self.get_i(p)
 
-        pp.image = self.get_i2i_init_image(p, pp)
         i2i = self.get_i2i_p(p, args, pp.image)
         seed, subseed = self.get_seed(p)
         ad_prompts, ad_negatives = self.get_prompt(p, args)
@@ -729,6 +732,8 @@ class AfterDetailerScript(scripts.Script):
         if getattr(p, "_ad_disabled", False) or not self.is_ad_enabled(*args_):
             return
 
+        pp.image = self.get_i2i_init_image(p, pp)
+        pp.image = self.ensure_rgb_image(pp.image)
         init_image = copy(pp.image)
         arg_list = self.get_args(p, *args_)
 
