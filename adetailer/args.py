@@ -42,6 +42,7 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
     ad_negative_prompt: str = ""
     ad_confidence: confloat(ge=0.0, le=1.0) = 0.3
     ad_mask_k_largest: NonNegativeInt = 0
+    ad_mask_k_largest_invert: bool = False
     ad_mask_min_ratio: confloat(ge=0.0, le=1.0) = 0.0
     ad_mask_max_ratio: confloat(ge=0.0, le=1.0) = 1.0
     ad_dilate_erode: int = 4
@@ -183,6 +184,7 @@ _all_args = [
     ("ad_negative_prompt", "ADetailer negative prompt"),
     ("ad_confidence", "ADetailer confidence"),
     ("ad_mask_k_largest", "ADetailer mask only top k largest"),
+    ("ad_mask_k_largest_invert", "Invert Mask Largest (Ignore largest mask areas)"),
     ("ad_mask_min_ratio", "ADetailer mask min ratio"),
     ("ad_mask_max_ratio", "ADetailer mask max ratio"),
     ("ad_x_offset", "ADetailer x offset"),

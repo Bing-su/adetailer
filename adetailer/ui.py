@@ -226,6 +226,14 @@ def detection(w: Widgets, n: int, is_img2img: bool):
                 visible=True,
                 elem_id=eid("ad_confidence"),
             )
+
+            w.ad_mask_k_largest_invert = gr.Checkbox(
+                label="Invert Mask Largest (Ignore largest)" + suffix(n),
+                value=False,
+                visible=True,
+                elem_id=eid("ad_mask_k_largest_invert"),
+            )
+
             w.ad_mask_k_largest = gr.Slider(
                 label="Mask only the top k largest (0 to disable)" + suffix(n),
                 minimum=0,

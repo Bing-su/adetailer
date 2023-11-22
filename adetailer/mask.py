@@ -215,12 +215,17 @@ def filter_by_ratio(pred: PredictOutput, low: float, high: float) -> PredictOutp
     return pred
 
 
-def filter_k_largest(pred: PredictOutput, k: int = 0) -> PredictOutput:
+def filter_k_largest(pred: PredictOutput, k: int = 0, invert: bool = False) -> PredictOutput:
     if not pred.bboxes or k == 0:
         return pred
     areas = [bbox_area(bbox) for bbox in pred.bboxes]
-    idx = np.argsort(areas)[-k:]
-    idx = idx[::-1]
+    if invert:
+        sorted_desc = np.argsort(areas)[::-1]
+        idx = sorted_desc[k:]
+        idx = idx[::-1]
+    else:
+        idx = np.argsort(areas)[-k:]
+        idx = idx[::-1]   
     pred.bboxes = [pred.bboxes[i] for i in idx]
     pred.masks = [pred.masks[i] for i in idx]
     return pred

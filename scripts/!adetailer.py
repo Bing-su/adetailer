@@ -561,7 +561,7 @@ class AfterDetailerScript(scripts.Script):
         pred = filter_by_ratio(
             pred, low=args.ad_mask_min_ratio, high=args.ad_mask_max_ratio
         )
-        pred = filter_k_largest(pred, k=args.ad_mask_k_largest)
+        pred = filter_k_largest(pred, k=args.ad_mask_k_largest, invert = args.ad_mask_k_largest_invert)
         pred = self.sort_bboxes(pred)
         return mask_preprocess(
             pred.masks,
