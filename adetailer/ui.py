@@ -228,7 +228,7 @@ def detection(w: Widgets, n: int, is_img2img: bool):
             )
 
             w.ad_mask_k_largest_invert = gr.Checkbox(
-                label="Invert Mask Largest (Ignore largest)" + suffix(n),
+                label="Invert Mask Top k (Ignore largest)" + suffix(n),
                 value=False,
                 visible=True,
                 elem_id=eid("ad_mask_k_largest_invert"),
