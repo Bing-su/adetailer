@@ -6,7 +6,7 @@ import re
 import sys
 import traceback
 from contextlib import contextmanager, suppress
-from copy import copy, deepcopy
+from copy import copy
 from functools import partial
 from pathlib import Path
 from textwrap import dedent
@@ -425,9 +425,21 @@ class AfterDetailerScript(scripts.Script):
         with suppress(Exception):
             params_txt.write_text(infotext, encoding="utf-8")
 
+    @staticmethod
+    def script_args_copy(script_args):
+        type_: type[list] | type[tuple] = type(script_args)
+        result = []
+        for arg in script_args:
+            try:
+                a = copy(arg)
+            except TypeError:
+                a = arg
+            result.append(a)
+        return type_(result)
+
     def script_filter(self, p, args: ADetailerArgs):
         script_runner = copy(p.scripts)
-        script_args = deepcopy(p.script_args)
+        script_args = self.script_args_copy(p.script_args)
         self.disable_controlnet_units(script_args)
 
         ad_only_seleted_scripts = opts.data.get("ad_only_seleted_scripts", True)
@@ -454,7 +466,9 @@ class AfterDetailerScript(scripts.Script):
         script_runner.alwayson_scripts = filtered_alwayson
         return script_runner, script_args
 
-    def disable_controlnet_units(self, script_args: list[Any]) -> None:
+    def disable_controlnet_units(
+        self, script_args: list[Any] | tuple[Any, ...]
+    ) -> None:
         for obj in script_args:
             if "controlnet" in obj.__class__.__name__.lower():
                 if hasattr(obj, "enabled"):
