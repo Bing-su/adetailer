@@ -41,9 +41,8 @@ from controlnet_ext.restore import (
     CNHijackRestore,
     cn_allow_script_control,
 )
-from modules import images, safe, script_callbacks, scripts, shared
+from modules import images, paths, safe, script_callbacks, scripts, shared
 from modules.devices import NansException
-from modules.paths import data_path, models_path
 from modules.processing import (
     Processed,
     StableDiffusionProcessingImg2Img,
@@ -54,7 +53,7 @@ from modules.sd_samplers import all_samplers
 from modules.shared import cmd_opts, opts, state
 
 no_huggingface = getattr(cmd_opts, "ad_no_huggingface", False)
-adetailer_dir = Path(models_path, "adetailer")
+adetailer_dir = Path(paths.models_path, "adetailer")
 extra_models_dir = shared.opts.data.get("ad_extra_models_dir", "")
 model_mapping = get_models(
     adetailer_dir, extra_dir=extra_models_dir, huggingface=not no_huggingface
@@ -103,28 +102,6 @@ def preseve_prompts(p):
     finally:
         p.all_prompts = all_pt
         p.all_negative_prompts = all_ng
-
-
-@contextmanager
-def change_skip_img2img_args(p):
-    if hasattr(p, "_ad_orig"):
-        steps = p.steps
-        sampler_name = p.sampler_name
-        width = p.width
-        height = p.height
-        try:
-            p.steps = p._ad_orig.steps
-            p.sampler_name = p._ad_orig.sampler_name
-            p.width = p._ad_orig.width
-            p.height = p._ad_orig.height
-            yield
-        finally:
-            p.steps = steps
-            p.sampler_name = sampler_name
-            p.width = width
-            p.height = height
-    else:
-        yield
 
 
 class AfterDetailerScript(scripts.Script):
@@ -427,18 +404,10 @@ class AfterDetailerScript(scripts.Script):
             p, p.all_prompts, p.all_seeds, p.all_subseeds, None, 0, 0
         )
 
-    def write_params_txt(self, p) -> None:
-        i = self.get_i(p)
-        lenp = len(p.all_prompts)
-        if i % lenp != lenp - 1:
-            return
-
-        with change_skip_img2img_args(p):
-            infotext = self.infotext(p)
-
-        params_txt = Path(data_path, "params.txt")
+    def write_params_txt(self, content: str) -> None:
+        params_txt = Path(paths.data_path, "params.txt")
         with suppress(Exception):
-            params_txt.write_text(infotext, encoding="utf-8")
+            params_txt.write_text(content, encoding="utf-8")
 
     @staticmethod
     def script_args_copy(script_args):
@@ -775,6 +744,7 @@ class AfterDetailerScript(scripts.Script):
         pp.image = self.ensure_rgb_image(pp.image)
         init_image = copy(pp.image)
         arg_list = self.get_args(p, *args_)
+        params_txt_content = Path(paths.data_path, "params.txt").read_text("utf-8")
 
         if self.need_call_postprocess(p):
             dummy = Processed(p, [], p.seed, "")
@@ -800,7 +770,7 @@ class AfterDetailerScript(scripts.Script):
                     p.scripts.before_process(copy_p)
                 p.scripts.process(copy_p)
 
-        self.write_params_txt(p)
+        self.write_params_txt(params_txt_content)
 
 
 def on_after_component(component, **_kwargs):
