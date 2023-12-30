@@ -1,5 +1,12 @@
 # Changelog
 
+## 2023-12-30
+
+- v23.12.0
+- 파일을 인자로 추가하는 몇몇 스크립트에 대해 deepcopy의 에러를 피하기 위해 script_args 복사 방법을 변경함
+- skip img2img 기능을 사용할 때 너비, 높이를 128로 고정하여 스킵 과정이 조금 더 나아짐
+- img2img inpainting 모드에서 adetailer 자동 비활성화
+
 ## 2023-11-19
 
 - v23.11.1
