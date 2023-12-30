@@ -656,9 +656,19 @@ class AfterDetailerScript(scripts.Script):
         use_same_seed = shared.opts.data.get("ad_same_seed_for_each_tap", False)
         return seed if use_same_seed else seed + i
 
+    @staticmethod
+    def is_img2img_inpaint(p) -> bool:
+        return hasattr(p, "image_mask") and bool(p.image_mask)
+
     @rich_traceback
     def process(self, p, *args_):
         if getattr(p, "_ad_disabled", False):
+            return
+
+        if self.is_img2img_inpaint(p):
+            p._ad_disabled = True
+            msg = "[-] ADetailer: img2img inpainting detected. adetailer disabled."
+            print(msg)
             return
 
         if self.is_ad_enabled(*args_):
