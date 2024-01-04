@@ -1,5 +1,10 @@
 # Changelog
 
+## 2024-01-04
+
+- v24.1.0
+- `depth_hand_refiner` ControlNet 추가 (PR #460)
+
 ## 2023-12-30
 
 - v23.12.0
