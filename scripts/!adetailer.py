@@ -696,7 +696,7 @@ class AfterDetailerScript(scripts.Script):
             condition="ad_save_previews",
             suffix="-ad-preview" + suffix(n, "-"),
         )
-
+        
         steps = len(masks)
         processed = None
         state.job_count += steps
@@ -705,6 +705,7 @@ class AfterDetailerScript(scripts.Script):
             print(f"mediapipe: {steps} detected.")
 
         p2 = copy(i2i)
+        save_masks_only = opts.data.get("ad_save_mask_only", False)
         for j in range(steps):
             p2.image_mask = masks[j]
             p2.init_images[0] = self.ensure_rgb_image(p2.init_images[0])
@@ -717,7 +718,10 @@ class AfterDetailerScript(scripts.Script):
             p2.subseed = self.get_each_tap_seed(subseed, j)
 
             try:
-                processed = process_images(p2)
+                if not save_masks_only:
+                    processed = process_images(p2)
+                else:
+                    pp.image = copy(p2.image_mask)
             except NansException as e:
                 msg = f"[-] ADetailer: 'NansException' occurred with {ordinal(n + 1)} settings.\n{e}"
                 print(msg, file=sys.stderr)
@@ -725,9 +729,10 @@ class AfterDetailerScript(scripts.Script):
             finally:
                 p2.close()
 
-            self.compare_prompt(p2, processed, n=n)
-            p2 = copy(i2i)
-            p2.init_images = [processed.images[0]]
+            if not save_masks_only:
+                self.compare_prompt(p2, processed, n=n)
+                p2 = copy(i2i)
+                p2.init_images = [processed.images[0]]
 
         if processed is not None:
             pp.image = processed.images[0]
@@ -742,7 +747,12 @@ class AfterDetailerScript(scripts.Script):
 
         pp.image = self.get_i2i_init_image(p, pp)
         pp.image = self.ensure_rgb_image(pp.image)
-        init_image = copy(pp.image)
+        
+        skip_img2img = getattr(p, "_ad_skip_img2img", False)
+        init_image = getattr(p, "ad_save_images_before", False)
+        if init_image and not skip_img2img:
+            init_image = copy(pp.image)
+
         arg_list = self.get_args(p, *args_)
         params_txt_content = Path(paths.data_path, "params.txt").read_text("utf-8")
 
@@ -758,7 +768,8 @@ class AfterDetailerScript(scripts.Script):
                     continue
                 is_processed |= self._postprocess_image_inner(p, pp, args, n=n)
 
-        if is_processed and not getattr(p, "_ad_skip_img2img", False):
+        if is_processed and not skip_img2img:
+            
             self.save_image(
                 p, init_image, condition="ad_save_images_before", suffix="-ad-before"
             )
@@ -809,6 +820,11 @@ def on_ui_settings():
     shared.opts.add_option(
         "ad_save_previews",
         shared.OptionInfo(False, "Save mask previews", section=section),
+    )
+    
+    shared.opts.add_option(
+        "ad_save_mask_only",
+        shared.OptionInfo(False, "Save mask image only", section=section),
     )
 
     shared.opts.add_option(
