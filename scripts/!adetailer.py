@@ -706,6 +706,7 @@ class AfterDetailerScript(scripts.Script):
 
         p2 = copy(i2i)
         save_masks_only = opts.data.get("ad_save_mask_only", False)
+        skip_img2img = getattr(p, "_ad_skip_img2img", False)
         for j in range(steps):
             p2.image_mask = masks[j]
             p2.init_images[0] = self.ensure_rgb_image(p2.init_images[0])
@@ -720,8 +721,15 @@ class AfterDetailerScript(scripts.Script):
             try:
                 if not save_masks_only:
                     processed = process_images(p2)
-                else:
+                elif skip_img2img:
                     pp.image = copy(p2.image_mask)
+                else:
+                    self.save_image(
+                        p,
+                        p2.image_mask,
+                        condition="ad_save_mask_only",
+                        suffix="-ad-mask" + suffix(n, "-"),
+                    )
             except NansException as e:
                 msg = f"[-] ADetailer: 'NansException' occurred with {ordinal(n + 1)} settings.\n{e}"
                 print(msg, file=sys.stderr)
