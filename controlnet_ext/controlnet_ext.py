@@ -48,6 +48,7 @@ cn_model_module = {
     "lineart": "lineart_coarse",
     "openpose": "openpose_full",
     "tile": "tile_resample",
+    "depth": "depth_midas",
 }
 cn_model_regex = re.compile("|".join(cn_model_module.keys()))
 

@@ -18,8 +18,8 @@ from pydantic import (
     validator,
 )
 
-cn_model_regex = r".*(inpaint|tile|scribble|lineart|openpose).*|^None$"
-cn_module_regex = r".*(inpaint|tile|pidi|lineart|openpose).*|^None$"
+cn_model_regex = r".*(inpaint|tile|scribble|lineart|openpose|depth).*|^None$"
+cn_module_regex = r".*(inpaint|tile|pidi|lineart|openpose|depth).*|^None$"
 
 
 @dataclass
