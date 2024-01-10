@@ -71,6 +71,7 @@ def on_generate_click(state: dict, *values: Any):
 
 
 def on_cn_model_update(cn_model_name: str):
+    cn_model_name = cn_model_name.replace("inpaint_depth", "depth")
     for t in cn_module_choices:
         if t in cn_model_name:
             choices = cn_module_choices[t]
