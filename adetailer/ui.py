@@ -85,6 +85,10 @@ def elem_id(item_id: str, n: int, is_img2img: bool) -> str:
     return f"script_{tap}_adetailer_{item_id}{suf}"
 
 
+def state_init(w: Widgets) -> dict[str, Any]:
+    return {attr: getattr(w, attr).value for attr in ALL_ARGS.attrs}
+
+
 def adui(
     num_models: int,
     is_img2img: bool,
@@ -140,7 +144,6 @@ def adui(
 
 def one_ui_group(n: int, is_img2img: bool, webui_info: WebuiInfo):
     w = Widgets()
-    state = gr.State({})
     eid = partial(elem_id, n=n, is_img2img=is_img2img)
 
     with gr.Row():
@@ -202,6 +205,8 @@ def one_ui_group(n: int, is_img2img: bool, webui_info: WebuiInfo):
 
     with gr.Group():
         controlnet(w, n, is_img2img)
+
+    state = gr.State(lambda: state_init(w))
 
     for attr in ALL_ARGS.attrs:
         widget = getattr(w, attr)
