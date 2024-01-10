@@ -59,6 +59,9 @@ def suffix(n: int, c: str = " ") -> str:
 
 
 def on_widget_change(state: dict, value: Any, *, attr: str):
+    if "is_api" in state:
+        state = state.copy()
+        state.pop("is_api")
     state[attr] = value
     return state
 
@@ -71,6 +74,7 @@ def on_generate_click(state: dict, *values: Any):
 
 
 def on_cn_model_update(cn_model_name: str):
+    cn_model_name = cn_model_name.replace("inpaint_depth", "depth")
     for t in cn_module_choices:
         if t in cn_model_name:
             choices = cn_module_choices[t]
@@ -82,6 +86,10 @@ def elem_id(item_id: str, n: int, is_img2img: bool) -> str:
     tap = "img2img" if is_img2img else "txt2img"
     suf = suffix(n, "_")
     return f"script_{tap}_adetailer_{item_id}{suf}"
+
+
+def state_init(w: Widgets) -> dict[str, Any]:
+    return {attr: getattr(w, attr).value for attr in ALL_ARGS.attrs}
 
 
 def adui(
@@ -139,7 +147,6 @@ def adui(
 
 def one_ui_group(n: int, is_img2img: bool, webui_info: WebuiInfo):
     w = Widgets()
-    state = gr.State({})
     eid = partial(elem_id, n=n, is_img2img=is_img2img)
 
     with gr.Row():
@@ -201,6 +208,13 @@ def one_ui_group(n: int, is_img2img: bool, webui_info: WebuiInfo):
 
     with gr.Group():
         controlnet(w, n, is_img2img)
+
+    state = gr.State(lambda: state_init(w))
+
+    for attr in ALL_ARGS.attrs:
+        widget = getattr(w, attr)
+        on_change = partial(on_widget_change, attr=attr)
+        widget.change(fn=on_change, inputs=[state, widget], outputs=state, queue=False)
 
     all_inputs = [state, *w.tolist()]
     target_button = webui_info.i2i_button if is_img2img else webui_info.t2i_button
