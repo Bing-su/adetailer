@@ -59,6 +59,9 @@ def suffix(n: int, c: str = " ") -> str:
 
 
 def on_widget_change(state: dict, value: Any, *, attr: str):
+    if "is_api" in state:
+        state = state.copy()
+        state.pop("is_api")
     state[attr] = value
     return state
 
