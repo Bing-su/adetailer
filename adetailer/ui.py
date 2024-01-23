@@ -574,7 +574,7 @@ def inpainting(w: Widgets, n: int, is_img2img: bool, webui_info: WebuiInfo):
 
 def controlnet(w: Widgets, n: int, is_img2img: bool):
     eid = partial(elem_id, n=n, is_img2img=is_img2img)
-    cn_models = ["None", *get_cn_models()]
+    cn_models = ["None", "Passthrough", *get_cn_models()]
 
     with gr.Row(variant="panel"):
         with gr.Column(variant="compact"):

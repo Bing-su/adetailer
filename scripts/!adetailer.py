@@ -10,7 +10,7 @@ from copy import copy
 from functools import partial
 from pathlib import Path
 from textwrap import dedent
-from typing import Any, NamedTuple
+from typing import TYPE_CHECKING, Any, NamedTuple
 
 import gradio as gr
 import torch
@@ -51,6 +51,9 @@ from modules.processing import (
 )
 from modules.sd_samplers import all_samplers
 from modules.shared import cmd_opts, opts, state
+
+if TYPE_CHECKING:
+    from fastapi import FastAPI
 
 no_huggingface = getattr(cmd_opts, "ad_no_huggingface", False)
 adetailer_dir = Path(paths.models_path, "adetailer")
@@ -424,7 +427,6 @@ class AfterDetailerScript(scripts.Script):
     def script_filter(self, p, args: ADetailerArgs):
         script_runner = copy(p.scripts)
         script_args = self.script_args_copy(p.script_args)
-        self.disable_controlnet_units(script_args)
 
         ad_only_seleted_scripts = opts.data.get("ad_only_seleted_scripts", True)
         if not ad_only_seleted_scripts:
@@ -515,9 +517,12 @@ class AfterDetailerScript(scripts.Script):
         i2i._ad_disabled = True
         i2i._ad_inner = True
 
-        if args.ad_controlnet_model != "None":
+        if args.ad_controlnet_model != "Passthrough":
+            self.disable_controlnet_units(i2i.script_args)
+
+        if args.ad_controlnet_model not in ["None", "Passthrough"]:
             self.update_controlnet_args(i2i, args)
-        else:
+        elif args.ad_controlnet_model != "Passthrough":
             i2i.control_net_enabled = False
 
         return i2i
@@ -972,6 +977,24 @@ def on_before_ui():
         )
 
 
+# api
+
+
+def add_api_endpoints(_: gr.Blocks, app: FastAPI):
+    @app.get("/adetailer/v1/version")
+    def version():
+        return {"version": __version__}
+
+    @app.get("/adetailer/v1/schema")
+    def schema():
+        return ADetailerArgs.schema()
+
+    @app.get("/adetailer/v1/ad_model")
+    def ad_model():
+        return {"ad_model": list(model_mapping)}
+
+
 script_callbacks.on_ui_settings(on_ui_settings)
 script_callbacks.on_after_component(on_after_component)
+script_callbacks.on_app_started(add_api_endpoints)
 script_callbacks.on_before_ui(on_before_ui)
