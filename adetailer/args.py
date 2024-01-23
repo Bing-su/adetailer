@@ -18,9 +18,6 @@ from pydantic import (
     validator,
 )
 
-cn_model_regex = r".*(inpaint|tile|scribble|lineart|openpose|depth).*|^None$"
-cn_module_regex = r".*(inpaint|tile|pidi|lineart|openpose|depth).*|^None$"
-
 
 @dataclass
 class SkipImg2ImgOrig:
@@ -79,8 +76,8 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
     ad_use_clip_skip: bool = False
     ad_clip_skip: conint(ge=1, le=12) = 1
     ad_restore_face: bool = False
-    ad_controlnet_model: constr(regex=cn_model_regex) = "None"
-    ad_controlnet_module: constr(regex=cn_module_regex) = "None"
+    ad_controlnet_model: str = "None"
+    ad_controlnet_module: str = "None"
     ad_controlnet_weight: confloat(ge=0.0, le=1.0) = 1.0
     ad_controlnet_guidance_start: confloat(ge=0.0, le=1.0) = 0.0
     ad_controlnet_guidance_end: confloat(ge=0.0, le=1.0) = 1.0
