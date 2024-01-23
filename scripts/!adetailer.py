@@ -10,7 +10,7 @@ from copy import copy
 from functools import partial
 from pathlib import Path
 from textwrap import dedent
-from typing import Any, NamedTuple
+from typing import TYPE_CHECKING, Any, NamedTuple
 
 import gradio as gr
 import torch
@@ -51,6 +51,9 @@ from modules.processing import (
 )
 from modules.sd_samplers import all_samplers
 from modules.shared import cmd_opts, opts, state
+
+if TYPE_CHECKING:
+    from fastapi import FastAPI
 
 no_huggingface = getattr(cmd_opts, "ad_no_huggingface", False)
 adetailer_dir = Path(paths.models_path, "adetailer")
@@ -974,6 +977,24 @@ def on_before_ui():
         )
 
 
+# api
+
+
+def add_api_endpoints(_: gr.Blocks, app: FastAPI):
+    @app.get("/adetailer/v1/version")
+    def version():
+        return {"version": __version__}
+
+    @app.get("/adetailer/v1/schema")
+    def schema():
+        return ADetailerArgs.schema()
+
+    @app.get("/adetailer/v1/ad_model")
+    def ad_model():
+        return {"ad_model": list(model_mapping)}
+
+
 script_callbacks.on_ui_settings(on_ui_settings)
 script_callbacks.on_after_component(on_after_component)
+script_callbacks.on_app_started(add_api_endpoints)
 script_callbacks.on_before_ui(on_before_ui)
