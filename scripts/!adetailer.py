@@ -522,7 +522,7 @@ class AfterDetailerScript(scripts.Script):
 
         if args.ad_controlnet_model not in ["None", "Passthrough"]:
             self.update_controlnet_args(i2i, args)
-        elif args.ad_controlnet_model != "Passthrough":
+        elif args.ad_controlnet_model == "None":
             i2i.control_net_enabled = False
 
         return i2i
