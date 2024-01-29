@@ -43,6 +43,7 @@ if controlnet_path is not None:
             sys.path.append(target_path)
 
 cn_model_module = {
+    "inpaint_depth_hand": "depth_hand_refiner",
     "inpaint": "inpaint_global_harmonious",
     "scribble": "t2ia_sketch_pidi",
     "lineart": "lineart_coarse",
