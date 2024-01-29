@@ -46,6 +46,7 @@ cn_model_module = {
     "inpaint_depth_hand": "depth_hand_refiner",
     "inpaint": "inpaint_global_harmonious",
     "scribble": "t2ia_sketch_pidi",
+    "lineart_anime": "lineart_anime",
     "lineart": "lineart_coarse",
     "openpose": "openpose_full",
     "tile": "tile_resample",
