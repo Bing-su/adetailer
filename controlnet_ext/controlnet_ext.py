@@ -29,7 +29,8 @@ for extension in extensions.active():
     if not extension.enabled:
         continue
     # For cases like sd-webui-controlnet-master
-    if "sd-webui-controlnet" in extension.name:
+    # For stable-diffusion-webui-forge
+    if "sd-webui-controlnet" in extension.name or extension.name == "sd_forge_controlnet":
         controlnet_exists = True
         controlnet_path = Path(extension.path)
         cn_base_path = ".".join(controlnet_path.parts[-2:])
