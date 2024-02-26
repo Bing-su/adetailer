@@ -15,10 +15,12 @@ def ultralytics_predict(
     image: Image.Image,
     confidence: float = 0.3,
     device: str = "",
+    classes: str = "",
 ) -> PredictOutput:
     from ultralytics import YOLO
 
     model = YOLO(model_path)
+    apply_classes(model, model_path, classes)
     pred = model(image, conf=confidence, device=device)
 
     bboxes = pred[0].boxes.xyxy.cpu().numpy()
@@ -35,6 +37,13 @@ def ultralytics_predict(
     preview = Image.fromarray(preview)
 
     return PredictOutput(bboxes=bboxes, masks=masks, preview=preview)
+
+
+def apply_classes(model, model_path: str | Path, classes: str):
+    if not classes or not Path(model_path).stem.endswith("world"):
+        return
+    parsed = [c.strip() for c in classes.split(",")]
+    model.set_classes(parsed)
 
 
 def mask_to_pil(masks, shape: tuple[int, int]) -> list[Image.Image]:
