@@ -649,12 +649,10 @@ class AfterDetailerScript(scripts.Script):
             arg_list = self.get_args(p, *args_)
             self.check_skip_img2img(p, *args_)
 
-            # The extra_generation_params has the ADetailer prompt that will be saved in the png info
-            # In case S/R script has been applied, we need to return the replaced prompt and not the original one
-            # batch_index exists on p if the p is for the Adetailer p.
-            # If the p is for the image before Adetailer, batch_index does not seem to exist.
-            if hasattr(p, "_ad_xyz_prompt_sr") and hasattr(p, "batch_index"):
-                replaced_positive_prompt, replaced_negative_prompt = self.get_prompt(p, arg_list[0])
+            if hasattr(p, "_ad_xyz_prompt_sr"):
+                replaced_positive_prompt, replaced_negative_prompt = self.get_prompt(
+                    p, arg_list[0]
+                )
                 arg_list[0].ad_prompt = replaced_positive_prompt[0]
                 arg_list[0].ad_negative_prompt = replaced_negative_prompt[0]
 
