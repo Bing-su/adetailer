@@ -9,25 +9,36 @@ import gradio as gr
 
 from adetailer import AFTER_DETAILER, __version__
 from adetailer.args import ALL_ARGS, MASK_MERGE_INVERT
-from controlnet_ext import controlnet_exists, get_cn_models
+from controlnet_ext import controlnet_exists, controlnet_forge, get_cn_models
 
-cn_module_choices = {
-    "inpaint": [
-        "inpaint_global_harmonious",
-        "inpaint_only",
-        "inpaint_only+lama",
-    ],
-    "lineart": [
-        "lineart_coarse",
-        "lineart_realistic",
-        "lineart_anime",
-        "lineart_anime_denoise",
-    ],
-    "openpose": ["openpose_full", "dw_openpose_full"],
-    "tile": ["tile_resample", "tile_colorfix", "tile_colorfix+sharp"],
-    "scribble": ["t2ia_sketch_pidi"],
-    "depth": ["depth_midas", "depth_hand_refiner"],
-}
+if controlnet_forge:
+    from lib_controlnet import global_state
+    cn_module_choices = {
+        "inpaint": list(m for m in global_state.get_filtered_preprocessors("Inpaint")),
+        "lineart": list(m for m in global_state.get_filtered_preprocessors("Lineart")),
+        "openpose": list(m for m in global_state.get_filtered_preprocessors("OpenPose")),
+        "tile": list(m for m in global_state.get_filtered_preprocessors("Tile")),
+        "scribble": list(m for m in global_state.get_filtered_preprocessors("Scribble")),
+        "depth": list(m for m in global_state.get_filtered_preprocessors("Depth")),
+    }
+else:
+    cn_module_choices = {
+        "inpaint": [
+            "inpaint_global_harmonious",
+            "inpaint_only",
+            "inpaint_only+lama",
+        ],
+        "lineart": [
+            "lineart_coarse",
+            "lineart_realistic",
+            "lineart_anime",
+            "lineart_anime_denoise",
+        ],
+        "openpose": ["openpose_full", "dw_openpose_full"],
+        "tile": ["tile_resample", "tile_colorfix", "tile_colorfix+sharp"],
+        "scribble": ["t2ia_sketch_pidi"],
+        "depth": ["depth_midas", "depth_hand_refiner"],
+    }
 
 
 class Widgets(SimpleNamespace):
