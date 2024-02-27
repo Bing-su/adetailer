@@ -13,13 +13,14 @@ from controlnet_ext import controlnet_exists, controlnet_forge, get_cn_models
 
 if controlnet_forge:
     from lib_controlnet import global_state
+
     cn_module_choices = {
-        "inpaint": list(m for m in global_state.get_filtered_preprocessors("Inpaint")),
-        "lineart": list(m for m in global_state.get_filtered_preprocessors("Lineart")),
-        "openpose": list(m for m in global_state.get_filtered_preprocessors("OpenPose")),
-        "tile": list(m for m in global_state.get_filtered_preprocessors("Tile")),
-        "scribble": list(m for m in global_state.get_filtered_preprocessors("Scribble")),
-        "depth": list(m for m in global_state.get_filtered_preprocessors("Depth")),
+        "inpaint": list(global_state.get_filtered_preprocessors("Inpaint")),
+        "lineart": list(global_state.get_filtered_preprocessors("Lineart")),
+        "openpose": list(global_state.get_filtered_preprocessors("OpenPose")),
+        "tile": list(global_state.get_filtered_preprocessors("Tile")),
+        "scribble": list(global_state.get_filtered_preprocessors("Scribble")),
+        "depth": list(global_state.get_filtered_preprocessors("Depth")),
     }
 else:
     cn_module_choices = {

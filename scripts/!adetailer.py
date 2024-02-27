@@ -667,7 +667,7 @@ class AfterDetailerScript(scripts.Script):
         else:
             p._ad_disabled = True
 
-    def _postprocess_image_inner(
+    def _postprocess_image_inner(  # noqa: C901
         self, p, pp, args: ADetailerArgs, *, n: int = 0
     ) -> bool:
         """

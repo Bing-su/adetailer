@@ -8,7 +8,7 @@ from textwrap import dedent
 
 from modules import extensions, sd_models, shared
 
-from .common import cn_model_regex
+from .common import cn_model_module, cn_model_regex
 
 try:
     from modules.paths import extensions_builtin_dir, extensions_dir, models_path
