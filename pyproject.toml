@@ -13,7 +13,7 @@ repository = "https://github.com/Bing-su/adetailer"
 profile = "black"
 known_first_party = ["launch", "modules"]
 
-[tool.ruff]
+[tool.ruff.lint]
 select = [
     "A",
     "B",
@@ -38,5 +38,5 @@ select = [
 ]
 ignore = ["B008", "B905", "E501", "F401", "UP007"]
 
-[tool.ruff.isort]
+[tool.ruff.lint.isort]
 known-first-party = ["launch", "modules"]
