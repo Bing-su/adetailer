@@ -58,8 +58,7 @@ class ControlNetExt:
             return
 
         image = np.asarray(p.init_images[0])
-        mask = np.zeros_like(image)
-        mask[:] = 255
+        mask = np.full_like(image, fill_value=255)
 
         cnet_image = {"image": image, "mask": mask}
 
