@@ -32,8 +32,6 @@ def add_forge_script_to_adetailer_run(p: StableDiffusionProcessing, script_title
     p.scripts.alwayson_scripts.append(script)
     p.script_args_value.extend(script_args)
 
-    print(f"Added script: {script.title()} with {len(script_args)} args, at positions {script.args_from}-{script.args_to} (of 0-{len(p.script_args_value)-1}.)", file=sys.stderr)
-
 class ControlNetExt:
     def __init__(self):
         self.cn_available = False
