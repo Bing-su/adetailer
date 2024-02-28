@@ -9,9 +9,9 @@ import gradio as gr
 
 from adetailer import AFTER_DETAILER, __version__
 from adetailer.args import ALL_ARGS, MASK_MERGE_INVERT
-from controlnet_ext import controlnet_exists, controlnet_forge, get_cn_models
+from controlnet_ext import controlnet_exists, controlnet_type, get_cn_models
 
-if controlnet_forge:
+if controlnet_type == "forge":
     from lib_controlnet import global_state
 
     cn_module_choices = {
