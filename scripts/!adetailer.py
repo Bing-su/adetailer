@@ -995,15 +995,15 @@ def on_before_ui():
 
 def add_api_endpoints(_: gr.Blocks, app: FastAPI):
     @app.get("/adetailer/v1/version")
-    def version():
+    async def version():
         return {"version": __version__}
 
     @app.get("/adetailer/v1/schema")
-    def schema():
+    async def schema():
         return ADetailerArgs.schema()
 
     @app.get("/adetailer/v1/ad_model")
-    def ad_model():
+    async def ad_model():
         return {"ad_model": list(model_mapping)}
 
 
