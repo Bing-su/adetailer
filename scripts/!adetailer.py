@@ -39,7 +39,7 @@ from adetailer.ui import WebuiInfo, adui, ordinal, suffix
 from controlnet_ext import (
     ControlNetExt,
     controlnet_exists,
-    controlnet_forge,
+    controlnet_type,
     get_cn_models,
 )
 from controlnet_ext.restore import (
@@ -522,7 +522,7 @@ class AfterDetailerScript(scripts.Script):
         i2i._ad_disabled = True
         i2i._ad_inner = True
 
-        if args.ad_controlnet_model != "Passthrough" and not controlnet_forge:
+        if args.ad_controlnet_model != "Passthrough" and controlnet_type != "forge":
             self.disable_controlnet_units(i2i.script_args)
 
         if args.ad_controlnet_model not in ["None", "Passthrough"]:

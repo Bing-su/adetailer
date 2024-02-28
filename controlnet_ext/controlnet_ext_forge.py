@@ -12,7 +12,7 @@ from modules.processing import StableDiffusionProcessing
 from .common import cn_model_regex
 
 controlnet_exists = True
-controlnet_forge = True
+controlnet_type = "forge"
 
 
 def find_script(p: StableDiffusionProcessing, script_title: str) -> scripts.Script:

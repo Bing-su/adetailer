@@ -23,7 +23,7 @@ except ImportError as e:
 ext_path = Path(extensions_dir)
 ext_builtin_path = Path(extensions_builtin_dir)
 controlnet_exists = False
-controlnet_forge = False
+controlnet_type = "standard"
 controlnet_path = None
 cn_base_path = ""
 
