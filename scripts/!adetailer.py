@@ -522,14 +522,13 @@ class AfterDetailerScript(scripts.Script):
         i2i._ad_disabled = True
         i2i._ad_inner = True
 
-        if not controlnet_forge:
-            if args.ad_controlnet_model != "Passthrough":
-                self.disable_controlnet_units(i2i.script_args)
+        if args.ad_controlnet_model != "Passthrough" and not controlnet_forge:
+            self.disable_controlnet_units(i2i.script_args)
 
-            if args.ad_controlnet_model not in ["None", "Passthrough"]:
-                self.update_controlnet_args(i2i, args)
-            elif args.ad_controlnet_model == "None":
-                i2i.control_net_enabled = False
+        if args.ad_controlnet_model not in ["None", "Passthrough"]:
+            self.update_controlnet_args(i2i, args)
+        elif args.ad_controlnet_model == "None":
+            i2i.control_net_enabled = False
 
         return i2i
 
@@ -667,7 +666,7 @@ class AfterDetailerScript(scripts.Script):
         else:
             p._ad_disabled = True
 
-    def _postprocess_image_inner(  # noqa: C901
+    def _postprocess_image_inner(
         self, p, pp, args: ADetailerArgs, *, n: int = 0
     ) -> bool:
         """
@@ -734,12 +733,6 @@ class AfterDetailerScript(scripts.Script):
 
             p2.seed = self.get_each_tap_seed(seed, j)
             p2.subseed = self.get_each_tap_seed(subseed, j)
-
-            if controlnet_forge:
-                if args.ad_controlnet_model not in "None":
-                    self.update_controlnet_args(p2, args)
-                else:
-                    p2.control_net_enabled = False
 
             try:
                 processed = process_images(p2)
