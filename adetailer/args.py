@@ -5,7 +5,6 @@ from dataclasses import dataclass
 from functools import cached_property, partial
 from typing import Any, Literal, NamedTuple, Optional
 
-import pydantic
 from pydantic import (
     BaseModel,
     Extra,
@@ -14,7 +13,6 @@ from pydantic import (
     PositiveInt,
     confloat,
     conint,
-    constr,
     validator,
 )
 
@@ -34,11 +32,11 @@ class Arg(NamedTuple):
 
 class ArgsList(UserList):
     @cached_property
-    def attrs(self) -> tuple[str]:
+    def attrs(self) -> tuple[str, ...]:
         return tuple(attr for attr, _ in self)
 
     @cached_property
-    def names(self) -> tuple[str]:
+    def names(self) -> tuple[str, ...]:
         return tuple(name for _, name in self)
 
 

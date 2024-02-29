@@ -36,7 +36,10 @@ select = [
     "UP",
     "W",
 ]
-ignore = ["B008", "B905", "E501", "F401", "UP007"]
+ignore = ["B008", "B905", "E501", "F401"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["launch", "modules"]
+
+[tool.ruff.lint.pyupgrade]
+keep-runtime-typing = true
