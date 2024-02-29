@@ -8,14 +8,14 @@ from PIL import Image
 @cache
 def _sample_image():
     url = "https://i.imgur.com/E5OVXvn.png"
-    resp = requests.get(url, stream=True)
+    resp = requests.get(url, stream=True, headers={"User-Agent": "Mozilla/5.0"})
     return Image.open(resp.raw)
 
 
 @cache
 def _sample_image2():
     url = "https://i.imgur.com/px5UT7T.png"
-    resp = requests.get(url, stream=True)
+    resp = requests.get(url, stream=True, headers={"User-Agent": "Mozilla/5.0"})
     return Image.open(resp.raw)
 
 
