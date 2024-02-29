@@ -971,7 +971,7 @@ def make_axis_on_xyz_grid():
             "[ADetailer] ControlNet model 1st",
             str,
             partial(set_value, field="ad_controlnet_model"),
-            choices=lambda: ["None", *get_cn_models()],
+            choices=lambda: ["None", "Passthrough", *get_cn_models()],
         ),
     ]
 
