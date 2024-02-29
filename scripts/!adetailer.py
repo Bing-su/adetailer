@@ -67,7 +67,7 @@ model_mapping = get_models(
     adetailer_dir, extra_dir=extra_models_dir, huggingface=not no_huggingface
 )
 txt2img_submit_button = img2img_submit_button = None
-SCRIPT_DEFAULT = "dynamic_prompting,dynamic_thresholding,wildcard_recursive,wildcards,lora_block_weight,negpip"
+SCRIPT_DEFAULT = "dynamic_prompting,dynamic_thresholding,wildcard_recursive,wildcards,lora_block_weight,negpip,soft_inpainting"
 
 if (
     not adetailer_dir.exists()
