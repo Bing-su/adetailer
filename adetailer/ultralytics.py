@@ -40,7 +40,7 @@ def ultralytics_predict(
 
 
 def apply_classes(model, model_path: str | Path, classes: str):
-    if not classes or not Path(model_path).stem.endswith("world"):
+    if not classes or "-world" not in Path(model_path).stem:
         return
     parsed = [c.strip() for c in classes.split(",")]
     model.set_classes(parsed)
