@@ -60,6 +60,7 @@ def get_models(
         )
     models.update(
         {
+            "yolov8x-world.pt": "yolov8x-world.pt",
             "mediapipe_face_full": None,
             "mediapipe_face_short": None,
             "mediapipe_face_mesh": None,

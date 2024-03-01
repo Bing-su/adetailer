@@ -695,6 +695,7 @@ class AfterDetailerScript(scripts.Script):
             predictor = ultralytics_predict
             ad_model = self.get_ad_model(args.ad_model)
             kwargs["device"] = self.ultralytics_device
+            kwargs["classes"] = args.ad_model_classes
 
         with change_torch_load():
             pred = predictor(ad_model, pp.image, args.ad_confidence, **kwargs)

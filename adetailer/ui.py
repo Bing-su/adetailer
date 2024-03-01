@@ -85,6 +85,14 @@ def on_generate_click(state: dict, *values: Any):
     return state
 
 
+def on_ad_model_update(model: str):
+    if "-world" in model:
+        return gr.update(
+            visible=True, placeholder="Comma separated class names to detect."
+        )
+    return gr.update(visible=False, placeholder="")
+
+
 def on_cn_model_update(cn_model_name: str):
     cn_model_name = cn_model_name.replace("inpaint_depth", "depth")
     for t in cn_module_choices:
@@ -175,6 +183,20 @@ def one_ui_group(n: int, is_img2img: bool, webui_info: WebuiInfo):
             visible=True,
             type="value",
             elem_id=eid("ad_model"),
+        )
+
+        w.ad_model_classes = gr.Textbox(
+            label="ADetailer model classes" + suffix(n),
+            value="",
+            visible=False,
+            elem_id=eid("ad_classes"),
+        )
+
+        w.ad_model_classes.change(
+            on_ad_model_update,
+            inputs=w.ad_model,
+            outputs=w.ad_model_classes,
+            queue=False,
         )
 
     with gr.Group():
