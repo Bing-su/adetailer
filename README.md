@@ -18,15 +18,16 @@ You can now install it directly from the Extensions tab.
 
 ![image](https://i.imgur.com/g6GdRBT.png)
 
-You **DON'T** need to download any model from huggingface.
+You **DON'T** need to download any base model from huggingface.
 
 ## Options
 
-| Model, Prompts                    |                                                                                   |                                                   |
-| --------------------------------- | --------------------------------------------------------------------------------- | ------------------------------------------------- |
-| ADetailer model                   | Determine what to detect.                                                         | `None` = disable                                  |
-| ADetailer prompt, negative prompt | Prompts and negative prompts to apply                                             | If left blank, it will use the same as the input. |
-| Skip img2img                      | Skip img2img. In practice, this works by changing the step count of img2img to 1. | img2img only                                      |
+| Model, Prompts                    |                                                                                    |                                                                                                                                                        |
+| --------------------------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| ADetailer model                   | Determine what to detect.                                                          | `None` = disable                                                                                                                                       |
+| ADetailer model classes           | Comma separated class names to detect. only available when using YOLO World models | If blank, use default values.<br/>default = [COCO 80 classes](https://github.com/ultralytics/ultralytics/blob/main/ultralytics/cfg/datasets/coco.yaml) |
+| ADetailer prompt, negative prompt | Prompts and negative prompts to apply                                              | If left blank, it will use the same as the input.                                                                                                      |
+| Skip img2img                      | Skip img2img. In practice, this works by changing the step count of img2img to 1.  | img2img only                                                                                                                                           |
 
 | Detection                            |                                                                                              |              |
 | ------------------------------------ | -------------------------------------------------------------------------------------------- | ------------ |
@@ -52,7 +53,9 @@ Each option corresponds to a corresponding option on the inpaint tab. Therefore,
 
 You can use the ControlNet extension if you have ControlNet installed and ControlNet models.
 
-Support `inpaint, scribble, lineart, openpose, tile` controlnet models. Once you choose a model, the preprocessor is set automatically. It works separately from the model set by the Controlnet extension.
+Support `inpaint, scribble, lineart, openpose, tile, depth` controlnet models. Once you choose a model, the preprocessor is set automatically. It works separately from the model set by the Controlnet extension.
+
+If you select `Passthrough`, the controlnet settings you set outside of ADetailer will be used.
 
 ## Advanced Options
 
@@ -80,11 +83,15 @@ API request example: [wiki/API](https://github.com/Bing-su/adetailer/wiki/API)
 | mediapipe_face_short  | realistic face        | -                             | -                             |
 | mediapipe_face_mesh   | realistic face        | -                             | -                             |
 
-The yolo models can be found on huggingface [Bingsu/adetailer](https://huggingface.co/Bingsu/adetailer).
+The YOLO models can be found on huggingface [Bingsu/adetailer](https://huggingface.co/Bingsu/adetailer).
+
+For a detailed description of the YOLO8 model, see: https://docs.ultralytics.com/models/yolov8/#overview
+
+YOLO World model: https://docs.ultralytics.com/models/yolo-world/
 
 ### Additional Model
 
-Put your [ultralytics](https://github.com/ultralytics/ultralytics) yolo model in `webui/models/adetailer`. The model name should end with `.pt` or `.pth`.
+Put your [ultralytics](https://github.com/ultralytics/ultralytics) yolo model in `webui/models/adetailer`. The model name should end with `.pt`.
 
 It must be a bbox detection or segment model and use all label.
 
