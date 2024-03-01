@@ -4,8 +4,6 @@ from PIL import Image
 
 from adetailer.ultralytics import ultralytics_predict
 
-repo_id = "Bingsu/adetailer"
-
 
 @pytest.mark.parametrize(
     "model_name",
@@ -22,13 +20,14 @@ repo_id = "Bingsu/adetailer"
     ],
 )
 def test_ultralytics_hf_models(sample_image: Image.Image, model_name: str):
-    model_path = hf_hub_download(repo_id, model_name)
+    model_path = hf_hub_download("Bingsu/adetailer", model_name)
     result = ultralytics_predict(model_path, sample_image)
     assert result.preview is not None
 
 
 def test_yolo_world_default(sample_image: Image.Image):
-    result = ultralytics_predict("yolov8x-world.pt", sample_image)
+    model_path = hf_hub_download("Bingsu/yolo-world-mirror", "yolov8x-world.pt")
+    result = ultralytics_predict(model_path, sample_image)
     assert result.preview is not None
 
 
@@ -44,5 +43,6 @@ def test_yolo_world_default(sample_image: Image.Image):
     ],
 )
 def test_yolo_world(sample_image2: Image.Image, klass: str):
-    result = ultralytics_predict("yolov8x-world.pt", sample_image2, classes=klass)
+    model_path = hf_hub_download("Bingsu/yolo-world-mirror", "yolov8x-world.pt")
+    result = ultralytics_predict(model_path, sample_image2, classes=klass)
     assert result.preview is not None
