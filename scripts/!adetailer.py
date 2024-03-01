@@ -36,7 +36,12 @@ from adetailer.mask import (
 )
 from adetailer.traceback import rich_traceback
 from adetailer.ui import WebuiInfo, adui, ordinal, suffix
-from controlnet_ext import ControlNetExt, controlnet_exists, get_cn_models
+from controlnet_ext import (
+    ControlNetExt,
+    controlnet_exists,
+    controlnet_type,
+    get_cn_models,
+)
 from controlnet_ext.restore import (
     CNHijackRestore,
     cn_allow_script_control,
@@ -62,7 +67,7 @@ model_mapping = get_models(
     adetailer_dir, extra_dir=extra_models_dir, huggingface=not no_huggingface
 )
 txt2img_submit_button = img2img_submit_button = None
-SCRIPT_DEFAULT = "dynamic_prompting,dynamic_thresholding,wildcard_recursive,wildcards,lora_block_weight,negpip"
+SCRIPT_DEFAULT = "dynamic_prompting,dynamic_thresholding,wildcard_recursive,wildcards,lora_block_weight,negpip,soft_inpainting"
 
 if (
     not adetailer_dir.exists()
@@ -517,7 +522,7 @@ class AfterDetailerScript(scripts.Script):
         i2i._ad_disabled = True
         i2i._ad_inner = True
 
-        if args.ad_controlnet_model != "Passthrough":
+        if args.ad_controlnet_model != "Passthrough" and controlnet_type != "forge":
             self.disable_controlnet_units(i2i.script_args)
 
         if args.ad_controlnet_model not in ["None", "Passthrough"]:
@@ -648,6 +653,14 @@ class AfterDetailerScript(scripts.Script):
         if self.is_ad_enabled(*args_):
             arg_list = self.get_args(p, *args_)
             self.check_skip_img2img(p, *args_)
+
+            if hasattr(p, "_ad_xyz_prompt_sr"):
+                replaced_positive_prompt, replaced_negative_prompt = self.get_prompt(
+                    p, arg_list[0]
+                )
+                arg_list[0].ad_prompt = replaced_positive_prompt[0]
+                arg_list[0].ad_negative_prompt = replaced_negative_prompt[0]
+
             extra_params = self.extra_params(arg_list)
             p.extra_generation_params.update(extra_params)
         else:
@@ -682,6 +695,7 @@ class AfterDetailerScript(scripts.Script):
             predictor = ultralytics_predict
             ad_model = self.get_ad_model(args.ad_model)
             kwargs["device"] = self.ultralytics_device
+            kwargs["classes"] = args.ad_model_classes
 
         with change_torch_load():
             pred = predictor(ad_model, pp.image, args.ad_confidence, **kwargs)
@@ -958,7 +972,7 @@ def make_axis_on_xyz_grid():
             "[ADetailer] ControlNet model 1st",
             str,
             partial(set_value, field="ad_controlnet_model"),
-            choices=lambda: ["None", *get_cn_models()],
+            choices=lambda: ["None", "Passthrough", *get_cn_models()],
         ),
     ]
 
@@ -982,15 +996,15 @@ def on_before_ui():
 
 def add_api_endpoints(_: gr.Blocks, app: FastAPI):
     @app.get("/adetailer/v1/version")
-    def version():
+    async def version():
         return {"version": __version__}
 
     @app.get("/adetailer/v1/schema")
-    def schema():
+    async def schema():
         return ADetailerArgs.schema()
 
     @app.get("/adetailer/v1/ad_model")
-    def ad_model():
+    async def ad_model():
         return {"ad_model": list(model_mapping)}
 
 

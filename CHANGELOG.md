@@ -1,5 +1,16 @@
 # Changelog
 
+## 2024-03-01
+
+- v24.3.0
+- YOLO World 모델 추가: 가장 큰 yolov8x-world.pt 모델만 기본적으로 선택할 수 있게 함.
+- lllyasviel/stable-diffusion-webui-forge에서 컨트롤넷을 사용가능하게 함 (PR #517)
+- 기본 스크립트 목록에 soft_inpainting 추가 (https://github.com/AUTOMATIC1111/stable-diffusion-webui/pull/14208)
+  - 기존에 설치한 사람에게 소급적용되지는 않음
+
+- 감지모델에 대한 간단한 pytest 추가함
+- xyz grid 컨트롤넷 모델 옵션에 `Passthrough` 추가함
+
 ## 2024-01-23
 
 - v24.1.2

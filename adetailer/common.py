@@ -3,13 +3,13 @@ from __future__ import annotations
 from collections import OrderedDict
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional, Union
+from typing import Optional
 
 from huggingface_hub import hf_hub_download
 from PIL import Image, ImageDraw
 from rich import print
 
-repo_id = "Bingsu/adetailer"
+REPO_ID = "Bingsu/adetailer"
 _download_failed = False
 
 
@@ -20,7 +20,7 @@ class PredictOutput:
     preview: Optional[Image.Image] = None
 
 
-def hf_download(file: str):
+def hf_download(file: str, repo_id: str = REPO_ID) -> str | None:
     global _download_failed
 
     if _download_failed:
@@ -56,6 +56,9 @@ def get_models(
                 "hand_yolov8n.pt": hf_download("hand_yolov8n.pt"),
                 "person_yolov8n-seg.pt": hf_download("person_yolov8n-seg.pt"),
                 "person_yolov8s-seg.pt": hf_download("person_yolov8s-seg.pt"),
+                "yolov8x-world.pt": hf_download(
+                    "yolov8x-world.pt", repo_id="Bingsu/yolo-world-mirror"
+                ),
             }
         )
     models.update(

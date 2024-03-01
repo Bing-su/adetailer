@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 import importlib
-import re
 import sys
 from functools import lru_cache
 from pathlib import Path
 from textwrap import dedent
 
 from modules import extensions, sd_models, shared
+
+from .common import cn_model_module, cn_model_regex
 
 try:
     from modules.paths import extensions_builtin_dir, extensions_dir, models_path
@@ -22,6 +23,7 @@ except ImportError as e:
 ext_path = Path(extensions_dir)
 ext_builtin_path = Path(extensions_builtin_dir)
 controlnet_exists = False
+controlnet_type = "standard"
 controlnet_path = None
 cn_base_path = ""
 
@@ -41,16 +43,6 @@ if controlnet_path is not None:
         target_path = str(sd_webui_controlnet_path.parent)
         if target_path not in sys.path:
             sys.path.append(target_path)
-
-cn_model_module = {
-    "inpaint": "inpaint_global_harmonious",
-    "scribble": "t2ia_sketch_pidi",
-    "lineart": "lineart_coarse",
-    "openpose": "openpose_full",
-    "tile": "tile_resample",
-    "depth": "depth_midas",
-}
-cn_model_regex = re.compile("|".join(cn_model_module.keys()))
 
 
 class ControlNetExt:

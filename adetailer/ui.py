@@ -9,25 +9,37 @@ import gradio as gr
 
 from adetailer import AFTER_DETAILER, __version__
 from adetailer.args import ALL_ARGS, MASK_MERGE_INVERT
-from controlnet_ext import controlnet_exists, get_cn_models
+from controlnet_ext import controlnet_exists, controlnet_type, get_cn_models
 
-cn_module_choices = {
-    "inpaint": [
-        "inpaint_global_harmonious",
-        "inpaint_only",
-        "inpaint_only+lama",
-    ],
-    "lineart": [
-        "lineart_coarse",
-        "lineart_realistic",
-        "lineart_anime",
-        "lineart_anime_denoise",
-    ],
-    "openpose": ["openpose_full", "dw_openpose_full"],
-    "tile": ["tile_resample", "tile_colorfix", "tile_colorfix+sharp"],
-    "scribble": ["t2ia_sketch_pidi"],
-    "depth": ["depth_midas", "depth_hand_refiner"],
-}
+if controlnet_type == "forge":
+    from lib_controlnet import global_state
+
+    cn_module_choices = {
+        "inpaint": list(global_state.get_filtered_preprocessors("Inpaint")),
+        "lineart": list(global_state.get_filtered_preprocessors("Lineart")),
+        "openpose": list(global_state.get_filtered_preprocessors("OpenPose")),
+        "tile": list(global_state.get_filtered_preprocessors("Tile")),
+        "scribble": list(global_state.get_filtered_preprocessors("Scribble")),
+        "depth": list(global_state.get_filtered_preprocessors("Depth")),
+    }
+else:
+    cn_module_choices = {
+        "inpaint": [
+            "inpaint_global_harmonious",
+            "inpaint_only",
+            "inpaint_only+lama",
+        ],
+        "lineart": [
+            "lineart_coarse",
+            "lineart_realistic",
+            "lineart_anime",
+            "lineart_anime_denoise",
+        ],
+        "openpose": ["openpose_full", "dw_openpose_full"],
+        "tile": ["tile_resample", "tile_colorfix", "tile_colorfix+sharp"],
+        "scribble": ["t2ia_sketch_pidi"],
+        "depth": ["depth_midas", "depth_hand_refiner"],
+    }
 
 
 class Widgets(SimpleNamespace):
@@ -71,6 +83,15 @@ def on_generate_click(state: dict, *values: Any):
         state[attr] = value
     state["is_api"] = ()
     return state
+
+
+def on_ad_model_update(model: str):
+    if "-world" in model:
+        return gr.update(
+            visible=True,
+            placeholder="Comma separated class names to detect, ex: 'person,cat'. default: COCO 80 classes",
+        )
+    return gr.update(visible=False, placeholder="")
 
 
 def on_cn_model_update(cn_model_name: str):
@@ -149,21 +170,39 @@ def one_ui_group(n: int, is_img2img: bool, webui_info: WebuiInfo):
     w = Widgets()
     eid = partial(elem_id, n=n, is_img2img=is_img2img)
 
-    with gr.Row():
-        model_choices = (
-            [*webui_info.ad_model_list, "None"]
-            if n == 0
-            else ["None", *webui_info.ad_model_list]
-        )
+    with gr.Group():
+        with gr.Row():
+            model_choices = (
+                [*webui_info.ad_model_list, "None"]
+                if n == 0
+                else ["None", *webui_info.ad_model_list]
+            )
 
-        w.ad_model = gr.Dropdown(
-            label="ADetailer model" + suffix(n),
-            choices=model_choices,
-            value=model_choices[0],
-            visible=True,
-            type="value",
-            elem_id=eid("ad_model"),
-        )
+            w.ad_model = gr.Dropdown(
+                label="ADetailer model" + suffix(n),
+                choices=model_choices,
+                value=model_choices[0],
+                visible=True,
+                type="value",
+                elem_id=eid("ad_model"),
+            )
+
+        with gr.Row():
+            w.ad_model_classes = gr.Textbox(
+                label="ADetailer model classes" + suffix(n),
+                value="",
+                visible=False,
+                elem_id=eid("ad_classes"),
+            )
+
+            w.ad_model.change(
+                on_ad_model_update,
+                inputs=w.ad_model,
+                outputs=w.ad_model_classes,
+                queue=False,
+            )
+
+    gr.HTML("<br>")
 
     with gr.Group():
         with gr.Row(elem_id=eid("ad_toprow_prompt")):

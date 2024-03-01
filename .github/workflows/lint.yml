@@ -1,0 +1,35 @@
+name: Lint
+
+on:
+  pull_request:
+    paths:
+      - "**.py"
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    if: github.repository == 'Bing-su/adetailer' || github.repository == ''
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install python packages
+        run: pip install black ruff pre-commit-hooks
+
+      - name: Run pre-commit-hooks
+        run: |
+          check-ast
+          trailing-whitespace-fixer --markdown-linebreak-ext=md
+          end-of-file-fixer
+          mixed-line-ending
+
+      - name: Run black
+        run: black --check .
+
+      - name: Run ruff
+        run: ruff check .
