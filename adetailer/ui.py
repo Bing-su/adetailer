@@ -88,7 +88,8 @@ def on_generate_click(state: dict, *values: Any):
 def on_ad_model_update(model: str):
     if "-world" in model:
         return gr.update(
-            visible=True, placeholder="Comma separated class names to detect."
+            visible=True,
+            placeholder="Comma separated class names to detect, ex: 'person,cat'. default: COCO 80 classes",
         )
     return gr.update(visible=False, placeholder="")
 
@@ -169,35 +170,39 @@ def one_ui_group(n: int, is_img2img: bool, webui_info: WebuiInfo):
     w = Widgets()
     eid = partial(elem_id, n=n, is_img2img=is_img2img)
 
-    with gr.Row():
-        model_choices = (
-            [*webui_info.ad_model_list, "None"]
-            if n == 0
-            else ["None", *webui_info.ad_model_list]
-        )
+    with gr.Group():
+        with gr.Row():
+            model_choices = (
+                [*webui_info.ad_model_list, "None"]
+                if n == 0
+                else ["None", *webui_info.ad_model_list]
+            )
 
-        w.ad_model = gr.Dropdown(
-            label="ADetailer model" + suffix(n),
-            choices=model_choices,
-            value=model_choices[0],
-            visible=True,
-            type="value",
-            elem_id=eid("ad_model"),
-        )
+            w.ad_model = gr.Dropdown(
+                label="ADetailer model" + suffix(n),
+                choices=model_choices,
+                value=model_choices[0],
+                visible=True,
+                type="value",
+                elem_id=eid("ad_model"),
+            )
 
-        w.ad_model_classes = gr.Textbox(
-            label="ADetailer model classes" + suffix(n),
-            value="",
-            visible=False,
-            elem_id=eid("ad_classes"),
-        )
+        with gr.Row():
+            w.ad_model_classes = gr.Textbox(
+                label="ADetailer model classes" + suffix(n),
+                value="",
+                visible=False,
+                elem_id=eid("ad_classes"),
+            )
 
-        w.ad_model_classes.change(
-            on_ad_model_update,
-            inputs=w.ad_model,
-            outputs=w.ad_model_classes,
-            queue=False,
-        )
+            w.ad_model.change(
+                on_ad_model_update,
+                inputs=w.ad_model,
+                outputs=w.ad_model_classes,
+                queue=False,
+            )
+
+    gr.HTML("<br>")
 
     with gr.Group():
         with gr.Row(elem_id=eid("ad_toprow_prompt")):
