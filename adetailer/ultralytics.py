@@ -47,8 +47,9 @@ def ultralytics_predict(
 def apply_classes(model: YOLO | YOLOWorld, model_path: str | Path, classes: str):
     if not classes or "-world" not in Path(model_path).stem:
         return
-    parsed = [c.strip() for c in classes.split(",")]
-    model.set_classes(parsed)
+    parsed = [c.strip() for c in classes.split(",") if c.strip()]
+    if parsed:
+        model.set_classes(parsed)
 
 
 def mask_to_pil(masks: torch.Tensor, shape: tuple[int, int]) -> list[Image.Image]:
