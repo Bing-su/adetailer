@@ -23,23 +23,28 @@ def ultralytics_predict(
     retina: bool = False,
     device: str = "",
     classes: str = "",
-
 ) -> PredictOutput:
     from ultralytics import YOLO
+
     if model_path.endswith("-hd.pt"):
         detsize = 1024
         retina = True
-        print("Adetailer: Using HD detection, pred size is 1024 and retina masks are used.")
+        print(
+            "Adetailer: Using HD detection, pred size is 1024 and retina masks are used."
+        )
         print("Please be aware of high VRAM usage.")
     else:
-        print("Adetailer: Using normal detection, pred size is 640 and retina masks are not used.")
+        print(
+            "Adetailer: Using normal detection, pred size is 640 and retina masks are not used."
+        )
 
     model = YOLO(model_path)
-   
+
     apply_classes(model, model_path, classes)
 
-
-    pred = model(image, conf=confidence, imgsz=detsize, device=device, retina_masks=retina)
+    pred = model(
+        image, conf=confidence, imgsz=detsize, device=device, retina_masks=retina
+    )
 
     bboxes = pred[0].boxes.xyxy.cpu().numpy()
     if bboxes.size == 0:
