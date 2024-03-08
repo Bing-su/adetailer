@@ -31,6 +31,8 @@ from adetailer.common import PredictOutput
 from adetailer.mask import (
     filter_by_ratio,
     filter_k_largest,
+    has_intersection,
+    is_all_black,
     mask_preprocess,
     sort_bboxes,
 )
@@ -637,16 +639,24 @@ class AfterDetailerScript(scripts.Script):
 
     @staticmethod
     def is_img2img_inpaint(p) -> bool:
-        return hasattr(p, "image_mask") and bool(p.image_mask)
+        return hasattr(p, "image_mask") and p.image_mask is not None
+
+    @staticmethod
+    def inpaint_mask_filter(
+        img2img_mask: Image.Image, ad_mask: list[Image.Image]
+    ) -> list[Image.Image]:
+        return [mask for mask in ad_mask if has_intersection(img2img_mask, mask)]
 
     @rich_traceback
     def process(self, p, *args_):
         if getattr(p, "_ad_disabled", False):
             return
 
-        if self.is_img2img_inpaint(p):
+        if self.is_img2img_inpaint(p) and is_all_black(p.image_mask):
             p._ad_disabled = True
-            msg = "[-] ADetailer: img2img inpainting detected. adetailer disabled."
+            msg = (
+                "[-] ADetailer: img2img inpainting with no mask -- adetailer disabled."
+            )
             print(msg)
             return
 
@@ -701,6 +711,8 @@ class AfterDetailerScript(scripts.Script):
             pred = predictor(ad_model, pp.image, args.ad_confidence, **kwargs)
 
         masks = self.pred_preprocessing(pred, args)
+        if self.is_img2img_inpaint(p):
+            masks = self.inpaint_mask_filter(p.image_mask, masks)
         shared.state.assign_current_image(pred.preview)
 
         if not masks:
