@@ -2,6 +2,10 @@ repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.5.0
     hooks:
+      - id: check-added-large-files
+        args: [--maxkb=100]
+      - id: check-merge-conflict
+      - id: check-case-conflict
       - id: check-ast
       - id: trailing-whitespace
         args: [--markdown-linebreak-ext=md]
@@ -9,7 +13,7 @@ repos:
       - id: mixed-line-ending
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.2.2
+    rev: v0.3.1
     hooks:
       - id: ruff
         args: [--fix, --exit-non-zero-on-fix]
