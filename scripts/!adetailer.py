@@ -567,19 +567,22 @@ class AfterDetailerScript(scripts.Script):
         sortby_idx = BBOX_SORTBY.index(sortby)
         return sort_bboxes(pred, sortby_idx)
 
-    def pred_preprocessing(self, pred: PredictOutput, args: ADetailerArgs):
+    def pred_preprocessing(self, p, pred: PredictOutput, args: ADetailerArgs):
         pred = filter_by_ratio(
             pred, low=args.ad_mask_min_ratio, high=args.ad_mask_max_ratio
         )
         pred = filter_k_largest(pred, k=args.ad_mask_k_largest)
         pred = self.sort_bboxes(pred)
-        return mask_preprocess(
+        masks = mask_preprocess(
             pred.masks,
             kernel=args.ad_dilate_erode,
             x_offset=args.ad_x_offset,
             y_offset=args.ad_y_offset,
             merge_invert=args.ad_mask_merge_invert,
         )
+        if self.is_img2img_inpaint(p):
+            masks = self.inpaint_mask_filter(p.image_mask, masks)
+        return masks
 
     @staticmethod
     def ensure_rgb_image(image: Any):
@@ -710,9 +713,7 @@ class AfterDetailerScript(scripts.Script):
         with change_torch_load():
             pred = predictor(ad_model, pp.image, args.ad_confidence, **kwargs)
 
-        masks = self.pred_preprocessing(pred, args)
-        if self.is_img2img_inpaint(p):
-            masks = self.inpaint_mask_filter(p.image_mask, masks)
+        masks = self.pred_preprocessing(p, pred, args)
         shared.state.assign_current_image(pred.preview)
 
         if not masks:
