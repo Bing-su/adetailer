@@ -39,14 +39,12 @@ from adetailer.mask import (
 from adetailer.traceback import rich_traceback
 from adetailer.ui import WebuiInfo, adui, ordinal, suffix
 from controlnet_ext import (
+    CNHijackRestore,
     ControlNetExt,
+    cn_allow_script_control,
     controlnet_exists,
     controlnet_type,
     get_cn_models,
-)
-from controlnet_ext.restore import (
-    CNHijackRestore,
-    cn_allow_script_control,
 )
 from modules import images, paths, safe, script_callbacks, scripts, shared
 from modules.devices import NansException
