@@ -102,3 +102,11 @@ ADetailer works in three simple steps.
 1. Create an image.
 2. Detect object with a detection model and create a mask image.
 3. Inpaint using the image from 1 and the mask from 2.
+
+## Development
+
+ADetailer is developed and tested using the stable-diffusion 1.5 model, for the [AUTOMATIC1111/stable-diffusion-webui](https://github.com/AUTOMATIC1111/stable-diffusion-webui) repository only.
+
+## License
+
+ADetailer is a derivative work that uses two AGPL-licensed works (stable-diffusion-webui, ultralytics) and is therefore distributed under the AGPL license.

@@ -14,9 +14,8 @@ from typing import TYPE_CHECKING, Any, NamedTuple
 
 import gradio as gr
 import torch
-from PIL import Image
+from PIL import Image, ImageChops
 from rich import print
-from torchvision.transforms.functional import to_pil_image
 
 import modules
 from adetailer import (
@@ -27,24 +26,24 @@ from adetailer import (
     ultralytics_predict,
 )
 from adetailer.args import ALL_ARGS, BBOX_SORTBY, ADetailerArgs, SkipImg2ImgOrig
-from adetailer.common import PredictOutput
+from adetailer.common import PredictOutput, ensure_pil_image
 from adetailer.mask import (
     filter_by_ratio,
     filter_k_largest,
+    has_intersection,
+    is_all_black,
     mask_preprocess,
     sort_bboxes,
 )
 from adetailer.traceback import rich_traceback
 from adetailer.ui import WebuiInfo, adui, ordinal, suffix
 from controlnet_ext import (
+    CNHijackRestore,
     ControlNetExt,
+    cn_allow_script_control,
     controlnet_exists,
     controlnet_type,
     get_cn_models,
-)
-from controlnet_ext.restore import (
-    CNHijackRestore,
-    cn_allow_script_control,
 )
 from modules import images, paths, safe, script_callbacks, scripts, shared
 from modules.devices import NansException
@@ -565,27 +564,24 @@ class AfterDetailerScript(scripts.Script):
         sortby_idx = BBOX_SORTBY.index(sortby)
         return sort_bboxes(pred, sortby_idx)
 
-    def pred_preprocessing(self, pred: PredictOutput, args: ADetailerArgs):
+    def pred_preprocessing(self, p, pred: PredictOutput, args: ADetailerArgs):
         pred = filter_by_ratio(
             pred, low=args.ad_mask_min_ratio, high=args.ad_mask_max_ratio
         )
         pred = filter_k_largest(pred, k=args.ad_mask_k_largest)
         pred = self.sort_bboxes(pred)
-        return mask_preprocess(
+        masks = mask_preprocess(
             pred.masks,
             kernel=args.ad_dilate_erode,
             x_offset=args.ad_x_offset,
             y_offset=args.ad_y_offset,
             merge_invert=args.ad_mask_merge_invert,
         )
-
-    @staticmethod
-    def ensure_rgb_image(image: Any):
-        if not isinstance(image, Image.Image):
-            image = to_pil_image(image)
-        if image.mode != "RGB":
-            image = image.convert("RGB")
-        return image
+        if self.is_img2img_inpaint(p) and not self.is_inpaint_only_masked(p):
+            invert = p.inpainting_mask_invert
+            image_mask = ensure_pil_image(p.image_mask, mode="L")
+            masks = self.inpaint_mask_filter(image_mask, masks, invert)
+        return masks
 
     @staticmethod
     def i2i_prompts_replace(
@@ -637,16 +633,30 @@ class AfterDetailerScript(scripts.Script):
 
     @staticmethod
     def is_img2img_inpaint(p) -> bool:
-        return hasattr(p, "image_mask") and bool(p.image_mask)
+        return hasattr(p, "image_mask") and p.image_mask is not None
+
+    @staticmethod
+    def is_inpaint_only_masked(p) -> bool:
+        return hasattr(p, "inpaint_full_res") and p.inpaint_full_res
+
+    @staticmethod
+    def inpaint_mask_filter(
+        img2img_mask: Image.Image, ad_mask: list[Image.Image], invert: int = 0
+    ) -> list[Image.Image]:
+        if invert:
+            img2img_mask = ImageChops.invert(img2img_mask)
+        return [mask for mask in ad_mask if has_intersection(img2img_mask, mask)]
 
     @rich_traceback
     def process(self, p, *args_):
         if getattr(p, "_ad_disabled", False):
             return
 
-        if self.is_img2img_inpaint(p):
+        if self.is_img2img_inpaint(p) and is_all_black(p.image_mask):
             p._ad_disabled = True
-            msg = "[-] ADetailer: img2img inpainting detected. adetailer disabled."
+            msg = (
+                "[-] ADetailer: img2img inpainting with no mask -- adetailer disabled."
+            )
             print(msg)
             return
 
@@ -700,7 +710,7 @@ class AfterDetailerScript(scripts.Script):
         with change_torch_load():
             pred = predictor(ad_model, pp.image, args.ad_confidence, **kwargs)
 
-        masks = self.pred_preprocessing(pred, args)
+        masks = self.pred_preprocessing(p, pred, args)
         shared.state.assign_current_image(pred.preview)
 
         if not masks:
@@ -726,7 +736,7 @@ class AfterDetailerScript(scripts.Script):
         p2 = copy(i2i)
         for j in range(steps):
             p2.image_mask = masks[j]
-            p2.init_images[0] = self.ensure_rgb_image(p2.init_images[0])
+            p2.init_images[0] = ensure_pil_image(p2.init_images[0], "RGB")
             self.i2i_prompts_replace(p2, ad_prompts, ad_negatives, j)
 
             if re.match(r"^\s*\[SKIP\]\s*$", p2.prompt):
@@ -760,7 +770,7 @@ class AfterDetailerScript(scripts.Script):
             return
 
         pp.image = self.get_i2i_init_image(p, pp)
-        pp.image = self.ensure_rgb_image(pp.image)
+        pp.image = ensure_pil_image(pp.image, "RGB")
         init_image = copy(pp.image)
         arg_list = self.get_args(p, *args_)
         params_txt_content = Path(paths.data_path, "params.txt").read_text("utf-8")

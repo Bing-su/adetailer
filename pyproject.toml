@@ -2,16 +2,40 @@
 name = "adetailer"
 description = "An object detection and auto-mask extension for stable diffusion webui."
 authors = [{ name = "dowon", email = "ks2515@naver.com" }]
-requires-python = ">=3.8,<3.12"
+requires-python = ">=3.8,<3.13"
 readme = "README.md"
 license = { text = "AGPL-3.0" }
+dependencies = [
+    "ultralytics>=8.1",
+    "mediapipe>=10",
+    "pydantic<3",
+    "rich>=13",
+    "huggingface_hub",
+]
+keywords = [
+    "stable-diffusion",
+    "stable-diffusion-webui",
+    "adetailer",
+    "ultralytics",
+]
+dynamic = ["version"]
 
 [project.urls]
 repository = "https://github.com/Bing-su/adetailer"
 
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+path = "adetailer/__version__.py"
+
 [tool.isort]
 profile = "black"
 known_first_party = ["launch", "modules"]
+
+[tool.ruff]
+target-version = "py38"
 
 [tool.ruff.lint]
 select = [

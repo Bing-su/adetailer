@@ -3,13 +3,14 @@ from __future__ import annotations
 from enum import IntEnum
 from functools import partial, reduce
 from math import dist
+from typing import Any
 
 import cv2
 import numpy as np
 from PIL import Image, ImageChops
 
 from adetailer.args import MASK_MERGE_INVERT
-from adetailer.common import PredictOutput
+from adetailer.common import PredictOutput, ensure_pil_image
 
 
 class SortBy(IntEnum):
@@ -83,12 +84,19 @@ def offset(img: Image.Image, x: int = 0, y: int = 0) -> Image.Image:
     return ImageChops.offset(img, x, -y)
 
 
-def is_all_black(img: Image.Image) -> bool:
-    arr = np.array(img)
-    return cv2.countNonZero(arr) == 0
+def is_all_black(img: Image.Image | np.ndarray) -> bool:
+    if isinstance(img, Image.Image):
+        img = np.array(img)
+    return cv2.countNonZero(img) == 0
 
 
-def bbox_area(bbox: list[float]):
+def has_intersection(im1: Any, im2: Any) -> bool:
+    arr1 = np.array(ensure_pil_image(im1, "L"))
+    arr2 = np.array(ensure_pil_image(im2, "L"))
+    return not is_all_black(cv2.bitwise_and(arr1, arr2))
+
+
+def bbox_area(bbox: list[float]) -> float:
     return (bbox[2] - bbox[0]) * (bbox[3] - bbox[1])
 
 

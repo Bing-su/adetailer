@@ -26,7 +26,7 @@ def test_ultralytics_hf_models(sample_image: Image.Image, model_name: str):
 
 
 def test_yolo_world_default(sample_image: Image.Image):
-    model_path = hf_hub_download("Bingsu/yolo-world-mirror", "yolov8x-world.pt")
+    model_path = hf_hub_download("Bingsu/yolo-world-mirror", "yolov8x-worldv2.pt")
     result = ultralytics_predict(model_path, sample_image)
     assert result.preview is not None
 
@@ -43,6 +43,6 @@ def test_yolo_world_default(sample_image: Image.Image):
     ],
 )
 def test_yolo_world(sample_image2: Image.Image, klass: str):
-    model_path = hf_hub_download("Bingsu/yolo-world-mirror", "yolov8x-world.pt")
+    model_path = hf_hub_download("Bingsu/yolo-world-mirror", "yolov8x-worldv2.pt")
     result = ultralytics_predict(model_path, sample_image2, classes=klass)
     assert result.preview is not None

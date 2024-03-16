@@ -1,5 +1,11 @@
 # Changelog
 
+## 2024-03-16
+
+- YOLO World v2, YOLO9 지원가능한 버전으로 ultralytics 업데이트
+- inpaint full res인 경우 인페인트 모드에서 동작하게 변경
+- inpaint full res가 아닌 경우, 사용자가 입력한 마스크와 교차점이 있는 마스크만 선택하여 사용함
+
 ## 2024-03-01
 
 - v24.3.0
