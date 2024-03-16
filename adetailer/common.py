@@ -57,8 +57,8 @@ def get_models(
                 "hand_yolov8n.pt": hf_download("hand_yolov8n.pt"),
                 "person_yolov8n-seg.pt": hf_download("person_yolov8n-seg.pt"),
                 "person_yolov8s-seg.pt": hf_download("person_yolov8s-seg.pt"),
-                "yolov8x-world.pt": hf_download(
-                    "yolov8x-world.pt", repo_id="Bingsu/yolo-world-mirror"
+                "yolov8x-worldv2.pt": hf_download(
+                    "yolov8x-worldv2.pt", repo_id="Bingsu/yolo-world-mirror"
                 ),
             }
         )
