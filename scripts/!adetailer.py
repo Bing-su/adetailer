@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING, Any, NamedTuple
 
 import gradio as gr
 import torch
-from PIL import Image
+from PIL import Image, ImageChops
 from rich import print
 
 import modules
@@ -578,7 +578,9 @@ class AfterDetailerScript(scripts.Script):
             merge_invert=args.ad_mask_merge_invert,
         )
         if self.is_img2img_inpaint(p) and not self.is_inpaint_only_masked(p):
-            masks = self.inpaint_mask_filter(p.image_mask, masks)
+            invert = p.inpainting_mask_invert
+            image_mask = ensure_pil_image(p.image_mask, mode="L")
+            masks = self.inpaint_mask_filter(image_mask, masks, invert)
         return masks
 
     @staticmethod
@@ -639,8 +641,10 @@ class AfterDetailerScript(scripts.Script):
 
     @staticmethod
     def inpaint_mask_filter(
-        img2img_mask: Image.Image, ad_mask: list[Image.Image]
+        img2img_mask: Image.Image, ad_mask: list[Image.Image], invert: int = 0
     ) -> list[Image.Image]:
+        if invert:
+            img2img_mask = ImageChops.invert(img2img_mask)
         return [mask for mask in ad_mask if has_intersection(img2img_mask, mask)]
 
     @rich_traceback
