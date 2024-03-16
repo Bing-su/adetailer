@@ -13,12 +13,7 @@ except ImportError:
         get_cn_models,
     )
 
-from .restore import cn_allow_script_control
-
-if controlnet_type == "forge":
-    from contextlib import nullcontext as CNHijackRestore  # noqa: N812
-else:
-    from .restore import CNHijackRestore
+from .restore import CNHijackRestore, cn_allow_script_control
 
 __all__ = [
     "ControlNetExt",
