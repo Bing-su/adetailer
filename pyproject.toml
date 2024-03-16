@@ -8,7 +8,7 @@ license = { text = "AGPL-3.0" }
 dependencies = [
     "ultralytics>=8.1",
     "mediapipe>=10",
-    "pydantic<2",
+    "pydantic<3",
     "rich>=13",
     "huggingface_hub",
 ]
