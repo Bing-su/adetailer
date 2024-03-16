@@ -3,11 +3,12 @@ from __future__ import annotations
 from collections import OrderedDict
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 from huggingface_hub import hf_hub_download
 from PIL import Image, ImageDraw
 from rich import print
+from torchvision.transforms.functional import to_pil_image
 
 REPO_ID = "Bingsu/adetailer"
 _download_failed = False
@@ -133,3 +134,11 @@ def create_bbox_from_mask(
         if bbox is not None:
             bboxes.append(list(bbox))
     return bboxes
+
+
+def ensure_pil_image(image: Any, mode: str = "RGB") -> Image.Image:
+    if not isinstance(image, Image.Image):
+        image = to_pil_image(image)
+    if image.mode != mode:
+        image = image.convert(mode)
+    return image

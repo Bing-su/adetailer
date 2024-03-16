@@ -3,13 +3,14 @@ from __future__ import annotations
 from enum import IntEnum
 from functools import partial, reduce
 from math import dist
+from typing import Any
 
 import cv2
 import numpy as np
 from PIL import Image, ImageChops
 
 from adetailer.args import MASK_MERGE_INVERT
-from adetailer.common import PredictOutput
+from adetailer.common import PredictOutput, ensure_pil_image
 
 
 class SortBy(IntEnum):
@@ -89,12 +90,9 @@ def is_all_black(img: Image.Image | np.ndarray) -> bool:
     return cv2.countNonZero(img) == 0
 
 
-def has_intersection(im1: Image.Image, im2: Image.Image) -> bool:
-    if im1.mode != "L" or im2.mode != "L":
-        msg = "Both images must be grayscale"
-        raise ValueError(msg)
-    arr1 = np.array(im1)
-    arr2 = np.array(im2)
+def has_intersection(im1: Any, im2: Any) -> bool:
+    arr1 = np.array(ensure_pil_image(im1, "L"))
+    arr2 = np.array(ensure_pil_image(im2, "L"))
     return not is_all_black(cv2.bitwise_and(arr1, arr2))
 
 
