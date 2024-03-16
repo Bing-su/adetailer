@@ -577,7 +577,7 @@ class AfterDetailerScript(scripts.Script):
             y_offset=args.ad_y_offset,
             merge_invert=args.ad_mask_merge_invert,
         )
-        if self.is_img2img_inpaint(p):
+        if self.is_img2img_inpaint(p) and not self.is_inpaint_only_masked(p):
             masks = self.inpaint_mask_filter(p.image_mask, masks)
         return masks
 
@@ -632,6 +632,10 @@ class AfterDetailerScript(scripts.Script):
     @staticmethod
     def is_img2img_inpaint(p) -> bool:
         return hasattr(p, "image_mask") and p.image_mask is not None
+
+    @staticmethod
+    def is_inpaint_only_masked(p) -> bool:
+        return hasattr(p, "inpaint_full_res") and p.inpaint_full_res
 
     @staticmethod
     def inpaint_mask_filter(
