@@ -1,4 +1,6 @@
+import cv2
 import numpy as np
+import pytest
 from PIL import Image, ImageDraw
 
 from adetailer.mask import dilate_erode, has_intersection, is_all_black, offset
@@ -76,6 +78,24 @@ def test_is_all_black_2():
 
     img[4:6, 4:6] = 255
     assert not is_all_black(img)
+
+
+def test_is_all_black_rgb_image_pil():
+    img = Image.new("RGB", (10, 10), color="red")
+    assert not is_all_black(img)
+
+    img = Image.new("RGBA", (10, 10), color="red")
+    assert not is_all_black(img)
+
+
+def test_is_all_black_rgb_image_numpy():
+    img = np.full((10, 10, 4), 127, dtype=np.uint8)
+    with pytest.raises(cv2.error):
+        is_all_black(img)
+
+    img = np.full((4, 10, 10), 0.5, dtype=np.float32)
+    with pytest.raises(cv2.error):
+        is_all_black(img)
 
 
 def test_has_intersection_1():
