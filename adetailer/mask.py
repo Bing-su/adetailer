@@ -86,7 +86,7 @@ def offset(img: Image.Image, x: int = 0, y: int = 0) -> Image.Image:
 
 def is_all_black(img: Image.Image | np.ndarray) -> bool:
     if isinstance(img, Image.Image):
-        img = np.array(img)
+        img = np.array(ensure_pil_image(img, "L"))
     return cv2.countNonZero(img) == 0
 
 

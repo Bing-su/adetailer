@@ -577,9 +577,10 @@ class AfterDetailerScript(scripts.Script):
             y_offset=args.ad_y_offset,
             merge_invert=args.ad_mask_merge_invert,
         )
+
         if self.is_img2img_inpaint(p) and not self.is_inpaint_only_masked(p):
             invert = p.inpainting_mask_invert
-            image_mask = ensure_pil_image(p.image_mask, mode="L")
+            image_mask = ensure_pil_image(p.image_mask, "L")
             masks = self.inpaint_mask_filter(image_mask, masks, invert)
         return masks
 
