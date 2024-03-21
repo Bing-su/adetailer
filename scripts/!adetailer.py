@@ -50,6 +50,7 @@ from modules.devices import NansException
 from modules.processing import (
     Processed,
     StableDiffusionProcessingImg2Img,
+    create_binary_mask,
     create_infotext,
     process_images,
 )
@@ -579,9 +580,8 @@ class AfterDetailerScript(scripts.Script):
         )
 
         if self.is_img2img_inpaint(p) and not self.is_inpaint_only_masked(p):
-            invert = p.inpainting_mask_invert
-            image_mask = ensure_pil_image(p.image_mask, "L")
-            masks = self.inpaint_mask_filter(image_mask, masks, invert)
+            image_mask = self.get_image_mask(p)
+            masks = self.inpaint_mask_filter(image_mask, masks)
         return masks
 
     @staticmethod
@@ -642,18 +642,24 @@ class AfterDetailerScript(scripts.Script):
 
     @staticmethod
     def inpaint_mask_filter(
-        img2img_mask: Image.Image, ad_mask: list[Image.Image], invert: int = 0
+        img2img_mask: Image.Image, ad_mask: list[Image.Image]
     ) -> list[Image.Image]:
-        if invert:
-            img2img_mask = ImageChops.invert(img2img_mask)
         return [mask for mask in ad_mask if has_intersection(img2img_mask, mask)]
+
+    @staticmethod
+    def get_image_mask(p) -> Image.Image:
+        mask = p.image_mask
+        if p.inpainting_mask_invert:
+            mask = ImageChops.invert(mask)
+        mask = create_binary_mask(mask)
+        return images.resize_image(p.resize_mode, mask, p.width, p.height)
 
     @rich_traceback
     def process(self, p, *args_):
         if getattr(p, "_ad_disabled", False):
             return
 
-        if self.is_img2img_inpaint(p) and is_all_black(p.image_mask):
+        if self.is_img2img_inpaint(p) and is_all_black(self.get_image_mask(p)):
             p._ad_disabled = True
             msg = (
                 "[-] ADetailer: img2img inpainting with no mask -- adetailer disabled."
