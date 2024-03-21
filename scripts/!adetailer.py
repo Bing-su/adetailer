@@ -50,6 +50,7 @@ from modules.devices import NansException
 from modules.processing import (
     Processed,
     StableDiffusionProcessingImg2Img,
+    create_binary_mask,
     create_infotext,
     process_images,
 )
@@ -200,7 +201,7 @@ class AfterDetailerScript(scripts.Script):
         not_none = any(arg.get("ad_model", "None") != "None" for arg in arg_list)
         return ad_enabled and not_none
 
-    def check_skip_img2img(self, p, *args_) -> None:
+    def set_skip_img2img(self, p, *args_) -> None:
         if (
             hasattr(p, "_ad_skip_img2img")
             or not hasattr(p, "init_images")
@@ -210,19 +211,28 @@ class AfterDetailerScript(scripts.Script):
 
         if len(args_) >= 2 and isinstance(args_[1], bool):
             p._ad_skip_img2img = args_[1]
-            if args_[1]:
-                p._ad_orig = SkipImg2ImgOrig(
-                    steps=p.steps,
-                    sampler_name=p.sampler_name,
-                    width=p.width,
-                    height=p.height,
-                )
-                p.steps = 1
-                p.sampler_name = "Euler"
-                p.width = 128
-                p.height = 128
         else:
             p._ad_skip_img2img = False
+
+        if not p._ad_skip_img2img:
+            return
+
+        if self.is_img2img_inpaint(p):
+            p._ad_disabled = True
+            msg = "[-] ADetailer: img2img inpainting with skip img2img is not supported. (because it's buggy)"
+            print(msg)
+            return
+
+        p._ad_orig = SkipImg2ImgOrig(
+            steps=p.steps,
+            sampler_name=p.sampler_name,
+            width=p.width,
+            height=p.height,
+        )
+        p.steps = 1
+        p.sampler_name = "Euler"
+        p.width = 128
+        p.height = 128
 
     @staticmethod
     def get_i(p) -> int:
@@ -577,10 +587,10 @@ class AfterDetailerScript(scripts.Script):
             y_offset=args.ad_y_offset,
             merge_invert=args.ad_mask_merge_invert,
         )
+
         if self.is_img2img_inpaint(p) and not self.is_inpaint_only_masked(p):
-            invert = p.inpainting_mask_invert
-            image_mask = ensure_pil_image(p.image_mask, mode="L")
-            masks = self.inpaint_mask_filter(image_mask, masks, invert)
+            image_mask = self.get_image_mask(p)
+            masks = self.inpaint_mask_filter(image_mask, masks)
         return masks
 
     @staticmethod
@@ -641,18 +651,29 @@ class AfterDetailerScript(scripts.Script):
 
     @staticmethod
     def inpaint_mask_filter(
-        img2img_mask: Image.Image, ad_mask: list[Image.Image], invert: int = 0
+        img2img_mask: Image.Image, ad_mask: list[Image.Image]
     ) -> list[Image.Image]:
-        if invert:
-            img2img_mask = ImageChops.invert(img2img_mask)
         return [mask for mask in ad_mask if has_intersection(img2img_mask, mask)]
+
+    @staticmethod
+    def get_image_mask(p) -> Image.Image:
+        mask = p.image_mask
+        if p.inpainting_mask_invert:
+            mask = ImageChops.invert(mask)
+        mask = create_binary_mask(mask)
+
+        if getattr(p, "_ad_skip_img2img", False):
+            width, height = p.init_images[0].size
+        else:
+            width, height = p.width, p.height
+        return images.resize_image(p.resize_mode, mask, width, height)
 
     @rich_traceback
     def process(self, p, *args_):
         if getattr(p, "_ad_disabled", False):
             return
 
-        if self.is_img2img_inpaint(p) and is_all_black(p.image_mask):
+        if self.is_img2img_inpaint(p) and is_all_black(self.get_image_mask(p)):
             p._ad_disabled = True
             msg = (
                 "[-] ADetailer: img2img inpainting with no mask -- adetailer disabled."
@@ -660,21 +681,26 @@ class AfterDetailerScript(scripts.Script):
             print(msg)
             return
 
-        if self.is_ad_enabled(*args_):
-            arg_list = self.get_args(p, *args_)
-            self.check_skip_img2img(p, *args_)
-
-            if hasattr(p, "_ad_xyz_prompt_sr"):
-                replaced_positive_prompt, replaced_negative_prompt = self.get_prompt(
-                    p, arg_list[0]
-                )
-                arg_list[0].ad_prompt = replaced_positive_prompt[0]
-                arg_list[0].ad_negative_prompt = replaced_negative_prompt[0]
-
-            extra_params = self.extra_params(arg_list)
-            p.extra_generation_params.update(extra_params)
-        else:
+        if not self.is_ad_enabled(*args_):
             p._ad_disabled = True
+            return
+
+        self.set_skip_img2img(p, *args_)
+        if getattr(p, "_ad_disabled", False):
+            # case when img2img inpainting with skip img2img
+            return
+
+        arg_list = self.get_args(p, *args_)
+
+        if hasattr(p, "_ad_xyz_prompt_sr"):
+            replaced_positive_prompt, replaced_negative_prompt = self.get_prompt(
+                p, arg_list[0]
+            )
+            arg_list[0].ad_prompt = replaced_positive_prompt[0]
+            arg_list[0].ad_negative_prompt = replaced_negative_prompt[0]
+
+        extra_params = self.extra_params(arg_list)
+        p.extra_generation_params.update(extra_params)
 
     def _postprocess_image_inner(
         self, p, pp, args: ADetailerArgs, *, n: int = 0

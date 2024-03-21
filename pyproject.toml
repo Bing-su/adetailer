@@ -7,7 +7,7 @@ readme = "README.md"
 license = { text = "AGPL-3.0" }
 dependencies = [
     "ultralytics>=8.1",
-    "mediapipe>=10",
+    "mediapipe>=0.10",
     "pydantic<3",
     "rich>=13",
     "huggingface_hub",
@@ -17,6 +17,10 @@ keywords = [
     "stable-diffusion-webui",
     "adetailer",
     "ultralytics",
+]
+classifiers = [
+    "License :: OSI Approved :: GNU Affero General Public License v3",
+    "Topic :: Scientific/Engineering :: Image Recognition",
 ]
 dynamic = ["version"]
 
