@@ -652,7 +652,12 @@ class AfterDetailerScript(scripts.Script):
         if p.inpainting_mask_invert:
             mask = ImageChops.invert(mask)
         mask = create_binary_mask(mask)
-        return images.resize_image(p.resize_mode, mask, p.width, p.height)
+
+        if getattr(p, "_ad_skip_img2img", False):
+            width, height = p.init_images[0].size
+        else:
+            width, height = p.width, p.height
+        return images.resize_image(p.resize_mode, mask, width, height)
 
     @rich_traceback
     def process(self, p, *args_):
