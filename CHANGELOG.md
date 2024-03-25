@@ -1,5 +1,10 @@
 # Changelog
 
+## 2024-03-25
+
+- v24.3.3
+- webui 1.6.0 미만 버전에서 create_binary_mask 함수에 대해 ImportError가 발생하는 것 수정
+
 ## 2024-03-21
 
 - v24.3.2

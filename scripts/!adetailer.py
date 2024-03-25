@@ -50,12 +50,19 @@ from modules.devices import NansException
 from modules.processing import (
     Processed,
     StableDiffusionProcessingImg2Img,
-    create_binary_mask,
     create_infotext,
     process_images,
 )
 from modules.sd_samplers import all_samplers
 from modules.shared import cmd_opts, opts, state
+
+try:
+    from modules.processing import create_binary_mask
+except ImportError:
+
+    def create_binary_mask(image: Image.Image):
+        return image.convert("L")
+
 
 if TYPE_CHECKING:
     from fastapi import FastAPI
