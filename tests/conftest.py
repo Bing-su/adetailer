@@ -1,29 +1,18 @@
-from functools import cache
-
 import pytest
 import requests
 from PIL import Image
 
 
-@cache
-def _sample_image():
-    url = "https://i.imgur.com/E5OVXvn.png"
+def get_image(url: str) -> Image.Image:
     resp = requests.get(url, stream=True, headers={"User-Agent": "Mozilla/5.0"})
     return Image.open(resp.raw)
 
 
-@cache
-def _sample_image2():
-    url = "https://i.imgur.com/px5UT7T.png"
-    resp = requests.get(url, stream=True, headers={"User-Agent": "Mozilla/5.0"})
-    return Image.open(resp.raw)
-
-
-@pytest.fixture()
+@pytest.fixture(scope="session")
 def sample_image():
-    return _sample_image()
+    return get_image("https://i.imgur.com/E5OVXvn.png")
 
 
-@pytest.fixture()
+@pytest.fixture(scope="session")
 def sample_image2():
-    return _sample_image2()
+    return get_image("https://i.imgur.com/px5UT7T.png")
