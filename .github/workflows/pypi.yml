@@ -1,0 +1,45 @@
+name: Publish to PyPI
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  test:
+    name: test
+    runs-on: macos-14
+    strategy:
+      matrix:
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          pip install .
+          pip install pytest
+
+      - name: Run tests
+        run: pytest -v
+
+  build:
+    name: build
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    needs: [test]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Build wheel
+      run: pipx run build
+
+    - name: Publish to PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
