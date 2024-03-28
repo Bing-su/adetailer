@@ -1,5 +1,6 @@
 {
     "recommendations": [
+        "ms-python.vscode-pylance",
         "ms-python.black-formatter",
         "kevinrose.vsc-python-indent",
         "charliermarsh.ruff",
