@@ -1,6 +1,6 @@
 # ADetailer
 
-ADetailer is a extension for stable diffusion webui, similar to Detection Detailer, except it uses ultralytics instead of the mmdet.
+ADetailer is an extension for the stable diffusion webui that does automatic masking and inpainting. It is similar to the Detection Detailer.
 
 ## Install
 
@@ -17,8 +17,6 @@ ADetailer is a extension for stable diffusion webui, similar to Detection Detail
 You can now install it directly from the Extensions tab.
 
 ![image](https://i.imgur.com/g6GdRBT.png)
-
-You **DON'T** need to download any base model from huggingface.
 
 ## Options
 
@@ -59,16 +57,16 @@ If you select `Passthrough`, the controlnet settings you set outside of ADetaile
 
 ## Advanced Options
 
-API request example: [wiki/API](https://github.com/Bing-su/adetailer/wiki/API)
+API request example: [wiki/REST-API](https://github.com/Bing-su/adetailer/wiki/REST-API)
 
-`ui-config.json` entries: [wiki/ui-config.json](https://github.com/Bing-su/adetailer/wiki/ui-config.json)
-
-`[SEP], [SKIP]` tokens: [wiki/Advanced](https://github.com/Bing-su/adetailer/wiki/Advanced)
+`[SEP], [SKIP], [PROMPT]` tokens: [wiki/Advanced](https://github.com/Bing-su/adetailer/wiki/Advanced)
 
 ## Media
 
 - 🎥 [どこよりも詳しいAfter Detailer (adetailer)の使い方① 【Stable Diffusion】](https://youtu.be/sF3POwPUWCE)
 - 🎥 [どこよりも詳しいAfter Detailer (adetailer)の使い方② 【Stable Diffusion】](https://youtu.be/urNISRdbIEg)
+
+- 📜 [ADetailer Installation and 5 Usage Methods](https://kindanai.com/en/manual-adetailer/)
 
 ## Model
 
@@ -91,7 +89,7 @@ YOLO World model: https://docs.ultralytics.com/models/yolo-world/
 
 ### Additional Model
 
-Put your [ultralytics](https://github.com/ultralytics/ultralytics) yolo model in `webui/models/adetailer`. The model name should end with `.pt`.
+Put your [ultralytics](https://github.com/ultralytics/ultralytics) yolo model in `models/adetailer`. The model name should end with `.pt`.
 
 It must be a bbox detection or segment model and use all label.
 
@@ -105,7 +103,7 @@ ADetailer works in three simple steps.
 
 ## Development
 
-ADetailer is developed and tested using the stable-diffusion 1.5 model, for the [AUTOMATIC1111/stable-diffusion-webui](https://github.com/AUTOMATIC1111/stable-diffusion-webui) repository only.
+ADetailer is developed and tested using the stable-diffusion 1.5 model, for the latest version of [AUTOMATIC1111/stable-diffusion-webui](https://github.com/AUTOMATIC1111/stable-diffusion-webui) repository only.
 
 ## License
 

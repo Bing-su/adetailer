@@ -267,15 +267,12 @@ class AfterDetailerScript(scripts.Script):
             try:
                 inp = ADetailerArgs(**arg_dict)
             except ValueError as e:
-                msgs = [
-                    f"[-] ADetailer: ValidationError when validating {ordinal(n)} arguments: {e}\n"
-                ]
-                for attr in ALL_ARGS.attrs:
-                    arg = arg_dict.get(attr)
-                    dtype = type(arg)
-                    arg = "DEFAULT" if arg is None else repr(arg)
-                    msgs.append(f"    {attr}: {arg} ({dtype})")
-                raise ValueError("\n".join(msgs)) from e
+                msg = f"[-] ADetailer: ValidationError when validating {ordinal(n)} arguments"
+                if hasattr(e, "add_note"):
+                    e.add_note(msg)
+                else:
+                    print(msg, file=sys.stderr)
+                raise
 
             all_inputs.append(inp)
 
@@ -667,12 +664,16 @@ class AfterDetailerScript(scripts.Script):
     @staticmethod
     def get_image_mask(p) -> Image.Image:
         mask = p.image_mask
-        if p.inpainting_mask_invert:
+        if getattr(p, "inpainting_mask_invert", False):
             mask = ImageChops.invert(mask)
         mask = create_binary_mask(mask)
 
         if getattr(p, "_ad_skip_img2img", False):
-            width, height = p.init_images[0].size
+            if hasattr(p, "init_images") and p.init_images:
+                width, height = p.init_images[0].size
+            else:
+                msg = "[-] ADetailer: no init_images."
+                raise RuntimeError(msg)
         else:
             width, height = p.width, p.height
         return images.resize_image(p.resize_mode, mask, width, height)
@@ -1046,6 +1047,8 @@ def add_api_endpoints(_: gr.Blocks, app: FastAPI):
 
     @app.get("/adetailer/v1/schema")
     async def schema():
+        if hasattr(ADetailerArgs, "model_json_schema"):
+            return ADetailerArgs.model_json_schema()
         return ADetailerArgs.schema()
 
     @app.get("/adetailer/v1/ad_model")
