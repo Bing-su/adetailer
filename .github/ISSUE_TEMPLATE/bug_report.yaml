@@ -18,6 +18,16 @@ body:
         Alle Sprachen werden akzeptiert
         Toutes les langues sont acceptées
         Принимаются все языки
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Steps to reproduce
+      description: |
+        Description of how we can reproduce this issue.
+    validations:
+      required: true
 
   - type: textarea
     attributes:
