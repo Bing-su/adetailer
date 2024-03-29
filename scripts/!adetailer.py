@@ -1047,6 +1047,8 @@ def add_api_endpoints(_: gr.Blocks, app: FastAPI):
 
     @app.get("/adetailer/v1/schema")
     async def schema():
+        if hasattr(ADetailerArgs, "model_json_schema"):
+            return ADetailerArgs.model_json_schema()
         return ADetailerArgs.schema()
 
     @app.get("/adetailer/v1/ad_model")
