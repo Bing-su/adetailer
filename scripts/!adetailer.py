@@ -667,12 +667,16 @@ class AfterDetailerScript(scripts.Script):
     @staticmethod
     def get_image_mask(p) -> Image.Image:
         mask = p.image_mask
-        if p.inpainting_mask_invert:
+        if getattr(p, "inpainting_mask_invert", False):
             mask = ImageChops.invert(mask)
         mask = create_binary_mask(mask)
 
         if getattr(p, "_ad_skip_img2img", False):
-            width, height = p.init_images[0].size
+            if hasattr(p, "init_images") and p.init_images:
+                width, height = p.init_images[0].size
+            else:
+                msg = "[-] ADetailer: no init_images."
+                raise RuntimeError(msg)
         else:
             width, height = p.width, p.height
         return images.resize_image(p.resize_mode, mask, width, height)
