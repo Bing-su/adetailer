@@ -267,15 +267,12 @@ class AfterDetailerScript(scripts.Script):
             try:
                 inp = ADetailerArgs(**arg_dict)
             except ValueError as e:
-                msgs = [
-                    f"[-] ADetailer: ValidationError when validating {ordinal(n)} arguments: {e}\n"
-                ]
-                for attr in ALL_ARGS.attrs:
-                    arg = arg_dict.get(attr)
-                    dtype = type(arg)
-                    arg = "DEFAULT" if arg is None else repr(arg)
-                    msgs.append(f"    {attr}: {arg} ({dtype})")
-                raise ValueError("\n".join(msgs)) from e
+                msg = f"[-] ADetailer: ValidationError when validating {ordinal(n)} arguments"
+                if hasattr(e, "add_note"):
+                    e.add_note(msg)
+                else:
+                    print(msg, file=sys.stderr)
+                raise
 
             all_inputs.append(inp)
 
