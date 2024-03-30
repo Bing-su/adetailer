@@ -38,10 +38,10 @@ jobs:
     needs: [test]
 
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Build wheel
-      run: pipx run build
+      - name: Build wheel
+        run: pipx run build
 
-    - name: Publish to PyPI
-      uses: pypa/gh-action-pypi-publish@release/v1
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1

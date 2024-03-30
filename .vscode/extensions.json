@@ -1,9 +1,9 @@
 {
-    "recommendations": [
-        "ms-python.vscode-pylance",
-        "ms-python.black-formatter",
-        "kevinrose.vsc-python-indent",
-        "charliermarsh.ruff",
-        "shardulm94.trailing-spaces"
-    ]
+  "recommendations": [
+    "ms-python.vscode-pylance",
+    "ms-python.black-formatter",
+    "kevinrose.vsc-python-indent",
+    "charliermarsh.ruff",
+    "shardulm94.trailing-spaces"
+  ]
 }
