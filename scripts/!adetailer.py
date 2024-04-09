@@ -780,7 +780,7 @@ class AfterDetailerScript(scripts.Script):
 
             p2.seed = self.get_each_tap_seed(seed, j)
             p2.subseed = self.get_each_tap_seed(subseed, j)
-            
+
             p2.extra_generation_params = deepcopy(p2.extra_generation_params)
 
             try:
