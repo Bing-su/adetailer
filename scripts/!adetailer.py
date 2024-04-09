@@ -615,10 +615,16 @@ class AfterDetailerScript(scripts.Script):
                 f"[-] ADetailer: applied {ordinal(n + 1)} ad_prompt: {processed.all_prompts[0]!r}"
             )
 
+            k = "ADetailer prompt" + suffix(n)
+            p.extra_generation_params[k] = processed.all_prompts[0]
+
         if p.negative_prompt != processed.all_negative_prompts[0]:
             print(
                 f"[-] ADetailer: applied {ordinal(n + 1)} ad_negative_prompt: {processed.all_negative_prompts[0]!r}"
             )
+
+            k = "ADetailer negative prompt" + suffix(n)
+            p.extra_generation_params[k] = processed.all_prompts[0]
 
     @staticmethod
     def need_call_process(p) -> bool:
