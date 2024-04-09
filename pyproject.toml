@@ -54,6 +54,7 @@ select = [
     "I001",
     "ISC",
     "N",
+    "PD",
     "PERF",
     "PIE",
     "PT",
@@ -61,10 +62,13 @@ select = [
     "RET",
     "RUF",
     "SIM",
+    "T20",
+    "TRY",
     "UP",
     "W",
 ]
-ignore = ["B008", "B905", "E501", "F401"]
+ignore = ["B905", "E501"]
+unfixable = ["F401"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["launch", "modules"]
