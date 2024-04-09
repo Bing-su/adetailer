@@ -25,7 +25,7 @@ from adetailer import (
     mediapipe_predict,
     ultralytics_predict,
 )
-from adetailer.args import ALL_ARGS, BBOX_SORTBY, ADetailerArgs, SkipImg2ImgOrig
+from adetailer.args import BBOX_SORTBY, ADetailerArgs, SkipImg2ImgOrig
 from adetailer.common import PredictOutput, ensure_pil_image
 from adetailer.mask import (
     filter_by_ratio,
