@@ -333,13 +333,19 @@ class AfterDetailerScript(scripts.Script):
         i = self.get_i(p)
         prompt_sr = p._ad_xyz_prompt_sr if hasattr(p, "_ad_xyz_prompt_sr") else []
 
-        prompt = self._get_prompt(args.ad_prompt, p.all_prompts, i, p.prompt, prompt_sr)
+        prompt = self._get_prompt(
+            ad_prompt=args.ad_prompt,
+            all_prompts=p.all_prompts,
+            i=i,
+            default=p.prompt,
+            replacements=prompt_sr,
+        )
         negative_prompt = self._get_prompt(
-            args.ad_negative_prompt,
-            p.all_negative_prompts,
-            i,
-            p.negative_prompt,
-            prompt_sr,
+            ad_prompt=args.ad_negative_prompt,
+            all_prompts=p.all_negative_prompts,
+            i=i,
+            default=p.negative_prompt,
+            replacements=prompt_sr,
         )
 
         return prompt, negative_prompt
@@ -609,22 +615,23 @@ class AfterDetailerScript(scripts.Script):
         i2i.negative_prompt = negative_prompt
 
     @staticmethod
-    def compare_prompt(p, processed, n: int = 0):
-        if p.prompt != processed.all_prompts[0]:
+    def compare_prompt(p, extra_params: dict[str, Any], processed, n: int = 0):
+        if not hasattr(p, "_ad_extra_params_result"):
+            p._ad_extra_params_result = {}
+
+        pt = "ADetailer prompt" + suffix(n)
+        if pt in extra_params and extra_params[pt] != processed.all_prompts[0]:
             print(
                 f"[-] ADetailer: applied {ordinal(n + 1)} ad_prompt: {processed.all_prompts[0]!r}"
             )
+            p._ad_extra_params_result[pt] = processed.all_prompts[0]
 
-            k = "ADetailer prompt" + suffix(n)
-            p.extra_generation_params[k] = processed.all_prompts[0]
-
-        if p.negative_prompt != processed.all_negative_prompts[0]:
+        ng = "ADetailer negative prompt" + suffix(n)
+        if ng in extra_params and extra_params[ng] != processed.all_negative_prompts[0]:
             print(
                 f"[-] ADetailer: applied {ordinal(n + 1)} ad_negative_prompt: {processed.all_negative_prompts[0]!r}"
             )
-
-            k = "ADetailer negative prompt" + suffix(n)
-            p.extra_generation_params[k] = processed.all_prompts[0]
+            p._ad_extra_params_result[ng] = processed.all_negative_prompts[0]
 
     @staticmethod
     def need_call_process(p) -> bool:
@@ -796,7 +803,7 @@ class AfterDetailerScript(scripts.Script):
             finally:
                 p2.close()
 
-            self.compare_prompt(p2, processed, n=n)
+            self.compare_prompt(p, p.extra_generation_params, processed, n=n)
             p2 = copy(i2i)
             p2.init_images = [processed.images[0]]
 
@@ -842,6 +849,9 @@ class AfterDetailerScript(scripts.Script):
                 p.scripts.process(copy_p)
 
         self.write_params_txt(params_txt_content)
+
+        if hasattr(p, "_ad_extra_params_result"):
+            p.extra_generation_params.update(p._ad_extra_params_result)
 
 
 def on_after_component(component, **_kwargs):
