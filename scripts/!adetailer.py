@@ -6,7 +6,7 @@ import re
 import sys
 import traceback
 from contextlib import contextmanager, suppress
-from copy import copy, deepcopy
+from copy import copy
 from functools import partial
 from pathlib import Path
 from textwrap import dedent
@@ -523,7 +523,7 @@ class AfterDetailerScript(scripts.Script):
             height=height,
             restore_faces=args.ad_restore_face,
             tiling=p.tiling,
-            extra_generation_params=p.extra_generation_params,
+            extra_generation_params=p.extra_generation_params.copy(),
             do_not_save_samples=True,
             do_not_save_grid=True,
             override_settings=override_settings,
@@ -780,8 +780,6 @@ class AfterDetailerScript(scripts.Script):
 
             p2.seed = self.get_each_tap_seed(seed, j)
             p2.subseed = self.get_each_tap_seed(subseed, j)
-
-            p2.extra_generation_params = deepcopy(p2.extra_generation_params)
 
             try:
                 processed = process_images(p2)
