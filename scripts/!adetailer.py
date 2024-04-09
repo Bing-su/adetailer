@@ -6,7 +6,7 @@ import re
 import sys
 import traceback
 from contextlib import contextmanager, suppress
-from copy import copy
+from copy import copy, deepcopy
 from functools import partial
 from pathlib import Path
 from textwrap import dedent
@@ -780,6 +780,8 @@ class AfterDetailerScript(scripts.Script):
 
             p2.seed = self.get_each_tap_seed(seed, j)
             p2.subseed = self.get_each_tap_seed(subseed, j)
+            
+            p2.extra_generation_params = deepcopy(p2.extra_generation_params)
 
             try:
                 processed = process_images(p2)
