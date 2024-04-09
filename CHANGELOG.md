@@ -1,5 +1,11 @@
 # Changelog
 
+## 2024-04-10
+
+- v24.4.0
+- txt2img에서 hires를 설정했을 때, 이미지의 exif에서 Denoising Strength가 adetailer의 denoisiog stregnth로 덮어 쓰이는 문제 수정
+- ad prompt, ad negative prompt에 프롬프트를 변경하는 기능을 적용했을 때(와일드카드 등), 적용된 프롬프트가 이미지의 exif에 제대로 표시됨
+
 ## 2024-03-29
 
 - v24.3.5
