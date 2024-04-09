@@ -112,7 +112,8 @@ class TestHasIntersection:
                 [0, 0, 0, 0],
                 [0, 0, 0, 0],
                 [0, 0, 0, 0],
-            ]
+            ],
+            dtype=np.uint8,
         )
         arr2 = arr1.copy()
         assert not has_intersection(arr1, arr2)
@@ -124,7 +125,8 @@ class TestHasIntersection:
                 [0, 255, 255, 0],
                 [0, 255, 255, 0],
                 [0, 0, 0, 0],
-            ]
+            ],
+            dtype=np.uint8,
         )
         arr2 = np.array(
             [
@@ -132,7 +134,8 @@ class TestHasIntersection:
                 [0, 0, 0, 0],
                 [0, 0, 255, 255],
                 [0, 0, 255, 255],
-            ]
+            ],
+            dtype=np.uint8,
         )
         assert has_intersection(arr1, arr2)
 
@@ -142,7 +145,8 @@ class TestHasIntersection:
                 [0, 0, 0, 0],
                 [0, 0, 0, 255],
                 [0, 0, 255, 255],
-            ]
+            ],
+            dtype=np.uint8,
         )
         assert not has_intersection(arr1, arr3)
 

@@ -1,5 +1,11 @@
 # Changelog
 
+## 2024-04-10
+
+- v24.4.0
+- txt2img에서 hires를 설정했을 때, 이미지의 exif에서 Denoising Strength가 adetailer의 denoisiog stregnth로 덮어 쓰이는 문제 수정
+- ad prompt, ad negative prompt에 프롬프트를 변경하는 기능을 적용했을 때(와일드카드 등), 적용된 프롬프트가 이미지의 exif에 제대로 표시됨
+
 ## 2024-03-29
 
 - v24.3.5
@@ -35,6 +41,7 @@
 - YOLO World 모델 추가: 가장 큰 yolov8x-world.pt 모델만 기본적으로 선택할 수 있게 함.
 - lllyasviel/stable-diffusion-webui-forge에서 컨트롤넷을 사용가능하게 함 (PR #517)
 - 기본 스크립트 목록에 soft_inpainting 추가 (https://github.com/AUTOMATIC1111/stable-diffusion-webui/pull/14208)
+
   - 기존에 설치한 사람에게 소급적용되지는 않음
 
 - 감지모델에 대한 간단한 pytest 추가함
@@ -126,7 +133,6 @@
 - 1.6.0 업데이트에 따라 img2img에서 사용불가능한 샘플러를 선택했을 때 더이상 Euler로 변경하지 않음
 - 유효하지 않은 인자가 전달되었을 때, 에러를 일으키지 않고 대신 adetailer를 비활성화함
 
-
 ## 2023-08-25
 
 - v23.8.1
@@ -141,7 +147,6 @@
 - Only top k largest 옵션 추가 (PR #264)
 - ultralytics 버전 업데이트
 
-
 ## 2023-07-31
 
 - v23.7.11
@@ -155,7 +160,6 @@
 - traceback에서 컬러를 없앰 (api 때문), 라이브러리 버전도 보여주게 설정.
 - huggingface_hub, pydantic을 install.py에서 없앰
 - 안쓰는 컨트롤넷 관련 코드 삭제
-
 
 ## 2023-07-23
 
@@ -264,6 +268,7 @@
   - `ad_inpaint_full_res` → `ad_inpaint_only_masked`
   - `ad_inpaint_full_res_padding` → `ad_inpaint_only_masked_padding`
 - mediapipe face mesh 모델 추가
+
   - mediapipe 최소 버전 `0.10.0`
 
 - rich traceback 제거함
@@ -293,7 +298,6 @@
 - 컨트롤넷 확장이 있으면 컨트롤넷 스크립트를 활성화함. (컨트롤넷 관련 문제 해결)
 - 모든 컴포넌트에 elem_id 설정
 - ui에 버전을 표시함
-
 
 ### 2023-05-19
 
