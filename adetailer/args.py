@@ -248,7 +248,7 @@ BBOX_SORTBY = [
 ]
 MASK_MERGE_INVERT = ["None", "Merge", "Merge and Invert"]
 
-_script_default = [
+_script_default = (
     "dynamic_prompting",
     "dynamic_thresholding",
     "wildcard_recursive",
@@ -256,5 +256,5 @@ _script_default = [
     "lora_block_weight",
     "negpip",
     "soft_inpainting",
-]
-SCRIPT_DEFAULT = "".join(sorted(_script_default))
+)
+SCRIPT_DEFAULT = ",".join(sorted(_script_default))
