@@ -247,3 +247,14 @@ BBOX_SORTBY = [
     "Area (large to small)",
 ]
 MASK_MERGE_INVERT = ["None", "Merge", "Merge and Invert"]
+
+_script_default = [
+    "dynamic_prompting",
+    "dynamic_thresholding",
+    "wildcard_recursive",
+    "wildcards",
+    "lora_block_weight",
+    "negpip",
+    "soft_inpainting",
+]
+SCRIPT_DEFAULT = "".join(sorted(_script_default))
