@@ -4,7 +4,7 @@ import platform
 import re
 import sys
 import traceback
-from contextlib import contextmanager, suppress
+from contextlib import suppress
 from copy import copy
 from functools import partial
 from pathlib import Path
@@ -12,11 +12,11 @@ from textwrap import dedent
 from typing import TYPE_CHECKING, Any, NamedTuple, cast
 
 import gradio as gr
-import torch
 from PIL import Image, ImageChops
 from rich import print
 
 import modules
+from aaaaaa.helper import change_torch_load, pause_total_tqdm, preseve_prompts
 from adetailer import (
     AFTER_DETAILER,
     __version__,
@@ -44,7 +44,7 @@ from controlnet_ext import (
     controlnet_type,
     get_cn_models,
 )
-from modules import images, paths, safe, script_callbacks, scripts, shared
+from modules import images, paths, script_callbacks, scripts, shared
 from modules.devices import NansException
 from modules.processing import (
     Processed,
@@ -84,37 +84,6 @@ img2img_submit_button = cast(gr.Button, img2img_submit_button)
 print(
     f"[-] ADetailer initialized. version: {__version__}, num models: {len(model_mapping)}"
 )
-
-
-@contextmanager
-def change_torch_load():
-    orig = torch.load
-    try:
-        torch.load = safe.unsafe_torch_load
-        yield
-    finally:
-        torch.load = orig
-
-
-@contextmanager
-def pause_total_tqdm():
-    orig = opts.data.get("multiple_tqdm", True)
-    try:
-        opts.data["multiple_tqdm"] = False
-        yield
-    finally:
-        opts.data["multiple_tqdm"] = orig
-
-
-@contextmanager
-def preseve_prompts(p):
-    all_pt = copy(p.all_prompts)
-    all_ng = copy(p.all_negative_prompts)
-    try:
-        yield
-    finally:
-        p.all_prompts = all_pt
-        p.all_negative_prompts = all_ng
 
 
 class AfterDetailerScript(scripts.Script):
