@@ -290,7 +290,7 @@ class AfterDetailerScript(scripts.Script):
             if not prompts[n]:
                 prompts[n] = blank_replacement
             elif "[PROMPT]" in prompts[n]:
-                prompts[n] = prompts[n].replace("[PROMPT]", f" {blank_replacement} ")
+                prompts[n] = prompts[n].replace("[PROMPT]", blank_replacement)
 
             for pair in replacements:
                 prompts[n] = prompts[n].replace(pair.s, pair.r)
