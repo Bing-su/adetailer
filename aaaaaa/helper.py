@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from contextlib import contextmanager
 from copy import copy
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import torch
 
@@ -53,3 +53,7 @@ def preseve_prompts(p: PT):
     finally:
         p.all_prompts = all_pt
         p.all_negative_prompts = all_ng
+
+
+def copy_extra_params(extra_params: dict[str, Any]) -> dict[str, Any]:
+    return {k: v for k, v in extra_params.items() if not callable(v)}

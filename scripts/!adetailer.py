@@ -16,7 +16,12 @@ from PIL import Image, ImageChops
 from rich import print
 
 import modules
-from aaaaaa.helper import change_torch_load, pause_total_tqdm, preseve_prompts
+from aaaaaa.helper import (
+    change_torch_load,
+    copy_extra_params,
+    pause_total_tqdm,
+    preseve_prompts,
+)
 from aaaaaa.p_method import (
     get_i,
     is_img2img_inpaint,
@@ -496,7 +501,7 @@ class AfterDetailerScript(scripts.Script):
             height=height,
             restore_faces=args.ad_restore_face,
             tiling=p.tiling,
-            extra_generation_params=p.extra_generation_params.copy(),
+            extra_generation_params=copy_extra_params(p.extra_generation_params),
             do_not_save_samples=True,
             do_not_save_grid=True,
             override_settings=override_settings,
