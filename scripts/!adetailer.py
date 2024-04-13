@@ -17,6 +17,13 @@ from rich import print
 
 import modules
 from aaaaaa.helper import change_torch_load, pause_total_tqdm, preseve_prompts
+from aaaaaa.p_method import (
+    get_i,
+    is_img2img_inpaint,
+    is_inpaint_only_masked,
+    need_call_postprocess,
+    need_call_process,
+)
 from adetailer import (
     AFTER_DETAILER,
     __version__,
@@ -191,7 +198,7 @@ class AfterDetailerScript(scripts.Script):
         if not p._ad_skip_img2img:
             return
 
-        if self.is_img2img_inpaint(p):
+        if is_img2img_inpaint(p):
             p._ad_disabled = True
             msg = "[-] ADetailer: img2img inpainting with skip img2img is not supported. (because it's buggy)"
             print(msg)
@@ -207,13 +214,6 @@ class AfterDetailerScript(scripts.Script):
         p.sampler_name = "Euler"
         p.width = 128
         p.height = 128
-
-    @staticmethod
-    def get_i(p) -> int:
-        it = p.iteration
-        bs = p.batch_size
-        i = p.batch_index
-        return it * bs + i
 
     def get_args(self, p, *args_) -> list[ADetailerArgs]:
         """
@@ -297,7 +297,7 @@ class AfterDetailerScript(scripts.Script):
         return prompts
 
     def get_prompt(self, p, args: ADetailerArgs) -> tuple[list[str], list[str]]:
-        i = self.get_i(p)
+        i = get_i(p)
         prompt_sr = p._ad_xyz_prompt_sr if hasattr(p, "_ad_xyz_prompt_sr") else []
 
         prompt = self._get_prompt(
@@ -318,7 +318,7 @@ class AfterDetailerScript(scripts.Script):
         return prompt, negative_prompt
 
     def get_seed(self, p) -> tuple[int, int]:
-        i = self.get_i(p)
+        i = get_i(p)
 
         if not p.all_seeds:
             seed = p.seed
@@ -519,7 +519,7 @@ class AfterDetailerScript(scripts.Script):
         return i2i
 
     def save_image(self, p, image, *, condition: str, suffix: str) -> None:
-        i = self.get_i(p)
+        i = get_i(p)
         if p.all_prompts:
             i %= len(p.all_prompts)
             save_prompt = p.all_prompts[i]
@@ -565,7 +565,7 @@ class AfterDetailerScript(scripts.Script):
             merge_invert=args.ad_mask_merge_invert,
         )
 
-        if self.is_img2img_inpaint(p) and not self.is_inpaint_only_masked(p):
+        if is_img2img_inpaint(p) and not is_inpaint_only_masked(p):
             image_mask = self.get_image_mask(p)
             masks = self.inpaint_mask_filter(image_mask, masks)
         return masks
@@ -601,20 +601,6 @@ class AfterDetailerScript(scripts.Script):
             p._ad_extra_params_result[ng] = processed.all_negative_prompts[0]
 
     @staticmethod
-    def need_call_process(p) -> bool:
-        if p.scripts is None:
-            return False
-        i = p.batch_index
-        bs = p.batch_size
-        return i == bs - 1
-
-    @staticmethod
-    def need_call_postprocess(p) -> bool:
-        if p.scripts is None:
-            return False
-        return p.batch_index == 0
-
-    @staticmethod
     def get_i2i_init_image(p, pp):
         if getattr(p, "_ad_skip_img2img", False):
             return p.init_images[0]
@@ -624,14 +610,6 @@ class AfterDetailerScript(scripts.Script):
     def get_each_tap_seed(seed: int, i: int):
         use_same_seed = shared.opts.data.get("ad_same_seed_for_each_tap", False)
         return seed if use_same_seed else seed + i
-
-    @staticmethod
-    def is_img2img_inpaint(p) -> bool:
-        return hasattr(p, "image_mask") and p.image_mask is not None
-
-    @staticmethod
-    def is_inpaint_only_masked(p) -> bool:
-        return hasattr(p, "inpaint_full_res") and p.inpaint_full_res
 
     @staticmethod
     def inpaint_mask_filter(
@@ -663,7 +641,7 @@ class AfterDetailerScript(scripts.Script):
         if getattr(p, "_ad_disabled", False):
             return
 
-        if self.is_img2img_inpaint(p) and is_all_black(self.get_image_mask(p)):
+        if is_img2img_inpaint(p) and is_all_black(self.get_image_mask(p)):
             p._ad_disabled = True
             msg = (
                 "[-] ADetailer: img2img inpainting with no mask -- adetailer disabled."
@@ -705,7 +683,7 @@ class AfterDetailerScript(scripts.Script):
         if state.interrupted or state.skipped:
             return False
 
-        i = self.get_i(p)
+        i = get_i(p)
 
         i2i = self.get_i2i_p(p, args, pp.image)
         seed, subseed = self.get_seed(p)
@@ -791,7 +769,7 @@ class AfterDetailerScript(scripts.Script):
         arg_list = self.get_args(p, *args_)
         params_txt_content = Path(paths.data_path, "params.txt").read_text("utf-8")
 
-        if self.need_call_postprocess(p):
+        if need_call_postprocess(p):
             dummy = Processed(p, [], p.seed, "")
             with preseve_prompts(p):
                 p.scripts.postprocess(copy(p), dummy)
@@ -808,7 +786,7 @@ class AfterDetailerScript(scripts.Script):
                 p, init_image, condition="ad_save_images_before", suffix="-ad-before"
             )
 
-        if self.need_call_process(p):
+        if need_call_process(p):
             with preseve_prompts(p):
                 copy_p = copy(p)
                 if hasattr(p.scripts, "before_process"):
