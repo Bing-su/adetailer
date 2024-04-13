@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from collections import OrderedDict
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -37,16 +38,27 @@ def hf_download(file: str, repo_id: str = REPO_ID) -> str | None:
     return path
 
 
-def scan_model_dir(path_: str | Path) -> list[Path]:
-    if not path_ or not (path := Path(path_)).is_dir():
+def safe_mkdir(path: str | os.PathLike[str]) -> None:
+    path = Path(path)
+    if not path.exists() and path.parent.exists() and os.access(path.parent, os.W_OK):
+        path.mkdir()
+
+
+def scan_model_dir(path: Path) -> list[Path]:
+    if not path.is_dir():
         return []
-    return [p for p in path.rglob("*") if p.is_file() and p.suffix in (".pt", ".pth")]
+    return [p for p in path.rglob("*") if p.is_file() and p.suffix == ".pt"]
 
 
 def get_models(
-    model_dir: str | Path, extra_dir: str | Path = "", huggingface: bool = True
+    *dirs: str | os.PathLike[str], huggingface: bool = True
 ) -> OrderedDict[str, str]:
-    model_paths = [*scan_model_dir(model_dir), *scan_model_dir(extra_dir)]
+    model_paths = []
+
+    for dir_ in dirs:
+        if not dir_:
+            continue
+        model_paths.extend(scan_model_dir(Path(dir_)))
 
     models = OrderedDict()
     if huggingface:
