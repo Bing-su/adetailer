@@ -51,6 +51,7 @@ class Widgets(SimpleNamespace):
 class WebuiInfo:
     ad_model_list: list[str]
     sampler_names: list[str]
+    scheduler_names: list[str]
     t2i_button: gr.Button
     i2i_button: gr.Button
     checkpoints_list: list[str]
@@ -545,10 +546,23 @@ def inpainting(w: Widgets, n: int, is_img2img: bool, webui_info: WebuiInfo):
                 elem_id=eid("ad_sampler"),
             )
 
+            scheduler_names = [
+                "Use same scheduler",
+                "Automatic",
+                *webui_info.scheduler_names,
+            ]
+            w.ad_scheduler = gr.Dropdown(
+                label="ADetailer scheduler" + suffix(n),
+                choices=webui_info.scheduler_names,
+                value=webui_info.scheduler_names[0],
+                visible=len(scheduler_names) > 2,
+                elem_id=eid("ad_scheduler"),
+            )
+
             w.ad_use_sampler.change(
-                gr_interactive,
+                lambda value: (gr_interactive(value), gr_interactive(value)),
                 inputs=w.ad_use_sampler,
-                outputs=w.ad_sampler,
+                outputs=[w.ad_sampler, w.ad_scheduler],
                 queue=False,
             )
 

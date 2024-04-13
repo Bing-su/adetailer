@@ -75,6 +75,15 @@ except ImportError:
         return image.convert("L")
 
 
+try:
+    from modules.sd_schedulers import sd_schedulers
+
+    scheduler_available = True
+except ImportError:
+    sd_schedulers = []
+    scheduler_available = False
+
+
 if TYPE_CHECKING:
     from fastapi import FastAPI
 
@@ -118,6 +127,7 @@ class AfterDetailerScript(scripts.Script):
         num_models = opts.data.get("ad_max_models", 2)
         ad_model_list = list(model_mapping.keys())
         sampler_names = [sampler.name for sampler in all_samplers]
+        scheduler_names = [x.label for x in sd_schedulers]
 
         try:
             checkpoint_list = modules.sd_models.checkpoint_tiles(use_shorts=True)
@@ -128,6 +138,7 @@ class AfterDetailerScript(scripts.Script):
         webui_info = WebuiInfo(
             ad_model_list=ad_model_list,
             sampler_names=sampler_names,
+            scheduler_names=scheduler_names,
             t2i_button=txt2img_submit_button,
             i2i_button=img2img_submit_button,
             checkpoints_list=checkpoint_list,
@@ -373,6 +384,17 @@ class AfterDetailerScript(scripts.Script):
             return p._ad_orig.sampler_name
         return p.sampler_name
 
+    def get_scheduler(self, p, args: ADetailerArgs) -> dict[str, str]:
+        "webui >= 1.9.0"
+        if not args.ad_use_sampler:
+            return {}
+
+        if args.ad_scheduler == "Use same scheduler":
+            value = getattr(p, "scheduler", "Automatic")
+        else:
+            value = args.ad_scheduler
+        return {"scheduler": value}
+
     def get_override_settings(self, p, args: ADetailerArgs) -> dict[str, Any]:
         d = {}
 
@@ -470,6 +492,10 @@ class AfterDetailerScript(scripts.Script):
         sampler_name = self.get_sampler(p, args)
         override_settings = self.get_override_settings(p, args)
 
+        version_args = {}
+        if scheduler_available:
+            version_args.update(self.get_scheduler(p, args))
+
         i2i = StableDiffusionProcessingImg2Img(
             init_images=[image],
             resize_mode=0,
@@ -505,6 +531,7 @@ class AfterDetailerScript(scripts.Script):
             do_not_save_samples=True,
             do_not_save_grid=True,
             override_settings=override_settings,
+            **version_args,
         )
 
         i2i.cached_c = [None, None]
