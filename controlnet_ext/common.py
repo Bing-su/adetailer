@@ -8,4 +8,4 @@ cn_model_module = {
     "tile": "tile_resample",
     "depth": "depth_midas",
 }
-cn_model_regex = re.compile("|".join(cn_model_module.keys()))
+cn_model_regex = re.compile("|".join(cn_model_module.keys()), flags=re.I)
