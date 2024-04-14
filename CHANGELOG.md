@@ -1,5 +1,15 @@
 # Changelog
 
+## 2024-04-14
+
+- v24.4.1
+- webui 1.9.0에서 발생한 에러 수정
+  - extra generation params에 callable이 들어와서 생긴 문제
+  - assign_current_image에 None이 들어갈 수 있던 문제
+- webui 1.9.0에서 변경된 scheduler 지원
+- 컨트롤넷 모델을 찾을 때, 대소문자 구분을 하지 않음 (PR #577)
+- 몇몇 기능을 스크립트에서 분리하여 별도 파일로 빼냄
+
 ## 2024-04-10
 
 - v24.4.0
