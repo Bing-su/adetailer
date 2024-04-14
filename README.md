@@ -110,3 +110,9 @@ ADetailer is developed and tested using the stable-diffusion 1.5 model, for the 
 ## License
 
 ADetailer is a derivative work that uses two AGPL-licensed works (stable-diffusion-webui, ultralytics) and is therefore distributed under the AGPL license.
+
+## See Also
+
+- https://github.com/ototadana/sd-face-editor
+- https://github.com/continue-revolution/sd-webui-segment-anything
+- https://github.com/portu-sim/sd-webui-bmab
