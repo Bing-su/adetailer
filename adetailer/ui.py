@@ -530,7 +530,7 @@ def inpainting(w: Widgets, n: int, is_img2img: bool, webui_info: WebuiInfo):
                     elem_id=eid("ad_vae"),
                 )
 
-        with gr.Row():
+        with gr.Row(), gr.Column(variant="compact"):
             w.ad_use_sampler = gr.Checkbox(
                 label="Use separate sampler" + suffix(n),
                 value=False,
