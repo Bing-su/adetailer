@@ -51,6 +51,7 @@ class Widgets(SimpleNamespace):
 class WebuiInfo:
     ad_model_list: list[str]
     sampler_names: list[str]
+    scheduler_names: list[str]
     t2i_button: gr.Button
     i2i_button: gr.Button
     checkpoints_list: list[str]
@@ -537,20 +538,33 @@ def inpainting(w: Widgets, n: int, is_img2img: bool, webui_info: WebuiInfo):
                 elem_id=eid("ad_use_sampler"),
             )
 
-            w.ad_sampler = gr.Dropdown(
-                label="ADetailer sampler" + suffix(n),
-                choices=webui_info.sampler_names,
-                value=webui_info.sampler_names[0],
-                visible=True,
-                elem_id=eid("ad_sampler"),
-            )
+            with gr.Row():
+                w.ad_sampler = gr.Dropdown(
+                    label="ADetailer sampler" + suffix(n),
+                    choices=webui_info.sampler_names,
+                    value=webui_info.sampler_names[0],
+                    visible=True,
+                    elem_id=eid("ad_sampler"),
+                )
 
-            w.ad_use_sampler.change(
-                gr_interactive,
-                inputs=w.ad_use_sampler,
-                outputs=w.ad_sampler,
-                queue=False,
-            )
+                scheduler_names = [
+                    "Use same scheduler",
+                    *webui_info.scheduler_names,
+                ]
+                w.ad_scheduler = gr.Dropdown(
+                    label="ADetailer scheduler" + suffix(n),
+                    choices=scheduler_names,
+                    value=scheduler_names[0],
+                    visible=len(scheduler_names) > 1,
+                    elem_id=eid("ad_scheduler"),
+                )
+
+                w.ad_use_sampler.change(
+                    lambda value: (gr_interactive(value), gr_interactive(value)),
+                    inputs=w.ad_use_sampler,
+                    outputs=[w.ad_sampler, w.ad_scheduler],
+                    queue=False,
+                )
 
         with gr.Row():
             with gr.Column(variant="compact"):
