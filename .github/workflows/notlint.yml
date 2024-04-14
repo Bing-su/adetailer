@@ -1,0 +1,19 @@
+name: Not Lint
+
+on:
+  pull_request:
+    types:
+      - opened
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: wow-actions/auto-comment@v1
+        with:
+          GITHUB_TOKEN: ${{ github.token }}
+          pullRequestOpened: |
+            ![Imgur](https://i.imgur.com/ESow3BL.png)
+
+            LGTM
