@@ -4,6 +4,12 @@ ADetailer is an extension for the stable diffusion webui that does automatic mas
 
 ## Install
 
+You can install it directly from the Extensions tab.
+
+![image](https://i.imgur.com/qaXtoI6.png)
+
+Or
+
 (from Mikubill/sd-webui-controlnet)
 
 1. Open "Extensions" tab.
@@ -13,10 +19,6 @@ ADetailer is an extension for the stable diffusion webui that does automatic mas
 5. Wait 5 seconds, and you will see the message "Installed into stable-diffusion-webui\extensions\adetailer. Use Installed tab to restart".
 6. Go to "Installed" tab, click "Check for updates", and then click "Apply and restart UI". (The next time you can also use this method to update extensions.)
 7. Completely restart A1111 webui including your terminal. (If you do not know what is a "terminal", you can reboot your computer: turn your computer off and turn it on again.)
-
-You can now install it directly from the Extensions tab.
-
-![image](https://i.imgur.com/g6GdRBT.png)
 
 ## Options
 
@@ -63,8 +65,8 @@ API request example: [wiki/REST-API](https://github.com/Bing-su/adetailer/wiki/R
 
 ## Media
 
-- 🎥 [どこよりも詳しいAfter Detailer (adetailer)の使い方① 【Stable Diffusion】](https://youtu.be/sF3POwPUWCE)
-- 🎥 [どこよりも詳しいAfter Detailer (adetailer)の使い方② 【Stable Diffusion】](https://youtu.be/urNISRdbIEg)
+- 🎥 [どこよりも詳しい After Detailer (adetailer)の使い方 ① 【Stable Diffusion】](https://youtu.be/sF3POwPUWCE)
+- 🎥 [どこよりも詳しい After Detailer (adetailer)の使い方 ② 【Stable Diffusion】](https://youtu.be/urNISRdbIEg)
 
 - 📜 [ADetailer Installation and 5 Usage Methods](https://kindanai.com/en/manual-adetailer/)
 
