@@ -736,14 +736,14 @@ class AfterDetailerScript(scripts.Script):
         with change_torch_load():
             pred = predictor(ad_model, pp.image, args.ad_confidence, **kwargs)
 
-        masks = self.pred_preprocessing(p, pred, args)
-        shared.state.assign_current_image(pred.preview)
-
-        if not masks:
+        if pred.preview is None:
             print(
                 f"[-] ADetailer: nothing detected on image {i + 1} with {ordinal(n + 1)} settings."
             )
             return False
+
+        masks = self.pred_preprocessing(p, pred, args)
+        shared.state.assign_current_image(pred.preview)
 
         self.save_image(
             p,
