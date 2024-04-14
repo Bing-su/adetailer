@@ -553,8 +553,8 @@ def inpainting(w: Widgets, n: int, is_img2img: bool, webui_info: WebuiInfo):
             ]
             w.ad_scheduler = gr.Dropdown(
                 label="ADetailer scheduler" + suffix(n),
-                choices=webui_info.scheduler_names,
-                value=webui_info.scheduler_names[0],
+                choices=scheduler_names,
+                value=scheduler_names[0],
                 visible=len(scheduler_names) > 2,
                 elem_id=eid("ad_scheduler"),
             )

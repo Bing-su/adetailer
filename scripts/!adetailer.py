@@ -76,11 +76,11 @@ except ImportError:
 
 
 try:
-    from modules.sd_schedulers import sd_schedulers
+    from modules.sd_schedulers import schedulers
 
     scheduler_available = True
 except ImportError:
-    sd_schedulers = []
+    schedulers = []
     scheduler_available = False
 
 
@@ -127,7 +127,7 @@ class AfterDetailerScript(scripts.Script):
         num_models = opts.data.get("ad_max_models", 2)
         ad_model_list = list(model_mapping.keys())
         sampler_names = [sampler.name for sampler in all_samplers]
-        scheduler_names = [x.label for x in sd_schedulers]
+        scheduler_names = [x.label for x in schedulers]
 
         try:
             checkpoint_list = modules.sd_models.checkpoint_tiles(use_shorts=True)
