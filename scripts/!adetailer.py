@@ -16,6 +16,7 @@ from PIL import Image, ImageChops
 from rich import print
 
 import modules
+from aaaaaa.conditional import create_binary_mask, schedulers
 from aaaaaa.helper import (
     change_torch_load,
     copy_extra_params,
@@ -66,23 +67,6 @@ from modules.processing import (
 )
 from modules.sd_samplers import all_samplers
 from modules.shared import cmd_opts, opts, state
-
-try:
-    from modules.processing import create_binary_mask
-except ImportError:
-
-    def create_binary_mask(image: Image.Image):
-        return image.convert("L")
-
-
-try:
-    from modules.sd_schedulers import schedulers
-
-    scheduler_available = True
-except ImportError:
-    schedulers = []
-    scheduler_available = False
-
 
 if TYPE_CHECKING:
     from fastapi import FastAPI
@@ -493,7 +477,7 @@ class AfterDetailerScript(scripts.Script):
         override_settings = self.get_override_settings(p, args)
 
         version_args = {}
-        if scheduler_available:
+        if schedulers:
             version_args.update(self.get_scheduler(p, args))
 
         i2i = StableDiffusionProcessingImg2Img(
