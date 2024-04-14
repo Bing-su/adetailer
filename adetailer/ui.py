@@ -530,7 +530,7 @@ def inpainting(w: Widgets, n: int, is_img2img: bool, webui_info: WebuiInfo):
                     elem_id=eid("ad_vae"),
                 )
 
-        with gr.Row(), gr.Column(variant="compact"):
+        with gr.Row():
             w.ad_use_sampler = gr.Checkbox(
                 label="Use separate sampler" + suffix(n),
                 value=False,
@@ -538,33 +538,33 @@ def inpainting(w: Widgets, n: int, is_img2img: bool, webui_info: WebuiInfo):
                 elem_id=eid("ad_use_sampler"),
             )
 
-            w.ad_sampler = gr.Dropdown(
-                label="ADetailer sampler" + suffix(n),
-                choices=webui_info.sampler_names,
-                value=webui_info.sampler_names[0],
-                visible=True,
-                elem_id=eid("ad_sampler"),
-            )
+            with gr.Row():
+                w.ad_sampler = gr.Dropdown(
+                    label="ADetailer sampler" + suffix(n),
+                    choices=webui_info.sampler_names,
+                    value=webui_info.sampler_names[0],
+                    visible=True,
+                    elem_id=eid("ad_sampler"),
+                )
 
-            scheduler_names = [
-                "Use same scheduler",
-                "Automatic",
-                *webui_info.scheduler_names,
-            ]
-            w.ad_scheduler = gr.Dropdown(
-                label="ADetailer scheduler" + suffix(n),
-                choices=scheduler_names,
-                value=scheduler_names[0],
-                visible=len(scheduler_names) > 2,
-                elem_id=eid("ad_scheduler"),
-            )
+                scheduler_names = [
+                    "Use same scheduler",
+                    *webui_info.scheduler_names,
+                ]
+                w.ad_scheduler = gr.Dropdown(
+                    label="ADetailer scheduler" + suffix(n),
+                    choices=scheduler_names,
+                    value=scheduler_names[0],
+                    visible=len(scheduler_names) > 1,
+                    elem_id=eid("ad_scheduler"),
+                )
 
-            w.ad_use_sampler.change(
-                lambda value: (gr_interactive(value), gr_interactive(value)),
-                inputs=w.ad_use_sampler,
-                outputs=[w.ad_sampler, w.ad_scheduler],
-                queue=False,
-            )
+                w.ad_use_sampler.change(
+                    lambda value: (gr_interactive(value), gr_interactive(value)),
+                    inputs=w.ad_use_sampler,
+                    outputs=[w.ad_sampler, w.ad_scheduler],
+                    queue=False,
+                )
 
         with gr.Row():
             with gr.Column(variant="compact"):
