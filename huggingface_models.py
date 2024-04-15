@@ -1,10 +1,10 @@
 import glob
 import os
 from urllib.parse import urlparse
-
 from huggingface_hub import hf_hub_download
+from pathlib import Path
+from modules import paths
 
-from modules.paths import data_path
 
 urls_huggingface = {
     "face_yolov8m.pt": "https://huggingface.co/Bingsu/adetailer/resolve/main/face_yolov8m.pt",
@@ -27,21 +27,19 @@ urls_huggingface = {
 
 def download_models(urls_huggingface):
     # Set the destination folder for Hugging Face models
-    adetailer_model_path = os.path.join(data_path, "models/adetailer")
+    adetailer_dir = Path(paths.models_path, "adetailer")
     os.makedirs(adetailer_model_path, exist_ok=True)
 
     for filename, url in urls_huggingface.items():
         # Extracting repo_id from the URL
         repo_id = url.split("/")[3] + "/" + url.split("/")[4]
 
-        files = glob.glob(os.path.join(adetailer_model_path, "*"))
+        files = glob.glob(os.path.join(adetailer_dir, "*"))
 
         if filename not in [os.path.basename(f) for f in files]:
             # Downloading the file with destination folder specified
-            hf_hub_download(
-                repo_id=repo_id, filename=filename, local_dir=adetailer_model_path
-            )
-            print(f"Downloaded {filename} to {adetailer_model_path}")
+            hf_hub_download(repo_id=repo_id, filename=filename, local_dir=adetailer_dir)
+            print(f"Downloaded {filename} to {adetailer_dir}")
 
 
 # Call the function to start downloading
