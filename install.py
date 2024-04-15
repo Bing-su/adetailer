@@ -4,9 +4,10 @@ import importlib.util
 import subprocess
 import sys
 from importlib.metadata import version  # python >= 3.8
-from huggingface_models import download_models, urls_huggingface
 
 from packaging.version import parse
+
+from huggingface_models import download_models, urls_huggingface
 
 import_name = {"py-cpuinfo": "cpuinfo", "protobuf": "google.protobuf"}
 
