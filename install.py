@@ -4,6 +4,7 @@ import importlib.util
 import subprocess
 import sys
 from importlib.metadata import version  # python >= 3.8
+from huggingface_models import download_models, urls_huggingface
 
 from packaging.version import parse
 
@@ -74,3 +75,4 @@ except Exception:
 
 if not skip_install:
     install()
+    download_models(urls_huggingface)
