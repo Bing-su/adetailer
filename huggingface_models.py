@@ -4,7 +4,7 @@ from urllib.parse import urlparse
 
 from huggingface_hub import hf_hub_download
 
-from modules.paths import models_path
+from modules.paths import data_path
 
 urls_huggingface = {
     "face_yolov8m.pt": "https://huggingface.co/Bingsu/adetailer/resolve/main/face_yolov8m.pt",
@@ -27,7 +27,7 @@ urls_huggingface = {
 
 def download_models(urls_huggingface):
     # Set the destination folder for Hugging Face models
-    adetailer_model_path = os.path.join(models_path, "adetailer")
+    adetailer_model_path = os.path.join(data_path, "models/adetailer")
     os.makedirs(adetailer_model_path, exist_ok=True)
 
     for filename, url in urls_huggingface.items():
