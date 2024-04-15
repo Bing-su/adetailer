@@ -1,10 +1,11 @@
 import glob
 import os
-from urllib.parse import urlparse
-from huggingface_hub import hf_hub_download
 from pathlib import Path
-from modules import paths
+from urllib.parse import urlparse
 
+from huggingface_hub import hf_hub_download
+
+from modules import paths
 
 urls_huggingface = {
     "face_yolov8m.pt": "https://huggingface.co/Bingsu/adetailer/resolve/main/face_yolov8m.pt",
