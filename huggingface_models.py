@@ -29,7 +29,7 @@ urls_huggingface = {
 def download_models(urls_huggingface):
     # Set the destination folder for Hugging Face models
     adetailer_dir = Path(paths.models_path, "adetailer")
-    os.makedirs(adetailer_model_path, exist_ok=True)
+    os.makedirs(adetailer_dir, exist_ok=True)
 
     for filename, url in urls_huggingface.items():
         # Extracting repo_id from the URL
