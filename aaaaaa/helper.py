@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from contextlib import contextmanager
 from copy import copy
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Union
 
 import torch
 
@@ -21,7 +21,7 @@ else:
         StableDiffusionProcessingTxt2Img,
     )
 
-PT = StableDiffusionProcessingTxt2Img | StableDiffusionProcessingImg2Img
+PT = Union[StableDiffusionProcessingTxt2Img, StableDiffusionProcessingImg2Img]
 
 
 @contextmanager
