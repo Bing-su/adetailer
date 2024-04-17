@@ -1,0 +1,22 @@
+name: Empirical Implementation of JDD
+
+on:
+  pull_request:
+    types:
+      - opened
+
+jobs:
+  lint:
+    permissions:
+      pull-requests: write
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: peter-evans/create-or-update-comment@v4
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            ![Imgur](https://i.imgur.com/ESow3BL.png)
+
+            LGTM
+          reactions: hooray
