@@ -44,11 +44,11 @@ def run_pip(*args):
 def install():
     deps = [
         # requirements
-        ("ultralytics", "8.1.29", None),
-        ("mediapipe", "0.10.9", None),
+        ("ultralytics", "8.2.0", None),
+        ("mediapipe", "0.10.12", None),
         ("rich", "13.0.0", None),
         # mediapipe
-        ("protobuf", "3.20", "3.9999"),
+        ("protobuf", "4.25.3", "4.9999"),
     ]
 
     for pkg, low, high in deps:
