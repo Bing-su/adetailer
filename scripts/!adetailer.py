@@ -4,7 +4,6 @@ import platform
 import re
 import sys
 import traceback
-from contextlib import suppress
 from copy import copy
 from functools import partial
 from pathlib import Path
@@ -70,6 +69,8 @@ from modules.shared import cmd_opts, opts, state
 
 if TYPE_CHECKING:
     from fastapi import FastAPI
+
+PARAMS_TXT = "params.txt"
 
 no_huggingface = getattr(cmd_opts, "ad_no_huggingface", False)
 adetailer_dir = Path(paths.models_path, "adetailer")
@@ -409,9 +410,15 @@ class AfterDetailerScript(scripts.Script):
             p, p.all_prompts, p.all_seeds, p.all_subseeds, None, 0, 0
         )
 
+    def read_params_txt(self) -> str:
+        params_txt = Path(paths.data_path, PARAMS_TXT)
+        if params_txt.exists():
+            return params_txt.read_text(encoding="utf-8")
+        return ""
+
     def write_params_txt(self, content: str) -> None:
-        params_txt = Path(paths.data_path, "params.txt")
-        with suppress(Exception):
+        params_txt = Path(paths.data_path, PARAMS_TXT)
+        if params_txt.exists() and content:
             params_txt.write_text(content, encoding="utf-8")
 
     @staticmethod
@@ -783,7 +790,7 @@ class AfterDetailerScript(scripts.Script):
         pp.image = ensure_pil_image(pp.image, "RGB")
         init_image = copy(pp.image)
         arg_list = self.get_args(p, *args_)
-        params_txt_content = Path(paths.data_path, "params.txt").read_text("utf-8")
+        params_txt_content = self.read_params_txt()
 
         if need_call_postprocess(p):
             dummy = Processed(p, [], p.seed, "")

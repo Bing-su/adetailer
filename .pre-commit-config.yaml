@@ -10,6 +10,7 @@ repos:
       - id: check-merge-conflict
       - id: check-case-conflict
       - id: check-ast
+      - id: check-yaml
       - id: trailing-whitespace
         args: [--markdown-linebreak-ext=md]
       - id: end-of-file-fixer
