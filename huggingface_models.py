@@ -4,8 +4,10 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 from huggingface_hub import hf_hub_download
+
 import modules.scripts as scripts
-#from modules.paths import data_path
+
+# from modules.paths import data_path
 
 urls_huggingface = {
     "face_yolov8m.pt": "https://huggingface.co/Bingsu/adetailer/resolve/main/face_yolov8m.pt",
