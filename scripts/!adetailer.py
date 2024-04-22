@@ -934,7 +934,7 @@ def search_and_replace_prompt(p, x: Any, xs: Any, replace_in_main_prompt: bool):
 def make_axis_on_xyz_grid():
     xyz_grid = None
     for script in scripts.scripts_data:
-        if script.script_class.__module__ == "xyz_grid.py":
+        if script.script_class.__module__ in ('scripts.xyz_grid', 'xyz_grid.py'):
             xyz_grid = script.module
             break
 
