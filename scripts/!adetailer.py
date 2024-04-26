@@ -76,10 +76,10 @@ no_huggingface = getattr(cmd_opts, "ad_no_huggingface", False)
 adetailer_dir = Path(paths.models_path, "adetailer")
 safe_mkdir(adetailer_dir)
 
-extra_models_dir = shared.opts.data.get("ad_extra_models_dir", "")
+extra_models_dirs = shared.opts.data.get("ad_extra_models_dir", "")
 model_mapping = get_models(
     adetailer_dir,
-    extra_models_dir,
+    *extra_models_dirs.split(":"),
     huggingface=not no_huggingface,
 )
 
@@ -849,7 +849,7 @@ def on_ui_settings():
         "ad_extra_models_dir",
         shared.OptionInfo(
             default="",
-            label="Extra path to scan adetailer models",
+            label="Extra paths to scan adetailer models seperated by colons (e.g. /path/to/models:another/path/to/models)",
             component=gr.Textbox,
             section=section,
         ),
