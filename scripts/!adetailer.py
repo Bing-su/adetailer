@@ -79,7 +79,7 @@ safe_mkdir(adetailer_dir)
 extra_models_dirs = shared.opts.data.get("ad_extra_models_dir", "")
 model_mapping = get_models(
     adetailer_dir,
-    *extra_models_dirs.split(":"),
+    *extra_models_dirs.split('|'),
     huggingface=not no_huggingface,
 )
 
@@ -849,11 +849,11 @@ def on_ui_settings():
         "ad_extra_models_dir",
         shared.OptionInfo(
             default="",
-            label="Extra paths to scan adetailer models seperated by colons",
+            label="Extra paths to scan adetailer models seperated by vertical bars",
             component=gr.Textbox,
             section=section,
         )
-        .info("eg. path/to/models:another/path/to/models:different/path/to/models")
+        .info("eg. path/to/models|another/path/to/models|different/path/to/models")
         .needs_reload_ui(),
     )
 
