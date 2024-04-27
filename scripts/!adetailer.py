@@ -853,7 +853,8 @@ def on_ui_settings():
             component=gr.Textbox,
             section=section,
         )
-        .info("eg. path/to/models:another/path/to/models:different/path/to/models"),
+        .info("eg. path/to/models:another/path/to/models:different/path/to/models")
+        .needs_reload_ui(),
     )
 
     shared.opts.add_option(
