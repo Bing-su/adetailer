@@ -45,10 +45,12 @@ def install():
     deps = [
         # requirements
         ("ultralytics", "8.2.0", None),
-        ("mediapipe", "0.10.12", None),
+        ("mediapipe", "0.10.13", None),
         ("rich", "13.0.0", None),
         # mediapipe
         ("protobuf", "4.25.3", "4.9999"),
+        # protobuf
+        ("transformers", "4.31.0", None),
     ]
 
     for pkg, low, high in deps:
