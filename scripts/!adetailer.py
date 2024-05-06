@@ -849,11 +849,11 @@ def on_ui_settings():
         "ad_extra_models_dir",
         shared.OptionInfo(
             default="",
-            label="Extra paths to scan adetailer models seperated by vertical bars",
+            label="Extra paths to scan adetailer models seperated by vertical bars(|)",
             component=gr.Textbox,
             section=section,
         )
-        .info("eg. path/to/models|another/path/to/models|different/path/to/models")
+        .info("eg. path\\to\\models|C:\\path\\to\\models|another/path/to/models")
         .needs_reload_ui(),
     )
 
