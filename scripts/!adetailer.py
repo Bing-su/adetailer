@@ -26,6 +26,7 @@ from aaaaaa.p_method import (
     get_i,
     is_img2img_inpaint,
     is_inpaint_only_masked,
+    is_skip_img2img,
     need_call_postprocess,
     need_call_process,
 )
@@ -625,7 +626,7 @@ class AfterDetailerScript(scripts.Script):
 
     @staticmethod
     def get_i2i_init_image(p, pp):
-        if getattr(p, "_ad_skip_img2img", False):
+        if is_skip_img2img(p):
             return p.init_images[0]
         return pp.image
 
@@ -649,7 +650,7 @@ class AfterDetailerScript(scripts.Script):
             mask = ImageChops.invert(mask)
         mask = create_binary_mask(mask)
 
-        if getattr(p, "_ad_skip_img2img", False):
+        if is_skip_img2img(p):
             if hasattr(p, "init_images") and p.init_images:
                 width, height = p.init_images[0].size
             else:
@@ -712,7 +713,7 @@ class AfterDetailerScript(scripts.Script):
         seed, subseed = self.get_seed(p)
         ad_prompts, ad_negatives = self.get_prompt(p, args)
 
-        is_mediapipe = args.ad_model.lower().startswith("mediapipe")
+        is_mediapipe = args.is_mediapipe()
 
         kwargs = {}
         if is_mediapipe:
@@ -800,11 +801,11 @@ class AfterDetailerScript(scripts.Script):
         is_processed = False
         with CNHijackRestore(), pause_total_tqdm(), cn_allow_script_control():
             for n, args in enumerate(arg_list):
-                if args.ad_model == "None":
+                if args.need_skip():
                     continue
                 is_processed |= self._postprocess_image_inner(p, pp, args, n=n)
 
-        if is_processed and not getattr(p, "_ad_skip_img2img", False):
+        if is_processed and not is_skip_img2img(p):
             self.save_image(
                 p, init_image, condition="ad_save_images_before", suffix="-ad-before"
             )
