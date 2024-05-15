@@ -29,6 +29,8 @@ from aaaaaa.p_method import (
     need_call_postprocess,
     need_call_process,
 )
+from aaaaaa.traceback import rich_traceback
+from aaaaaa.ui import WebuiInfo, adui, ordinal, suffix
 from adetailer import (
     AFTER_DETAILER,
     __version__,
@@ -46,8 +48,6 @@ from adetailer.mask import (
     mask_preprocess,
     sort_bboxes,
 )
-from adetailer.traceback import rich_traceback
-from adetailer.ui import WebuiInfo, adui, ordinal, suffix
 from controlnet_ext import (
     CNHijackRestore,
     ControlNetExt,
