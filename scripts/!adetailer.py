@@ -39,7 +39,13 @@ from adetailer import (
     mediapipe_predict,
     ultralytics_predict,
 )
-from adetailer.args import BBOX_SORTBY, SCRIPT_DEFAULT, ADetailerArgs, SkipImg2ImgOrig
+from adetailer.args import (
+    BBOX_SORTBY,
+    BUILTIN_SCRIPT,
+    SCRIPT_DEFAULT,
+    ADetailerArgs,
+    SkipImg2ImgOrig,
+)
 from adetailer.common import PredictOutput, ensure_pil_image, safe_mkdir
 from adetailer.mask import (
     filter_by_ratio,
@@ -442,10 +448,11 @@ class AfterDetailerScript(scripts.Script):
         if not ad_only_seleted_scripts:
             return script_runner, script_args
 
-        ad_script_names = opts.data.get("ad_script_names", SCRIPT_DEFAULT)
+        ad_script_names_string: str = opts.data.get("ad_script_names", SCRIPT_DEFAULT)
+        ad_script_names = ad_script_names_string.split(",") + BUILTIN_SCRIPT.split(",")
         script_names_set = {
             name
-            for script_name in ad_script_names.split(",")
+            for script_name in ad_script_names
             for name in (script_name, script_name.strip())
         }
 

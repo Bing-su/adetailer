@@ -268,6 +268,8 @@ _script_default = (
     "wildcards",
     "lora_block_weight",
     "negpip",
-    "soft_inpainting",
 )
 SCRIPT_DEFAULT = ",".join(sorted(_script_default))
+
+_builtin_script = ("soft_inpainting", "hypertile_script")
+BUILTIN_SCRIPT = ",".join(sorted(_builtin_script))
