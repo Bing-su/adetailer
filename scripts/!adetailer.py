@@ -770,6 +770,8 @@ class AfterDetailerScript(scripts.Script):
             p2.seed = self.get_each_tap_seed(seed, j)
             p2.subseed = self.get_each_tap_seed(subseed, j)
 
+            p2.cached_c = [None, None]
+            p2.cached_uc = [None, None]
             try:
                 processed = process_images(p2)
             except NansException as e:
