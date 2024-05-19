@@ -55,6 +55,7 @@ class ArgsList(UserList):
 class ADetailerArgs(BaseModel, extra=Extra.forbid):
     ad_model: str = "None"
     ad_model_classes: str = ""
+    ad_tap_enable: bool = True
     ad_prompt: str = ""
     ad_negative_prompt: str = ""
     ad_confidence: confloat(ge=0.0, le=1.0) = 0.3
@@ -119,7 +120,7 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
                 p.pop(k, None)
 
     def extra_params(self, suffix: str = "") -> dict[str, Any]:
-        if self.ad_model == "None":
+        if self.need_skip():
             return {}
 
         p = {name: getattr(self, attr) for attr, name in ALL_ARGS}
@@ -128,6 +129,7 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
         ppop("ADetailer model classes")
         ppop("ADetailer prompt")
         ppop("ADetailer negative prompt")
+        p.pop("ADetailer tap enable", None)  # always pop
         ppop("ADetailer mask only top k largest", cond=0)
         ppop("ADetailer mask min ratio", cond=0.0)
         ppop("ADetailer mask max ratio", cond=1.0)
@@ -200,10 +202,17 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
 
         return p
 
+    def is_mediapipe(self) -> bool:
+        return self.ad_model.lower().startswith("mediapipe")
+
+    def need_skip(self) -> bool:
+        return self.ad_model == "None" or self.ad_tap_enable is False
+
 
 _all_args = [
     ("ad_model", "ADetailer model"),
     ("ad_model_classes", "ADetailer model classes"),
+    ("ad_tap_enable", "ADetailer tap enable"),
     ("ad_prompt", "ADetailer prompt"),
     ("ad_negative_prompt", "ADetailer negative prompt"),
     ("ad_confidence", "ADetailer confidence"),
@@ -262,6 +271,8 @@ _script_default = (
     "wildcards",
     "lora_block_weight",
     "negpip",
-    "soft_inpainting",
 )
 SCRIPT_DEFAULT = ",".join(sorted(_script_default))
+
+_builtin_script = ("soft_inpainting", "hypertile_script")
+BUILTIN_SCRIPT = ",".join(sorted(_builtin_script))

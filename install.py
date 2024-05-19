@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import os
 import subprocess
 import sys
 from importlib.metadata import version  # python >= 3.8
@@ -38,19 +39,29 @@ def is_installed(
 
 
 def run_pip(*args):
-    subprocess.run([sys.executable, "-m", "pip", "install", *args])
+    subprocess.run([sys.executable, "-m", "pip", "install", *args], check=False)
+
+
+def run_uv_pip(*args):
+    subprocess.run([sys.executable, "-m", "uv", "pip", "install", *args], check=False)
 
 
 def install():
     deps = [
         # requirements
-        ("ultralytics", "8.1.29", None),
-        ("mediapipe", "0.10.9", None),
+        ("ultralytics", "8.2.0", None),
+        ("mediapipe", "0.10.13", None),
         ("rich", "13.0.0", None),
         # mediapipe
-        ("protobuf", "3.20", "3.9999"),
+        ("protobuf", "4.25.3", "4.9999"),
     ]
 
+    if not is_installed("uv", "0.1.44", None):
+        run_pip("uv>=0.1.44")
+
+    os.environ["UV_PYTHON"] = sys.executable
+
+    pkgs = []
     for pkg, low, high in deps:
         if not is_installed(pkg, low, high):
             if low and high:
@@ -61,8 +72,9 @@ def install():
                 cmd = f"{pkg}<={high}"
             else:
                 cmd = pkg
+            pkgs.append(cmd)
 
-            run_pip("-U", cmd)
+    run_uv_pip(*pkgs)
 
 
 try:

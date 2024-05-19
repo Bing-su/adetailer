@@ -2,11 +2,11 @@
 name = "adetailer"
 description = "An object detection and auto-mask extension for stable diffusion webui."
 authors = [{ name = "dowon", email = "ks2515@naver.com" }]
-requires-python = ">=3.8,<3.13"
+requires-python = ">=3.8"
 readme = "README.md"
 license = { text = "AGPL-3.0" }
 dependencies = [
-    "ultralytics>=8.1",
+    "ultralytics>=8.2",
     "mediapipe>=0.10",
     "pydantic<3",
     "rich>=13",
