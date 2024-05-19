@@ -180,20 +180,22 @@ def one_ui_group(n: int, is_img2img: bool, webui_info: WebuiInfo):
             )
 
             w.ad_model = gr.Dropdown(
-                label="ADetailer model" + suffix(n),
+                label="ADetailer detector" + suffix(n),
                 choices=model_choices,
                 value=model_choices[0],
                 visible=True,
                 type="value",
                 elem_id=eid("ad_model"),
+                info="Select a model to use for detection.",
             )
 
         with gr.Row():
             w.ad_model_classes = gr.Textbox(
-                label="ADetailer model classes" + suffix(n),
+                label="ADetailer detector classes" + suffix(n),
                 value="",
                 visible=False,
                 elem_id=eid("ad_classes"),
+                info="Comma separated class names to detect, ex: 'girl,cat'.",
             )
 
             w.ad_model.change(
@@ -280,6 +282,7 @@ def detection(w: Widgets, n: int, is_img2img: bool):
                 value=0.3,
                 visible=True,
                 elem_id=eid("ad_confidence"),
+                info="Confidence threshold for detection model.",
             )
             w.ad_mask_k_largest = gr.Slider(
                 label="Mask only the top k largest (0 to disable)" + suffix(n),
@@ -289,6 +292,7 @@ def detection(w: Widgets, n: int, is_img2img: bool):
                 value=0,
                 visible=True,
                 elem_id=eid("ad_mask_k_largest"),
+                info="Use only the top k largest objects for masking.",
             )
 
         with gr.Column(variant="compact"):
@@ -300,6 +304,7 @@ def detection(w: Widgets, n: int, is_img2img: bool):
                 value=0.0,
                 visible=True,
                 elem_id=eid("ad_mask_min_ratio"),
+                info="Minimum area ratio for masking.",
             )
             w.ad_mask_max_ratio = gr.Slider(
                 label="Mask max area ratio" + suffix(n),
@@ -309,6 +314,7 @@ def detection(w: Widgets, n: int, is_img2img: bool):
                 value=1.0,
                 visible=True,
                 elem_id=eid("ad_mask_max_ratio"),
+                info="Maximum area ratio for masking.",
             )
 
 
@@ -326,6 +332,7 @@ def mask_preprocessing(w: Widgets, n: int, is_img2img: bool):
                     value=0,
                     visible=True,
                     elem_id=eid("ad_x_offset"),
+                    info="Mask x offset (→) in pixels.",
                 )
                 w.ad_y_offset = gr.Slider(
                     label="Mask y(↑) offset" + suffix(n),
@@ -335,6 +342,7 @@ def mask_preprocessing(w: Widgets, n: int, is_img2img: bool):
                     value=0,
                     visible=True,
                     elem_id=eid("ad_y_offset"),
+                    info="Mask y offset (↑) in pixels.",
                 )
 
             with gr.Column(variant="compact"):
@@ -346,6 +354,7 @@ def mask_preprocessing(w: Widgets, n: int, is_img2img: bool):
                     value=4,
                     visible=True,
                     elem_id=eid("ad_dilate_erode"),
+                    info="Mask erosion (-) / dilation (+) in pixels.",
                 )
 
         with gr.Row():
@@ -354,6 +363,7 @@ def mask_preprocessing(w: Widgets, n: int, is_img2img: bool):
                 choices=MASK_MERGE_INVERT,
                 value="None",
                 elem_id=eid("ad_mask_merge_invert"),
+                info="Mask merge mode. (None: do nothing, Merge: merge masks, Merge and Invert: merge all masks and invert)",
             )
 
 
@@ -622,6 +632,7 @@ def inpainting(w: Widgets, n: int, is_img2img: bool, webui_info: WebuiInfo):
                 label="Restore faces after ADetailer" + suffix(n),
                 value=False,
                 elem_id=eid("ad_restore_face"),
+                info="Apply face restoration after ADetailer.",
             )
 
 
