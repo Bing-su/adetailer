@@ -49,8 +49,6 @@ def install():
         ("rich", "13.0.0", None),
         # mediapipe
         ("protobuf", "4.25.3", "4.9999"),
-        # protobuf
-        ("transformers", "4.31.0", None),
     ]
 
     for pkg, low, high in deps:
