@@ -187,7 +187,13 @@ class AfterDetailerScript(scripts.Script):
             return False
 
         ad_enabled = args_[0] if isinstance(args_[0], bool) else True
-        not_none = any(arg.get("ad_model", "None") != "None" for arg in arg_list)
+        pydantic_args = []
+        for arg in arg_list:
+            try:
+                pydantic_args.append(ADetailerArgs(**arg))
+            except ValueError:  # noqa: PERF203
+                continue
+        not_none = not all(arg.need_skip() for arg in pydantic_args)
         return ad_enabled and not_none
 
     def set_skip_img2img(self, p, *args_) -> None:
