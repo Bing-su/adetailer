@@ -4,7 +4,7 @@ import os
 from collections import OrderedDict
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Generic, Optional, TypeVar
 
 from huggingface_hub import hf_hub_download
 from PIL import Image, ImageDraw
@@ -14,10 +14,12 @@ from torchvision.transforms.functional import to_pil_image
 REPO_ID = "Bingsu/adetailer"
 _download_failed = False
 
+T = TypeVar("T", int, float)
+
 
 @dataclass
-class PredictOutput:
-    bboxes: list[list[int | float]] = field(default_factory=list)
+class PredictOutput(Generic[T]):
+    bboxes: list[list[T]] = field(default_factory=list)
     masks: list[Image.Image] = field(default_factory=list)
     preview: Optional[Image.Image] = None
 

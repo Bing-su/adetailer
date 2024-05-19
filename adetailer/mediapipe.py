@@ -28,7 +28,7 @@ def mediapipe_predict(
 
 def mediapipe_face_detection(
     model_type: int, image: Image.Image, confidence: float = 0.3
-) -> PredictOutput:
+) -> PredictOutput[float]:
     import mediapipe as mp
 
     img_width, img_height = image.size
@@ -68,7 +68,9 @@ def mediapipe_face_detection(
     return PredictOutput(bboxes=bboxes, masks=masks, preview=preview)
 
 
-def mediapipe_face_mesh(image: Image.Image, confidence: float = 0.3) -> PredictOutput:
+def mediapipe_face_mesh(
+    image: Image.Image, confidence: float = 0.3
+) -> PredictOutput[int]:
     import mediapipe as mp
 
     mp_face_mesh = mp.solutions.face_mesh
@@ -115,7 +117,7 @@ def mediapipe_face_mesh(image: Image.Image, confidence: float = 0.3) -> PredictO
 
 def mediapipe_face_mesh_eyes_only(
     image: Image.Image, confidence: float = 0.3
-) -> PredictOutput:
+) -> PredictOutput[int]:
     import mediapipe as mp
 
     mp_face_mesh = mp.solutions.face_mesh
