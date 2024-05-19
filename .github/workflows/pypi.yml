@@ -13,6 +13,7 @@ jobs:
         python-version:
           - "3.10"
           - "3.11"
+          - "3.12"
 
     steps:
       - uses: actions/checkout@v4
@@ -22,10 +23,11 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+      - uses: yezz123/setup-uv@v4
+
       - name: Install dependencies
         run: |
-          pip install .
-          pip install pytest
+          uv pip install --system . pytest
 
       - name: Run tests
         run: pytest -v
