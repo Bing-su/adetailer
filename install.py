@@ -74,7 +74,8 @@ def install():
                 cmd = pkg
             pkgs.append(cmd)
 
-    run_uv_pip(*pkgs)
+    if pkgs:
+        run_uv_pip(*pkgs)
 
 
 try:
