@@ -13,7 +13,6 @@ from rich import print
 from torchvision.transforms.functional import to_pil_image
 
 REPO_ID = "Bingsu/adetailer"
-_download_failed = False
 
 T = TypeVar("T", int, float)
 
@@ -26,18 +25,12 @@ class PredictOutput(Generic[T]):
 
 
 def hf_download(file: str, repo_id: str = REPO_ID) -> str:
-    global _download_failed
-
-    if _download_failed:
-        return "INVALID"
-
     try:
         path = hf_hub_download(repo_id, file)
     except Exception:
         msg = f"[-] ADetailer: Failed to load model {file!r} from huggingface"
         print(msg)
         path = "INVALID"
-        _download_failed = True
     return path
 
 
