@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import importlib.util
-import os
 import subprocess
 import sys
 from importlib.metadata import version  # python >= 3.8
@@ -39,11 +38,7 @@ def is_installed(
 
 
 def run_pip(*args):
-    subprocess.run([sys.executable, "-m", "pip", "install", *args], check=False)
-
-
-def run_uv_pip(*args):
-    subprocess.run([sys.executable, "-m", "uv", "pip", "install", *args], check=False)
+    subprocess.run([sys.executable, "-m", "pip", "install", *args], check=True)
 
 
 def install():
@@ -55,11 +50,6 @@ def install():
         # mediapipe
         ("protobuf", "4.25.3", "4.9999"),
     ]
-
-    if not is_installed("uv", "0.1.44", None):
-        run_pip("uv>=0.1.44")
-
-    os.environ["UV_PYTHON"] = sys.executable
 
     pkgs = []
     for pkg, low, high in deps:
@@ -75,7 +65,7 @@ def install():
             pkgs.append(cmd)
 
     if pkgs:
-        run_uv_pip(*pkgs)
+        run_pip(*pkgs)
 
 
 try:
