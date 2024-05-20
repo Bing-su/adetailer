@@ -21,7 +21,7 @@ def ultralytics_predict(
     confidence: float = 0.3,
     device: str = "",
     classes: str = "",
-) -> PredictOutput:
+) -> PredictOutput[float]:
     from ultralytics import YOLO
 
     model = YOLO(model_path)

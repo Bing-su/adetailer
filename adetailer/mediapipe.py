@@ -28,7 +28,7 @@ def mediapipe_predict(
 
 def mediapipe_face_detection(
     model_type: int, image: Image.Image, confidence: float = 0.3
-) -> PredictOutput:
+) -> PredictOutput[float]:
     import mediapipe as mp
 
     img_width, img_height = image.size
@@ -68,7 +68,9 @@ def mediapipe_face_detection(
     return PredictOutput(bboxes=bboxes, masks=masks, preview=preview)
 
 
-def mediapipe_face_mesh(image: Image.Image, confidence: float = 0.3) -> PredictOutput:
+def mediapipe_face_mesh(
+    image: Image.Image, confidence: float = 0.3
+) -> PredictOutput[int]:
     import mediapipe as mp
 
     mp_face_mesh = mp.solutions.face_mesh
@@ -98,7 +100,9 @@ def mediapipe_face_mesh(image: Image.Image, confidence: float = 0.3) -> PredictO
                 connection_drawing_spec=drawing_styles.get_default_face_mesh_tesselation_style(),
             )
 
-            points = np.intp([(land.x * w, land.y * h) for land in landmarks.landmark])
+            points = np.array(
+                [[land.x * w, land.y * h] for land in landmarks.landmark], dtype=int
+            )
             outline = cv2.convexHull(points).reshape(-1).tolist()
 
             mask = Image.new("L", image.size, "black")
@@ -113,7 +117,7 @@ def mediapipe_face_mesh(image: Image.Image, confidence: float = 0.3) -> PredictO
 
 def mediapipe_face_mesh_eyes_only(
     image: Image.Image, confidence: float = 0.3
-) -> PredictOutput:
+) -> PredictOutput[int]:
     import mediapipe as mp
 
     mp_face_mesh = mp.solutions.face_mesh
@@ -136,7 +140,9 @@ def mediapipe_face_mesh_eyes_only(
         masks = []
 
         for landmarks in pred.multi_face_landmarks:
-            points = np.intp([(land.x * w, land.y * h) for land in landmarks.landmark])
+            points = np.array(
+                [[land.x * w, land.y * h] for land in landmarks.landmark], dtype=int
+            )
             left_eyes = points[left_idx]
             right_eyes = points[right_idx]
             left_outline = cv2.convexHull(left_eyes).reshape(-1).tolist()

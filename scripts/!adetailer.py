@@ -853,10 +853,10 @@ def on_ui_settings():
     shared.opts.add_option(
         "ad_max_models",
         shared.OptionInfo(
-            default=2,
+            default=4,
             label="Max models",
             component=gr.Slider,
-            component_args={"minimum": 1, "maximum": 10, "step": 1},
+            component_args={"minimum": 1, "maximum": 15, "step": 1},
             section=section,
         ),
     )
