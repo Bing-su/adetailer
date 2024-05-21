@@ -854,11 +854,11 @@ def on_ui_settings():
         "ad_max_models",
         shared.OptionInfo(
             default=4,
-            label="Max models",
+            label="Max taps",
             component=gr.Slider,
             component_args={"minimum": 1, "maximum": 15, "step": 1},
             section=section,
-        ),
+        ).needs_reload_ui(),
     )
 
     shared.opts.add_option(
