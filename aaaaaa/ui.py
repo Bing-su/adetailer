@@ -105,9 +105,9 @@ def on_cn_model_update(cn_model_name: str):
 
 
 def elem_id(item_id: str, n: int, is_img2img: bool) -> str:
-    tap = "img2img" if is_img2img else "txt2img"
+    tab = "img2img" if is_img2img else "txt2img"
     suf = suffix(n, "_")
-    return f"script_{tap}_adetailer_{item_id}{suf}"
+    return f"script_{tab}_adetailer_{item_id}{suf}"
 
 
 def state_init(w: Widgets) -> dict[str, Any]:
@@ -179,11 +179,11 @@ def one_ui_group(n: int, is_img2img: bool, webui_info: WebuiInfo):
 
     with gr.Group():
         with gr.Row(variant="compact"):
-            w.ad_tap_enable = gr.Checkbox(
-                label=f"Enable this tap ({ordinal(n + 1)})",
+            w.ad_tab_enable = gr.Checkbox(
+                label=f"Enable this tab ({ordinal(n + 1)})",
                 value=True,
                 visible=True,
-                elem_id=eid("ad_tap_enable"),
+                elem_id=eid("ad_tab_enable"),
             )
 
         with gr.Row():

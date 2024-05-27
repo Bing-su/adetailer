@@ -644,8 +644,8 @@ class AfterDetailerScript(scripts.Script):
         return pp.image
 
     @staticmethod
-    def get_each_tap_seed(seed: int, i: int):
-        use_same_seed = shared.opts.data.get("ad_same_seed_for_each_tap", False)
+    def get_each_tab_seed(seed: int, i: int):
+        use_same_seed = shared.opts.data.get("ad_same_seed_for_each_tab", False)
         return seed if use_same_seed else seed + i
 
     @staticmethod
@@ -773,8 +773,8 @@ class AfterDetailerScript(scripts.Script):
             if re.match(r"^\s*\[SKIP\]\s*$", p2.prompt):
                 continue
 
-            p2.seed = self.get_each_tap_seed(seed, j)
-            p2.subseed = self.get_each_tap_seed(subseed, j)
+            p2.seed = self.get_each_tab_seed(seed, j)
+            p2.subseed = self.get_each_tab_seed(subseed, j)
 
             p2.cached_c = [None, None]
             p2.cached_uc = [None, None]
@@ -854,7 +854,7 @@ def on_ui_settings():
         "ad_max_models",
         shared.OptionInfo(
             default=4,
-            label="Max taps",
+            label="Max tabs",
             component=gr.Slider,
             component_args={"minimum": 1, "maximum": 15, "step": 1},
             section=section,
@@ -918,7 +918,7 @@ def on_ui_settings():
     )
 
     shared.opts.add_option(
-        "ad_same_seed_for_each_tap",
+        "ad_same_seed_for_each_tab",
         shared.OptionInfo(
             False, "Use same seed for each tab in adetailer", section=section
         ),
