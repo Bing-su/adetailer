@@ -2,12 +2,12 @@
 name = "adetailer"
 description = "An object detection and auto-mask extension for stable diffusion webui."
 authors = [{ name = "dowon", email = "ks2515@naver.com" }]
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 readme = "README.md"
 license = { text = "AGPL-3.0" }
 dependencies = [
     "ultralytics>=8.2",
-    "mediapipe>=0.10",
+    "mediapipe>=0.10.13",
     "pydantic<3",
     "rich>=13",
     "huggingface_hub",
@@ -39,7 +39,7 @@ profile = "black"
 known_first_party = ["launch", "modules"]
 
 [tool.ruff]
-target-version = "py38"
+target-version = "py39"
 
 [tool.ruff.lint]
 select = [

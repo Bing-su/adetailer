@@ -121,10 +121,7 @@ class AfterDetailerScript(scripts.Script):
         sampler_names = [sampler.name for sampler in all_samplers]
         scheduler_names = [x.label for x in schedulers]
 
-        try:
-            checkpoint_list = modules.sd_models.checkpoint_tiles(use_shorts=True)
-        except TypeError:
-            checkpoint_list = modules.sd_models.checkpoint_tiles()
+        checkpoint_list = modules.sd_models.checkpoint_tiles(use_shorts=True)
         vae_list = modules.shared_items.sd_vae_items()
 
         webui_info = WebuiInfo(

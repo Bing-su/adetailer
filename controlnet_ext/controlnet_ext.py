@@ -4,21 +4,11 @@ import importlib
 import sys
 from functools import lru_cache
 from pathlib import Path
-from textwrap import dedent
 
 from modules import extensions, sd_models, shared
+from modules.paths import extensions_builtin_dir, extensions_dir, models_path
 
 from .common import cn_model_module, cn_model_regex
-
-try:
-    from modules.paths import extensions_builtin_dir, extensions_dir, models_path
-except ImportError as e:
-    msg = """
-    [-] ADetailer: `stable-diffusion-webui < 1.1.0` is no longer supported.
-        Please upgrade to stable-diffusion-webui >= 1.1.0.
-        or you can use ADetailer v23.10.1 (https://github.com/Bing-su/adetailer/archive/refs/tags/v23.10.1.zip)
-    """
-    raise RuntimeError(dedent(msg)) from e
 
 ext_path = Path(extensions_dir)
 ext_builtin_path = Path(extensions_builtin_dir)
