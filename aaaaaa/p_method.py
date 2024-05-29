@@ -28,3 +28,7 @@ def get_i(p) -> int:
     bs = p.batch_size
     i = p.batch_index
     return it * bs + i
+
+
+def is_skip_img2img(p) -> bool:
+    return getattr(p, "_ad_skip_img2img", False)

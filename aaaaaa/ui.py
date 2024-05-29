@@ -162,7 +162,7 @@ def adui(
                 states.append(state)
                 infotext_fields.extend(infofields)
 
-    # components: [bool, dict, dict, ...]
+    # components: [bool, bool, dict, dict, ...]
     components = [ad_enable, ad_skip_img2img, *states]
     return components, infotext_fields
 
@@ -171,26 +171,35 @@ def one_ui_group(n: int, is_img2img: bool, webui_info: WebuiInfo):
     w = Widgets()
     eid = partial(elem_id, n=n, is_img2img=is_img2img)
 
+    model_choices = (
+        [*webui_info.ad_model_list, "None"]
+        if n == 0
+        else ["None", *webui_info.ad_model_list]
+    )
+
     with gr.Group():
-        with gr.Row():
-            model_choices = (
-                [*webui_info.ad_model_list, "None"]
-                if n == 0
-                else ["None", *webui_info.ad_model_list]
+        with gr.Row(variant="compact"):
+            w.ad_tap_enable = gr.Checkbox(
+                label=f"Enable this tap ({ordinal(n + 1)})",
+                value=True,
+                visible=True,
+                elem_id=eid("ad_tap_enable"),
             )
 
+        with gr.Row():
             w.ad_model = gr.Dropdown(
-                label="ADetailer model" + suffix(n),
+                label="ADetailer detector" + suffix(n),
                 choices=model_choices,
                 value=model_choices[0],
                 visible=True,
                 type="value",
                 elem_id=eid("ad_model"),
+                info="Select a model to use for detection.",
             )
 
         with gr.Row():
             w.ad_model_classes = gr.Textbox(
-                label="ADetailer model classes" + suffix(n),
+                label="ADetailer detector classes" + suffix(n),
                 value="",
                 visible=False,
                 elem_id=eid("ad_classes"),
@@ -354,6 +363,7 @@ def mask_preprocessing(w: Widgets, n: int, is_img2img: bool):
                 choices=MASK_MERGE_INVERT,
                 value="None",
                 elem_id=eid("ad_mask_merge_invert"),
+                info="None: do nothing, Merge: merge masks, Merge and Invert: merge all masks and invert",
             )
 
 
