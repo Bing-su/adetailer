@@ -593,9 +593,10 @@ class AfterDetailerScript(scripts.Script):
         pred = filter_by_ratio(
             pred, low=args.ad_mask_min_ratio, high=args.ad_mask_max_ratio
         )
-        # wrap this and the other largest filter in an if statement or selector
-        pred = filter_k_most_confident(pred, k=args.ad_mask_k_largest)
-        # pred = filter_k_largest(pred, k=args.ad_mask_k_largest)
+        if args.ad_mask_filter_method == "Area":
+            pred = filter_k_largest(pred, k=args.ad_mask_k)
+        else:
+            pred = filter_k_most_confident(pred, k=args.ad_mask_k)
         pred = self.sort_bboxes(pred)
         masks = mask_preprocess(
             pred.masks,
