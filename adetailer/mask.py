@@ -233,6 +233,14 @@ def filter_k_largest(pred: PredictOutput, k: int = 0) -> PredictOutput:
     pred.masks = [pred.masks[i] for i in idx]
     return pred
 
+def filter_k_most_confident(pred: PredictOutput, k: int = 0) -> PredictOutput:
+    if len(pred.confidences) == 0 or k == 0:
+        return pred
+    idx = np.argsort(pred.confidences)[-k:]
+    idx = idx[::-1]
+    pred.bboxes = [pred.bboxes[i] for i in idx]
+    pred.masks = [pred.masks[i] for i in idx]
+    return pred
 
 # Merge / Invert
 def mask_merge(masks: list[Image.Image]) -> list[Image.Image]:

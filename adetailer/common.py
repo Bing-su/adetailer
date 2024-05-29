@@ -19,6 +19,7 @@ _download_failed = False
 class PredictOutput:
     bboxes: list[list[int | float]] = field(default_factory=list)
     masks: list[Image.Image] = field(default_factory=list)
+    confidences: list[float] = field(default_factory=list)
     preview: Optional[Image.Image] = None
 
 

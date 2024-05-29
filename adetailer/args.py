@@ -58,6 +58,8 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
     ad_prompt: str = ""
     ad_negative_prompt: str = ""
     ad_confidence: confloat(ge=0.0, le=1.0) = 0.3
+    ad_use_confidence_mask_filter: bool = True
+    ad_use_area_mask_filter: bool = True
     ad_mask_k_largest: NonNegativeInt = 0
     ad_mask_min_ratio: confloat(ge=0.0, le=1.0) = 0.0
     ad_mask_max_ratio: confloat(ge=0.0, le=1.0) = 1.0
