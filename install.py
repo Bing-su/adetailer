@@ -49,6 +49,8 @@ def install():
         ("rich", "13.0.0", None),
         # mediapipe
         ("protobuf", "4.25.3", "4.9999"),
+        # protobuf
+        ("open-clip-torch", "2.23.0", "2.9999"),
     ]
 
     pkgs = []
