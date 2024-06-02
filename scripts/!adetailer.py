@@ -121,7 +121,7 @@ class AfterDetailerScript(scripts.Script):
         sampler_names = [sampler.name for sampler in all_samplers]
         scheduler_names = [x.label for x in schedulers]
 
-        checkpoint_list = modules.sd_models.checkpoint_tiles(use_shorts=True)
+        checkpoint_list = modules.sd_models.checkpoint_tiles(use_short=True)
         vae_list = modules.shared_items.sd_vae_items()
 
         webui_info = WebuiInfo(
