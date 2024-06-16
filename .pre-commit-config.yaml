@@ -17,12 +17,12 @@ repos:
       - id: mixed-line-ending
 
   - repo: https://github.com/rbubley/mirrors-prettier
-    rev: v3.3.1
+    rev: v3.3.2
     hooks:
       - id: prettier
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.4.8
+    rev: v0.4.9
     hooks:
       - id: ruff
         args: [--fix, --exit-non-zero-on-fix]
