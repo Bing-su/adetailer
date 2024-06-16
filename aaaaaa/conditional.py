@@ -1,19 +1,21 @@
 from __future__ import annotations
 
-from PIL import Image
-from rich import print
+msg = "[-] ADetailer: WebUI versions below 1.6.0 are not supported."
 
 try:
-    from modules.processing import create_binary_mask
-except ImportError:
-    msg = "[-] ADetailer: Support for webui versions below 1.6.0 will be discontinued."
-    print(msg)
+    from modules.processing import create_binary_mask  # noqa: F401
+except ImportError as e:
+    raise RuntimeError(msg) from e
 
-    def create_binary_mask(image: Image.Image):
-        return image.convert("L")
+
+try:
+    from modules.ui_components import InputAccordion  # noqa: F401
+except ImportError as e:
+    raise RuntimeError(msg) from e
 
 
 try:
     from modules.sd_schedulers import schedulers
 except ImportError:
+    # webui < 1.9.0
     schedulers = []

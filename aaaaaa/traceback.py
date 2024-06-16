@@ -3,13 +3,15 @@ from __future__ import annotations
 import io
 import platform
 import sys
+from collections.abc import Callable
 from importlib.metadata import version
-from typing import Any, Callable
+from typing import Any, TypeVar
 
 from rich.console import Console, Group
 from rich.panel import Panel
 from rich.table import Table
 from rich.traceback import Traceback
+from typing_extensions import ParamSpec
 
 from adetailer.__version__ import __version__
 from adetailer.args import ADetailerArgs
@@ -137,7 +139,11 @@ def get_table(title: str, data: dict[str, Any]) -> Table:
     return table
 
 
-def rich_traceback(func: Callable) -> Callable:
+P = ParamSpec("P")
+T = TypeVar("T")
+
+
+def rich_traceback(func: Callable[P, T]) -> Callable[P, T]:
     def wrapper(*args, **kwargs):
         string = io.StringIO()
         width = Console().width

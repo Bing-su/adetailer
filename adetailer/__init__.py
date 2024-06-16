@@ -4,12 +4,12 @@ from .common import PredictOutput, get_models
 from .mediapipe import mediapipe_predict
 from .ultralytics import ultralytics_predict
 
-AFTER_DETAILER = "ADetailer"
+ADETAILER = "ADetailer"
 
 __all__ = [
     "__version__",
     "ADetailerArgs",
-    "AFTER_DETAILER",
+    "ADETAILER",
     "ALL_ARGS",
     "PredictOutput",
     "get_models",

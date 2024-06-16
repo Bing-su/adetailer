@@ -33,7 +33,7 @@ from aaaaaa.p_method import (
 from aaaaaa.traceback import rich_traceback
 from aaaaaa.ui import WebuiInfo, adui, ordinal, suffix
 from adetailer import (
-    AFTER_DETAILER,
+    ADETAILER,
     __version__,
     get_models,
     mediapipe_predict,
@@ -110,7 +110,7 @@ class AfterDetailerScript(scripts.Script):
         return f"{self.__class__.__name__}(version={__version__})"
 
     def title(self):
-        return AFTER_DETAILER
+        return ADETAILER
 
     def show(self, is_img2img):
         return scripts.AlwaysVisible
@@ -121,10 +121,7 @@ class AfterDetailerScript(scripts.Script):
         sampler_names = [sampler.name for sampler in all_samplers]
         scheduler_names = [x.label for x in schedulers]
 
-        try:
-            checkpoint_list = modules.sd_models.checkpoint_tiles(use_shorts=True)
-        except TypeError:
-            checkpoint_list = modules.sd_models.checkpoint_tiles()
+        checkpoint_list = modules.sd_models.checkpoint_tiles(use_short=True)
         vae_list = modules.shared_items.sd_vae_items()
 
         webui_info = WebuiInfo(
@@ -644,8 +641,8 @@ class AfterDetailerScript(scripts.Script):
         return pp.image
 
     @staticmethod
-    def get_each_tap_seed(seed: int, i: int):
-        use_same_seed = shared.opts.data.get("ad_same_seed_for_each_tap", False)
+    def get_each_tab_seed(seed: int, i: int):
+        use_same_seed = shared.opts.data.get("ad_same_seed_for_each_tab", False)
         return seed if use_same_seed else seed + i
 
     @staticmethod
@@ -773,8 +770,8 @@ class AfterDetailerScript(scripts.Script):
             if re.match(r"^\s*\[SKIP\]\s*$", p2.prompt):
                 continue
 
-            p2.seed = self.get_each_tap_seed(seed, j)
-            p2.subseed = self.get_each_tap_seed(subseed, j)
+            p2.seed = self.get_each_tab_seed(seed, j)
+            p2.subseed = self.get_each_tab_seed(subseed, j)
 
             p2.cached_c = [None, None]
             p2.cached_uc = [None, None]
@@ -849,16 +846,16 @@ def on_after_component(component, **_kwargs):
 
 
 def on_ui_settings():
-    section = ("ADetailer", AFTER_DETAILER)
+    section = ("ADetailer", ADETAILER)
     shared.opts.add_option(
         "ad_max_models",
         shared.OptionInfo(
             default=4,
-            label="Max models",
+            label="Max tabs",
             component=gr.Slider,
             component_args={"minimum": 1, "maximum": 15, "step": 1},
             section=section,
-        ),
+        ).needs_reload_ui(),
     )
 
     shared.opts.add_option(
@@ -918,7 +915,7 @@ def on_ui_settings():
     )
 
     shared.opts.add_option(
-        "ad_same_seed_for_each_tap",
+        "ad_same_seed_for_each_tab",
         shared.OptionInfo(
             False, "Use same seed for each tab in adetailer", section=section
         ),
