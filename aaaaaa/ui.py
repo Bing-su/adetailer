@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from functools import partial
+from itertools import chain
 from types import SimpleNamespace
 from typing import Any
 
@@ -41,6 +42,9 @@ else:
         "scribble": ["t2ia_sketch_pidi"],
         "depth": ["depth_midas", "depth_hand_refiner"],
     }
+
+union = list(chain.from_iterable(cn_module_choices.values()))
+cn_module_choices["union"] = union
 
 
 class Widgets(SimpleNamespace):
