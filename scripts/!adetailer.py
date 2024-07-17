@@ -382,7 +382,7 @@ class AfterDetailerScript(scripts.Script):
     def get_scheduler(self, p, args: ADetailerArgs) -> dict[str, str]:
         "webui >= 1.9.0"
         if not args.ad_use_sampler:
-            return {}
+            return {"scheduler": getattr(p, "scheduler", "Automatic")}
 
         if args.ad_scheduler == "Use same scheduler":
             value = getattr(p, "scheduler", "Automatic")
