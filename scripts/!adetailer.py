@@ -820,8 +820,7 @@ class AfterDetailerScript(scripts.Script):
         if need_call_process(p):
             with preserve_prompts(p):
                 copy_p = copy(p)
-                if hasattr(p.scripts, "before_process"):
-                    p.scripts.before_process(copy_p)
+                p.scripts.before_process(copy_p)
                 p.scripts.process(copy_p)
 
         self.write_params_txt(params_txt_content)
