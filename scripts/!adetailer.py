@@ -20,7 +20,7 @@ from aaaaaa.helper import (
     change_torch_load,
     copy_extra_params,
     pause_total_tqdm,
-    preseve_prompts,
+    preserve_prompts,
 )
 from aaaaaa.p_method import (
     get_i,
@@ -447,8 +447,8 @@ class AfterDetailerScript(scripts.Script):
         script_runner = copy(p.scripts)
         script_args = self.script_args_copy(p.script_args)
 
-        ad_only_seleted_scripts = opts.data.get("ad_only_seleted_scripts", True)
-        if not ad_only_seleted_scripts:
+        ad_only_selected_scripts = opts.data.get("ad_only_selected_scripts", True)
+        if not ad_only_selected_scripts:
             return script_runner, script_args
 
         ad_script_names_string: str = opts.data.get("ad_script_names", SCRIPT_DEFAULT)
@@ -802,7 +802,7 @@ class AfterDetailerScript(scripts.Script):
 
         if need_call_postprocess(p):
             dummy = Processed(p, [], p.seed, "")
-            with preseve_prompts(p):
+            with preserve_prompts(p):
                 p.scripts.postprocess(copy(p), dummy)
 
         is_processed = False
@@ -818,7 +818,7 @@ class AfterDetailerScript(scripts.Script):
             )
 
         if need_call_process(p):
-            with preseve_prompts(p):
+            with preserve_prompts(p):
                 copy_p = copy(p)
                 if hasattr(p.scripts, "before_process"):
                     p.scripts.before_process(copy_p)
@@ -854,7 +854,7 @@ def on_ui_settings():
         "ad_extra_models_dir",
         shared.OptionInfo(
             default="",
-            label="Extra paths to scan adetailer models seperated by vertical bars(|)",
+            label="Extra paths to scan adetailer models separated by vertical bars(|)",
             component=gr.Textbox,
             section=section,
         )
@@ -873,7 +873,7 @@ def on_ui_settings():
     )
 
     shared.opts.add_option(
-        "ad_only_seleted_scripts",
+        "ad_only_selected_scripts",
         shared.OptionInfo(
             True, "Apply only selected scripts to ADetailer", section=section
         ),

@@ -45,7 +45,7 @@ def pause_total_tqdm():
 
 
 @contextmanager
-def preseve_prompts(p: PT):
+def preserve_prompts(p: PT):
     all_pt = copy(p.all_prompts)
     all_ng = copy(p.all_negative_prompts)
     try:
