@@ -616,23 +616,18 @@ class AfterDetailerScript(scripts.Script):
         i2i.negative_prompt = negative_prompt
 
     @staticmethod
-    def compare_prompt(p, extra_params: dict[str, Any], processed, n: int = 0):
-        if not hasattr(p, "_ad_extra_params_result"):
-            p._ad_extra_params_result = {}
-
+    def compare_prompt(extra_params: dict[str, Any], processed, n: int = 0):
         pt = "ADetailer prompt" + suffix(n)
         if pt in extra_params and extra_params[pt] != processed.all_prompts[0]:
             print(
                 f"[-] ADetailer: applied {ordinal(n + 1)} ad_prompt: {processed.all_prompts[0]!r}"
             )
-            p._ad_extra_params_result[pt] = processed.all_prompts[0]
 
         ng = "ADetailer negative prompt" + suffix(n)
         if ng in extra_params and extra_params[ng] != processed.all_negative_prompts[0]:
             print(
                 f"[-] ADetailer: applied {ordinal(n + 1)} ad_negative_prompt: {processed.all_negative_prompts[0]!r}"
             )
-            p._ad_extra_params_result[ng] = processed.all_negative_prompts[0]
 
     @staticmethod
     def get_i2i_init_image(p, pp):
@@ -784,7 +779,7 @@ class AfterDetailerScript(scripts.Script):
             finally:
                 p2.close()
 
-            self.compare_prompt(p, p.extra_generation_params, processed, n=n)
+            self.compare_prompt(p.extra_generation_params, processed, n=n)
             p2 = copy(i2i)
             p2.init_images = [processed.images[0]]
 
@@ -830,9 +825,6 @@ class AfterDetailerScript(scripts.Script):
                 p.scripts.process(copy_p)
 
         self.write_params_txt(params_txt_content)
-
-        if hasattr(p, "_ad_extra_params_result"):
-            p.extra_generation_params.update(p._ad_extra_params_result)
 
 
 def on_after_component(component, **_kwargs):
