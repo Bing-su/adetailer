@@ -374,7 +374,10 @@ class AfterDetailerScript(scripts.Script):
 
     def get_sampler(self, p, args: ADetailerArgs) -> str:
         if args.ad_use_sampler:
+            if args.ad_sampler == "Use same sampler":
+                return p.sampler_name
             return args.ad_sampler
+
         if hasattr(p, "_ad_orig"):
             return p._ad_orig.sampler_name
         return p.sampler_name

@@ -550,11 +550,16 @@ def inpainting(w: Widgets, n: int, is_img2img: bool, webui_info: WebuiInfo):
                 elem_id=eid("ad_use_sampler"),
             )
 
+            sampler_names = [
+                "Use same sampler",
+                *webui_info.sampler_names,
+            ]
+
             with gr.Row():
                 w.ad_sampler = gr.Dropdown(
                     label="ADetailer sampler" + suffix(n),
-                    choices=webui_info.sampler_names,
-                    value=webui_info.sampler_names[0],
+                    choices=sampler_names,
+                    value=sampler_names[1],
                     visible=True,
                     elem_id=eid("ad_sampler"),
                 )
