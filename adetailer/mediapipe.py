@@ -21,7 +21,10 @@ def mediapipe_predict(
     }
     if model_type in mapping:
         func = mapping[model_type]
-        return func(image, confidence)
+        try:
+            return func(image, confidence)
+        except Exception:
+            return PredictOutput()
     msg = f"[-] ADetailer: Invalid mediapipe model type: {model_type}, Available: {list(mapping.keys())!r}"
     raise RuntimeError(msg)
 
