@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from functools import partial
+from itertools import chain
 from types import SimpleNamespace
 from typing import Any
 
@@ -41,6 +42,9 @@ else:
         "scribble": ["t2ia_sketch_pidi"],
         "depth": ["depth_midas", "depth_hand_refiner"],
     }
+
+union = list(chain.from_iterable(cn_module_choices.values()))
+cn_module_choices["union"] = union
 
 
 class Widgets(SimpleNamespace):
@@ -82,7 +86,7 @@ def on_widget_change(state: dict, value: Any, *, attr: str):
 
 def on_generate_click(state: dict, *values: Any):
     for attr, value in zip(ALL_ARGS.attrs, values):
-        state[attr] = value
+        state[attr] = value  # noqa: PERF403
     state["is_api"] = ()
     return state
 
@@ -546,11 +550,16 @@ def inpainting(w: Widgets, n: int, is_img2img: bool, webui_info: WebuiInfo):
                 elem_id=eid("ad_use_sampler"),
             )
 
+            sampler_names = [
+                "Use same sampler",
+                *webui_info.sampler_names,
+            ]
+
             with gr.Row():
                 w.ad_sampler = gr.Dropdown(
                     label="ADetailer sampler" + suffix(n),
-                    choices=webui_info.sampler_names,
-                    value=webui_info.sampler_names[0],
+                    choices=sampler_names,
+                    value=sampler_names[1],
                     visible=True,
                     elem_id=eid("ad_sampler"),
                 )

@@ -20,7 +20,7 @@ from aaaaaa.helper import (
     change_torch_load,
     copy_extra_params,
     pause_total_tqdm,
-    preseve_prompts,
+    preserve_prompts,
 )
 from aaaaaa.p_method import (
     get_i,
@@ -374,7 +374,10 @@ class AfterDetailerScript(scripts.Script):
 
     def get_sampler(self, p, args: ADetailerArgs) -> str:
         if args.ad_use_sampler:
+            if args.ad_sampler == "Use same sampler":
+                return p.sampler_name
             return args.ad_sampler
+
         if hasattr(p, "_ad_orig"):
             return p._ad_orig.sampler_name
         return p.sampler_name
@@ -382,7 +385,7 @@ class AfterDetailerScript(scripts.Script):
     def get_scheduler(self, p, args: ADetailerArgs) -> dict[str, str]:
         "webui >= 1.9.0"
         if not args.ad_use_sampler:
-            return {}
+            return {"scheduler": getattr(p, "scheduler", "Automatic")}
 
         if args.ad_scheduler == "Use same scheduler":
             value = getattr(p, "scheduler", "Automatic")
@@ -447,8 +450,8 @@ class AfterDetailerScript(scripts.Script):
         script_runner = copy(p.scripts)
         script_args = self.script_args_copy(p.script_args)
 
-        ad_only_seleted_scripts = opts.data.get("ad_only_seleted_scripts", True)
-        if not ad_only_seleted_scripts:
+        ad_only_selected_scripts = opts.data.get("ad_only_selected_scripts", True)
+        if not ad_only_selected_scripts:
             return script_runner, script_args
 
         ad_script_names_string: str = opts.data.get("ad_script_names", SCRIPT_DEFAULT)
@@ -616,23 +619,18 @@ class AfterDetailerScript(scripts.Script):
         i2i.negative_prompt = negative_prompt
 
     @staticmethod
-    def compare_prompt(p, extra_params: dict[str, Any], processed, n: int = 0):
-        if not hasattr(p, "_ad_extra_params_result"):
-            p._ad_extra_params_result = {}
-
+    def compare_prompt(extra_params: dict[str, Any], processed, n: int = 0):
         pt = "ADetailer prompt" + suffix(n)
         if pt in extra_params and extra_params[pt] != processed.all_prompts[0]:
             print(
                 f"[-] ADetailer: applied {ordinal(n + 1)} ad_prompt: {processed.all_prompts[0]!r}"
             )
-            p._ad_extra_params_result[pt] = processed.all_prompts[0]
 
         ng = "ADetailer negative prompt" + suffix(n)
         if ng in extra_params and extra_params[ng] != processed.all_negative_prompts[0]:
             print(
                 f"[-] ADetailer: applied {ordinal(n + 1)} ad_negative_prompt: {processed.all_negative_prompts[0]!r}"
             )
-            p._ad_extra_params_result[ng] = processed.all_negative_prompts[0]
 
     @staticmethod
     def get_i2i_init_image(p, pp):
@@ -784,7 +782,7 @@ class AfterDetailerScript(scripts.Script):
             finally:
                 p2.close()
 
-            self.compare_prompt(p, p.extra_generation_params, processed, n=n)
+            self.compare_prompt(p.extra_generation_params, processed, n=n)
             p2 = copy(i2i)
             p2.init_images = [processed.images[0]]
 
@@ -807,7 +805,7 @@ class AfterDetailerScript(scripts.Script):
 
         if need_call_postprocess(p):
             dummy = Processed(p, [], p.seed, "")
-            with preseve_prompts(p):
+            with preserve_prompts(p):
                 p.scripts.postprocess(copy(p), dummy)
 
         is_processed = False
@@ -823,16 +821,12 @@ class AfterDetailerScript(scripts.Script):
             )
 
         if need_call_process(p):
-            with preseve_prompts(p):
+            with preserve_prompts(p):
                 copy_p = copy(p)
-                if hasattr(p.scripts, "before_process"):
-                    p.scripts.before_process(copy_p)
+                p.scripts.before_process(copy_p)
                 p.scripts.process(copy_p)
 
         self.write_params_txt(params_txt_content)
-
-        if hasattr(p, "_ad_extra_params_result"):
-            p.extra_generation_params.update(p._ad_extra_params_result)
 
 
 def on_after_component(component, **_kwargs):
@@ -862,7 +856,7 @@ def on_ui_settings():
         "ad_extra_models_dir",
         shared.OptionInfo(
             default="",
-            label="Extra paths to scan adetailer models seperated by vertical bars(|)",
+            label="Extra paths to scan adetailer models separated by vertical bars(|)",
             component=gr.Textbox,
             section=section,
         )
@@ -881,7 +875,7 @@ def on_ui_settings():
     )
 
     shared.opts.add_option(
-        "ad_only_seleted_scripts",
+        "ad_only_selected_scripts",
         shared.OptionInfo(
             True, "Apply only selected scripts to ADetailer", section=section
         ),
