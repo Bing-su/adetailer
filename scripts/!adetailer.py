@@ -736,7 +736,7 @@ class AfterDetailerScript(scripts.Script):
             return (inpaint_width, inpaint_height)
 
         print(
-            f"[-] ADetailer: inpaint dimensions optimized -- {inpaint_width}x{inpaint_height} -> {optimal_resolution[0]:.0f}x{optimal_resolution[1]:.0f}"
+            f"[-] ADetailer: inpaint dimensions optimized -- {inpaint_width}x{inpaint_height} -> {optimal_resolution[0]}x{optimal_resolution[1]}"
         )
 
         return optimal_resolution
