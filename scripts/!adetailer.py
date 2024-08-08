@@ -838,7 +838,10 @@ class AfterDetailerScript(scripts.Script):
             p2.cached_uc = [None, None]
             
             p2.denoising_strength = self.get_dynamic_denoise_strength(p2.denoising_strength, pred.bboxes[j], pp.image)
-            p2.width, p2.height = self.get_optimal_crop_image_size(p2.width, p2.height, pred.bboxes[j])
+
+            # Don't override user-defined dimensions.
+            if not args.ad_use_inpaint_width_height:
+                p2.width, p2.height = self.get_optimal_crop_image_size(p2.width, p2.height, pred.bboxes[j])
 
             try:
                 processed = process_images(p2)
