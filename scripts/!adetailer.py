@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING, Any, NamedTuple, cast
 import gradio as gr
 from PIL import Image, ImageChops
 from rich import print
+import math
 
 import modules
 from aaaaaa.conditional import create_binary_mask, schedulers
@@ -668,6 +669,68 @@ class AfterDetailerScript(scripts.Script):
             width, height = p.width, p.height
         return images.resize_image(p.resize_mode, mask, width, height)
 
+    @staticmethod
+    def get_dynamic_denoise_strength(denoise_strength, bbox, image):
+        denoise_power = opts.data.get("ad_dynamic_denoise_power", 0)
+        if math.isclose(denoise_power, 0):
+            return denoise_strength
+
+        image_pixels = image.width * image.height
+        bbox_pixels = (bbox[2] - bbox[0]) * (bbox[3] - bbox[1])
+
+        normalized_area = bbox_pixels / image_pixels
+        denoise_modifier = (1.0 - normalized_area) ** denoise_power
+
+        print((f"[-] ADetailer: dynamic denoising -- {denoise_modifier:.2f} * {denoise_strength:.2f} = {denoise_strength * denoise_modifier:.2f}"))
+        
+        return denoise_strength * denoise_modifier
+
+    @staticmethod
+    def get_optimal_crop_image_size(inpaint_width, inpaint_height, bbox):
+        calculate_optimal_crop = opts.data.get("ad_match_inpaint_bbox_size", False)
+        if not calculate_optimal_crop:
+            return (inpaint_width, inpaint_height)
+
+        resolutions = []
+        if shared.sd_model.is_sdxl:
+            # Limit resolutions to those SDXL was trained on.
+            resolutions = [ 
+                (1024, 1024),
+                (1152, 896), (896, 1152),
+                (1216, 832), (832, 1216),
+                (1344, 768), (768, 1344),
+                (1536, 640), (640, 1536)
+            ]
+        else:
+            msg = (
+                "[-] ADetailer: inpaint bounding box size matching is only valid for SDXL."
+            )
+            print(msg)
+            return (inpaint_width, inpaint_height)
+
+        bbox_width = bbox[2] - bbox[0]
+        bbox_height = bbox[3] - bbox[1]
+
+        target_aspect = bbox_width / bbox_height
+        larger_resolutions = [res for res in resolutions if res[0] >= bbox_width and res[1] >= bbox_height]
+        
+        if not larger_resolutions:
+            return (inpaint_width, inpaint_height)
+        
+        def aspect_ratio_difference(res):
+            res_aspect = res[0] / res[1]
+            return abs(res_aspect - target_aspect)
+        
+        optimal_resolution = min(larger_resolutions, key=aspect_ratio_difference)
+
+        # Don't use resolution if it's smaller than what was to be used.
+        if optimal_resolution[0] < inpaint_width and optimal_resolution[1] < inpaint_height:
+            return (inpaint_width, inpaint_height)
+        
+        print((f"[-] ADetailer: inpaint dimensions optimized -- {inpaint_width}x{inpaint_height} -> {optimal_resolution[0]:.0f}x{optimal_resolution[1]:.0f}"))
+
+        return optimal_resolution
+
     @rich_traceback
     def process(self, p, *args_):
         if getattr(p, "_ad_disabled", False):
@@ -773,6 +836,10 @@ class AfterDetailerScript(scripts.Script):
 
             p2.cached_c = [None, None]
             p2.cached_uc = [None, None]
+            
+            p2.denoising_strength = self.get_dynamic_denoise_strength(p2.denoising_strength, pred.bboxes[j], pp.image)
+            p2.width, p2.height = self.get_optimal_crop_image_size(p2.width, p2.height, pred.bboxes[j])
+
             try:
                 processed = process_images(p2)
             except NansException as e:
@@ -915,6 +982,25 @@ def on_ui_settings():
         ),
     )
 
+    shared.opts.add_option(
+        "ad_dynamic_denoise_power",
+        shared.OptionInfo(
+            default=0,
+            label="Power scaling for dynamic denoise strength based on bounding box size",
+            component=gr.Slider,
+            component_args={"minimum": -10, "maximum": 10, "step": 0.01},
+            section=section,
+        )
+        .info("Smaller areas get higher denoising, larger areas less. Maximum denoise strength is set by 'Inpaint denoising strength'. 0 = disabled; 1 = linear; 4 = recommended"),
+    )
+
+    shared.opts.add_option(
+        "ad_match_inpaint_bbox_size",
+        shared.OptionInfo(
+            False, "Try to match inpaint width, height and aspect ratio to bounding box size", section=section
+        )
+        .info("SDXL only, as it natively supports alternative aspect ratios"),
+    )
 
 # xyz_grid
 
