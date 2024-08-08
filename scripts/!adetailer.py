@@ -672,7 +672,7 @@ class AfterDetailerScript(scripts.Script):
     @staticmethod
     def get_dynamic_denoise_strength(denoise_strength, bbox, image):
         denoise_power = opts.data.get("ad_dynamic_denoise_power", 0)
-        if math.isclose(denoise_power, 0):
+        if denoise_power == 0:
             return denoise_strength
 
         image_pixels = image.width * image.height
