@@ -1008,7 +1008,7 @@ def on_ui_settings():
             component_args={"minimum": -10, "maximum": 10, "step": 0.01},
             section=section,
         ).info(
-            "Smaller areas get higher denoising, larger areas less. Maximum denoise strength is set by 'Inpaint denoising strength'. 0 = disabled; 1 = linear; 4 = recommended"
+            "Smaller areas get higher denoising, larger areas less. Maximum denoise strength is set by 'Inpaint denoising strength'. 0 = disabled; 1 = linear; 2-4 = recommended"
         ),
     )
 
@@ -1016,9 +1016,9 @@ def on_ui_settings():
         "ad_match_inpaint_bbox_size",
         shared.OptionInfo(
             False,
-            "Try to match inpaint width, height and aspect ratio to bounding box size",
+            "Try to match inpainting size to bounding box size, if 'Use separate width/height' is not set",
             section=section,
-        ).info("SDXL only, as it natively supports alternative aspect ratios"),
+        ).info("Works with SDXL only, as it natively supports alternative aspect ratios"),
     )
 
 
