@@ -715,13 +715,19 @@ class AfterDetailerScript(scripts.Script):
 
         # Filter resolutions smaller than bbox, and any that could result in a total pixel size smaller than the current inpaint dimensions.
         resolutions = [
-            res for res in resolutions if (res[0] >= bbox_width and res[1] >= bbox_height) and (res[0] >= inpaint_width or res[1] >= inpaint_height)
+            res
+            for res in resolutions
+            if (res[0] >= bbox_width and res[1] >= bbox_height)
+            and (res[0] >= inpaint_width or res[1] >= inpaint_height)
         ]
 
         if not resolutions:
             return (inpaint_width, inpaint_height)
 
-        optimal_resolution = min(resolutions, key=lambda res: abs((res[0] / res[1]) - (bbox_width / bbox_height)))
+        optimal_resolution = min(
+            resolutions,
+            key=lambda res: abs((res[0] / res[1]) - (bbox_width / bbox_height)),
+        )
 
         if optimal_resolution != (inpaint_width, inpaint_height):
             print(
@@ -1007,7 +1013,9 @@ def on_ui_settings():
             False,
             "Try to match inpainting size to bounding box size, if 'Use separate width/height' is not set",
             section=section,
-        ).info("Works with SDXL only, as it natively supports alternative aspect ratios"),
+        ).info(
+            "Works with SDXL only, as it natively supports alternative aspect ratios"
+        ),
     )
 
 
