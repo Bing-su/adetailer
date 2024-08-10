@@ -692,52 +692,41 @@ class AfterDetailerScript(scripts.Script):
         if not calculate_optimal_crop:
             return (inpaint_width, inpaint_height)
 
-        resolutions = []
-        if shared.sd_model.is_sdxl:
-            # Limit resolutions to those SDXL was trained on.
-            resolutions = [
-                (1024, 1024),
-                (1152, 896),
-                (896, 1152),
-                (1216, 832),
-                (832, 1216),
-                (1344, 768),
-                (768, 1344),
-                (1536, 640),
-                (640, 1536),
-            ]
-        else:
-            msg = "[-] ADetailer: inpaint bounding box size matching is only valid for SDXL."
+        if not shared.sd_model.is_sdxl:
+            msg = "[-] ADetailer: inpaint bounding box size matching is only available for SDXL."
             print(msg)
             return (inpaint_width, inpaint_height)
 
         bbox_width = bbox[2] - bbox[0]
         bbox_height = bbox[3] - bbox[1]
 
-        target_aspect = bbox_width / bbox_height
-        larger_resolutions = [
-            res for res in resolutions if res[0] >= bbox_width and res[1] >= bbox_height
+        # Limit resolutions to those SDXL was trained on.
+        resolutions = [
+            (1024, 1024),
+            (1152, 896),
+            (896, 1152),
+            (1216, 832),
+            (832, 1216),
+            (1344, 768),
+            (768, 1344),
+            (1536, 640),
+            (640, 1536),
         ]
 
-        if not larger_resolutions:
+        # Filter resolutions smaller than bbox, and any that could result in a total pixel size smaller than the current inpaint dimensions.
+        resolutions = [
+            res for res in resolutions if (res[0] >= bbox_width and res[1] >= bbox_height) and (res[0] >= inpaint_width or res[1] >= inpaint_height)
+        ]
+
+        if not resolutions:
             return (inpaint_width, inpaint_height)
 
-        def aspect_ratio_difference(res):
-            res_aspect = res[0] / res[1]
-            return abs(res_aspect - target_aspect)
+        optimal_resolution = min(resolutions, key=lambda res: abs((res[0] / res[1]) - (bbox_width / bbox_height)))
 
-        optimal_resolution = min(larger_resolutions, key=aspect_ratio_difference)
-
-        # Don't use resolution if it's smaller than what was to be used.
-        if (
-            optimal_resolution[0] < inpaint_width
-            and optimal_resolution[1] < inpaint_height
-        ):
-            return (inpaint_width, inpaint_height)
-
-        print(
-            f"[-] ADetailer: inpaint dimensions optimized -- {inpaint_width}x{inpaint_height} -> {optimal_resolution[0]}x{optimal_resolution[1]}"
-        )
+        if optimal_resolution != (inpaint_width, inpaint_height):
+            print(
+                f"[-] ADetailer: inpaint dimensions optimized -- {inpaint_width}x{inpaint_height} -> {optimal_resolution[0]}x{optimal_resolution[1]}"
+            )
 
         return optimal_resolution
 
