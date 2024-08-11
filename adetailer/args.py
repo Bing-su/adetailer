@@ -266,7 +266,7 @@ INPAINT_BBOX_MATCH_MODES = [
     "Off",
     "Strict (SDXL only)",
     "Free (prefer smaller sizes)",
-    "Free (prefer larger sizes)"
+    "Free (prefer larger sizes)",
 ]
 MASK_MERGE_INVERT = ["None", "Merge", "Merge and Invert"]
 

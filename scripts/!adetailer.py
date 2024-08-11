@@ -41,8 +41,8 @@ from adetailer import (
 )
 from adetailer.args import (
     BBOX_SORTBY,
-    INPAINT_BBOX_MATCH_MODES,
     BUILTIN_SCRIPT,
+    INPAINT_BBOX_MATCH_MODES,
     SCRIPT_DEFAULT,
     ADetailerArgs,
     SkipImg2ImgOrig,
@@ -736,7 +736,11 @@ class AfterDetailerScript(scripts.Script):
         elif calculate_optimal_crop.startswith("Free"):
             prefer_larger = calculate_optimal_crop.endswith("(prefer larger sizes)")
 
-            scale_size = max(inpaint_width, inpaint_height) if prefer_larger else min(inpaint_width, inpaint_height)
+            scale_size = (
+                max(inpaint_width, inpaint_height)
+                if prefer_larger
+                else min(inpaint_width, inpaint_height)
+            )
 
             if bbox_aspect_ratio > 1:
                 optimal_width = scale_size * bbox_aspect_ratio
@@ -751,16 +755,17 @@ class AfterDetailerScript(scripts.Script):
 
             optimal_resolution = (int(optimal_width), int(optimal_height))
         else:
-            msg = (
-                "[-] ADetailer: unsupported inpaint bounding box match mode. Original inpainting dimensions will be used."
-            )
+            msg = "[-] ADetailer: unsupported inpaint bounding box match mode. Original inpainting dimensions will be used."
             print(msg)
 
         if optimal_resolution is None:
             return (inpaint_width, inpaint_height)
 
         # Only use optimal dimensions if they're different enough to current inpaint dimensions.
-        if (abs(optimal_resolution[0] - inpaint_width) > inpaint_width * 0.1 and abs(optimal_resolution[1] - inpaint_height) > inpaint_height * 0.1):
+        if (
+            abs(optimal_resolution[0] - inpaint_width) > inpaint_width * 0.1
+            and abs(optimal_resolution[1] - inpaint_height) > inpaint_height * 0.1
+        ):
             print(
                 f"[-] ADetailer: inpaint dimensions optimized -- {inpaint_width}x{inpaint_height} -> {optimal_resolution[0]}x{optimal_resolution[1]}"
             )
