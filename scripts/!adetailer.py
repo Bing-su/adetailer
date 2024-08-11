@@ -41,6 +41,7 @@ from adetailer import (
 )
 from adetailer.args import (
     BBOX_SORTBY,
+    INPAINT_BBOX_MATCH_MODES,
     BUILTIN_SCRIPT,
     SCRIPT_DEFAULT,
     ADetailerArgs,
@@ -688,48 +689,78 @@ class AfterDetailerScript(scripts.Script):
 
     @staticmethod
     def get_optimal_crop_image_size(inpaint_width, inpaint_height, bbox):
-        calculate_optimal_crop = opts.data.get("ad_match_inpaint_bbox_size", False)
-        if not calculate_optimal_crop:
+        calculate_optimal_crop = opts.data.get("ad_match_inpaint_bbox_size", "Off")
+        if calculate_optimal_crop == "Off":
             return (inpaint_width, inpaint_height)
 
-        if not shared.sd_model.is_sdxl:
-            msg = "[-] ADetailer: inpaint bounding box size matching is only available for SDXL."
-            print(msg)
-            return (inpaint_width, inpaint_height)
+        optimal_resolution = None
 
         bbox_width = bbox[2] - bbox[0]
         bbox_height = bbox[3] - bbox[1]
+        bbox_aspect_ratio = bbox_width / bbox_height
 
-        # Limit resolutions to those SDXL was trained on.
-        resolutions = [
-            (1024, 1024),
-            (1152, 896),
-            (896, 1152),
-            (1216, 832),
-            (832, 1216),
-            (1344, 768),
-            (768, 1344),
-            (1536, 640),
-            (640, 1536),
-        ]
+        if calculate_optimal_crop == "Strict (SDXL only)":
+            if not shared.sd_model.is_sdxl:
+                msg = "[-] ADetailer: strict inpaint bounding box size matching is only available for SDXL. Use Free mode instead."
+                print(msg)
+                return (inpaint_width, inpaint_height)
 
-        # Filter resolutions smaller than bbox, and any that could result in a total pixel size smaller than the current inpaint dimensions.
-        resolutions = [
-            res
-            for res in resolutions
-            if (res[0] >= bbox_width and res[1] >= bbox_height)
-            and (res[0] >= inpaint_width or res[1] >= inpaint_height)
-        ]
+            # Limit resolutions to those SDXL was trained on.
+            resolutions = [
+                (1024, 1024),
+                (1152, 896),
+                (896, 1152),
+                (1216, 832),
+                (832, 1216),
+                (1344, 768),
+                (768, 1344),
+                (1536, 640),
+                (640, 1536),
+            ]
 
-        if not resolutions:
+            # Filter resolutions smaller than bbox, and any that could result in a total pixel size smaller than the current inpaint dimensions.
+            resolutions = [
+                res
+                for res in resolutions
+                if (res[0] >= bbox_width and res[1] >= bbox_height)
+                and (res[0] >= inpaint_width or res[1] >= inpaint_height)
+            ]
+
+            if not resolutions:
+                return (inpaint_width, inpaint_height)
+
+            optimal_resolution = min(
+                resolutions,
+                key=lambda res: abs((res[0] / res[1]) - bbox_aspect_ratio),
+            )
+        elif calculate_optimal_crop.startswith("Free"):
+            prefer_larger = calculate_optimal_crop.endswith("(prefer larger sizes)")
+
+            scale_size = max(inpaint_width, inpaint_height) if prefer_larger else min(inpaint_width, inpaint_height)
+
+            if bbox_aspect_ratio > 1:
+                optimal_width = scale_size * bbox_aspect_ratio
+                optimal_height = scale_size
+            else:
+                optimal_height = scale_size / bbox_aspect_ratio
+                optimal_width = scale_size
+
+            # Round up to the nearest multiple of 8 to make the dimensions friendly for upscaling/diffusion.
+            optimal_width = ((optimal_width + 8 - 1) // 8) * 8
+            optimal_height = ((optimal_height + 8 - 1) // 8) * 8
+
+            optimal_resolution = (int(optimal_width), int(optimal_height))
+        else:
+            msg = (
+                "[-] ADetailer: unsupported inpaint bounding box match mode. Original inpainting dimensions will be used."
+            )
+            print(msg)
+
+        if optimal_resolution is None:
             return (inpaint_width, inpaint_height)
 
-        optimal_resolution = min(
-            resolutions,
-            key=lambda res: abs((res[0] / res[1]) - (bbox_width / bbox_height)),
-        )
-
-        if optimal_resolution != (inpaint_width, inpaint_height):
+        # Only use optimal dimensions if they're different enough to current inpaint dimensions.
+        if (abs(optimal_resolution[0] - inpaint_width) > inpaint_width * 0.1 and abs(optimal_resolution[1] - inpaint_height) > inpaint_height * 0.1):
             print(
                 f"[-] ADetailer: inpaint dimensions optimized -- {inpaint_width}x{inpaint_height} -> {optimal_resolution[0]}x{optimal_resolution[1]}"
             )
@@ -1010,11 +1041,13 @@ def on_ui_settings():
     shared.opts.add_option(
         "ad_match_inpaint_bbox_size",
         shared.OptionInfo(
-            False,
-            "Try to match inpainting size to bounding box size, if 'Use separate width/height' is not set",
+            default="Off",
+            component=gr.Radio,
+            component_args={"choices": INPAINT_BBOX_MATCH_MODES},
+            label="Try to match inpainting size to bounding box size, if 'Use separate width/height' is not set",
             section=section,
         ).info(
-            "Works with SDXL only, as it natively supports alternative aspect ratios"
+            "Strict is for SDXL only, and matches exactly to trained SDXL resolutions. Free works with any model, but will use potentially unsupported dimensions. Prefer smaller is more conservative and safer."
         ),
     )
 
