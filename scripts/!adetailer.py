@@ -733,21 +733,15 @@ class AfterDetailerScript(scripts.Script):
                 resolutions,
                 key=lambda res: abs((res[0] / res[1]) - bbox_aspect_ratio),
             )
-        elif calculate_optimal_crop.startswith("Free"):
-            prefer_larger = calculate_optimal_crop.endswith("(prefer larger sizes)")
-
-            scale_size = (
-                max(inpaint_width, inpaint_height)
-                if prefer_larger
-                else min(inpaint_width, inpaint_height)
-            )
+        elif calculate_optimal_crop == "Free":
+            scale_size = max(inpaint_width, inpaint_height)
 
             if bbox_aspect_ratio > 1:
+                optimal_width = scale_size
+                optimal_height = scale_size / bbox_aspect_ratio
+            else:
                 optimal_width = scale_size * bbox_aspect_ratio
                 optimal_height = scale_size
-            else:
-                optimal_height = scale_size / bbox_aspect_ratio
-                optimal_width = scale_size
 
             # Round up to the nearest multiple of 8 to make the dimensions friendly for upscaling/diffusion.
             optimal_width = ((optimal_width + 8 - 1) // 8) * 8
@@ -1052,7 +1046,7 @@ def on_ui_settings():
             label="Try to match inpainting size to bounding box size, if 'Use separate width/height' is not set",
             section=section,
         ).info(
-            "Strict is for SDXL only, and matches exactly to trained SDXL resolutions. Free works with any model, but will use potentially unsupported dimensions. Prefer smaller is more conservative and safer."
+            "Strict is for SDXL only, and matches exactly to trained SDXL resolutions. Free works with any model, but will use potentially unsupported dimensions."
         ),
     )
 
