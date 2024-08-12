@@ -764,7 +764,7 @@ class AfterDetailerScript(scripts.Script):
         # Only use optimal dimensions if they're different enough to current inpaint dimensions.
         if (
             abs(optimal_resolution[0] - inpaint_width) > inpaint_width * 0.1
-            and abs(optimal_resolution[1] - inpaint_height) > inpaint_height * 0.1
+            or abs(optimal_resolution[1] - inpaint_height) > inpaint_height * 0.1
         ):
             print(
                 f"[-] ADetailer: inpaint dimensions optimized -- {inpaint_width}x{inpaint_height} -> {optimal_resolution[0]}x{optimal_resolution[1]}"
