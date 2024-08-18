@@ -262,6 +262,11 @@ BBOX_SORTBY = [
     "Position (center to edge)",
     "Area (large to small)",
 ]
+INPAINT_BBOX_MATCH_MODES = [
+    "Off",
+    "Strict (SDXL only)",
+    "Free",
+]
 MASK_MERGE_INVERT = ["None", "Merge", "Merge and Invert"]
 
 _script_default = (
