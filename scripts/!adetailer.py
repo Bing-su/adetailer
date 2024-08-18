@@ -8,7 +8,7 @@ import traceback
 from contextlib import contextmanager
 from copy import copy, deepcopy
 from functools import partial
-from pathlib import Path
+from pathlib import Path, PurePath
 from textwrap import dedent
 from typing import Any
 
@@ -450,9 +450,11 @@ class AfterDetailerScript(scripts.Script):
         seed, _ = self.get_seed(p)
 
         if opts.data.get(condition, False):
+            ad_save_images_dir = opts.data.get("ad_save_images_dir", str(PurePath("outputs", "ad-save-images")))
+
             images.save_image(
                 image=image,
-                path=p.outpath_samples,
+                path=ad_save_images_dir,
                 basename="",
                 seed=seed,
                 prompt=save_prompt,
@@ -685,6 +687,16 @@ def on_ui_settings():
             label="Max models",
             component=gr.Slider,
             component_args={"minimum": 1, "maximum": 10, "step": 1},
+            section=section,
+        ),
+    )
+
+    shared.opts.add_option(
+        "ad_save_images_dir",
+        shared.OptionInfo(
+            default=str(PurePath("outputs", "ad-save-images")),
+            label="Output directory for adetailer images",
+            component=gr.Textbox,
             section=section,
         ),
     )
