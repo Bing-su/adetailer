@@ -450,7 +450,9 @@ class AfterDetailerScript(scripts.Script):
         seed, _ = self.get_seed(p)
 
         if opts.data.get(condition, False):
-            ad_save_images_dir = opts.data.get("ad_save_images_dir", str(PurePath("outputs", "ad-save-images")))
+            ad_save_images_dir = opts.data.get(
+                "ad_save_images_dir", str(PurePath("outputs", "ad-save-images"))
+            )
 
             images.save_image(
                 image=image,
