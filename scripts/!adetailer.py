@@ -8,7 +8,7 @@ import traceback
 from contextlib import contextmanager
 from copy import copy, deepcopy
 from functools import partial
-from pathlib import Path, PurePath
+from pathlib import Path
 from textwrap import dedent
 from typing import Any
 
