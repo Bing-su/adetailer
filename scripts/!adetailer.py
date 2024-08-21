@@ -450,9 +450,10 @@ class AfterDetailerScript(scripts.Script):
         seed, _ = self.get_seed(p)
 
         if opts.data.get(condition, False):
-            ad_save_images_dir = opts.data.get(
-                "ad_save_images_dir", str(PurePath("outputs", "ad-save-images"))
-            )
+            ad_save_images_dir = opts.data.get("ad_save_images_dir", None)
+
+            if not bool(ad_save_images_dir and ad_save_images_dir.strip()):
+                ad_save_images_dir = p.outpath_samples
 
             images.save_image(
                 image=image,
@@ -696,7 +697,7 @@ def on_ui_settings():
     shared.opts.add_option(
         "ad_save_images_dir",
         shared.OptionInfo(
-            default=str(PurePath("outputs", "ad-save-images")),
+            default="",
             label="Output directory for adetailer images",
             component=gr.Textbox,
             section=section,
