@@ -49,7 +49,7 @@ class ControlNetExt:
         models = self.external_cn.get_models()
         self.cn_models.extend(m for m in models if cn_model_regex.search(m))
 
-    def update_scripts_args(
+    def update_scripts_args(  # noqa: PLR0913
         self,
         p,
         model: str,

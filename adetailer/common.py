@@ -163,7 +163,7 @@ def create_bbox_from_mask(
     """
     bboxes = []
     for mask in masks:
-        mask = mask.resize(shape)
+        mask = mask.resize(shape)  # noqa: PLW2901
         bbox = mask.getbbox()
         if bbox is not None:
             bboxes.append(list(bbox))

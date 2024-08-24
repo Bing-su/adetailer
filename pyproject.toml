@@ -56,6 +56,7 @@ select = [
     "N",
     "PD",
     "PERF",
+    "PL",
     "PIE",
     "PT",
     "PTH",
@@ -67,7 +68,7 @@ select = [
     "UP",
     "W",
 ]
-ignore = ["B905", "E501"]
+ignore = ["B905", "E501", "PLR2004", "PLW0603"]
 unfixable = ["F401"]
 
 [tool.ruff.lint.isort]

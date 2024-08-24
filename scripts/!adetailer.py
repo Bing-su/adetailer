@@ -745,7 +745,7 @@ class AfterDetailerScript(scripts.Script):
 
         return optimal_resolution
 
-    def fix_p2(
+    def fix_p2(  # noqa: PLR0913
         self, p, p2, pp: PPImage, args: ADetailerArgs, pred: PredictOutput, j: int
     ):
         seed, subseed = self.get_seed(p)
