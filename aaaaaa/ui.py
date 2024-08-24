@@ -219,6 +219,7 @@ def one_ui_group(n: int, is_img2img: bool, webui_info: WebuiInfo):
     with gr.Group():
         with gr.Row(elem_id=eid("ad_toprow_prompt")):
             w.ad_prompt = gr.Textbox(
+                value="",
                 label="ad_prompt" + suffix(n),
                 show_label=False,
                 lines=3,
@@ -230,6 +231,7 @@ def one_ui_group(n: int, is_img2img: bool, webui_info: WebuiInfo):
 
         with gr.Row(elem_id=eid("ad_toprow_negative_prompt")):
             w.ad_negative_prompt = gr.Textbox(
+                value="",
                 label="ad_negative_prompt" + suffix(n),
                 show_label=False,
                 lines=2,

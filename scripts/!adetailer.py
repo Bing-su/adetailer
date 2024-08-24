@@ -8,7 +8,6 @@ from collections.abc import Sequence
 from copy import copy
 from functools import partial
 from pathlib import Path
-from textwrap import dedent
 from typing import TYPE_CHECKING, Any, NamedTuple, cast
 
 import gradio as gr
@@ -177,25 +176,23 @@ class AfterDetailerScript(scripts.Script):
                 guidance_end=args.ad_controlnet_guidance_end,
             )
 
-    def is_ad_enabled(self, *args_) -> bool:
-        arg_list = [arg for arg in args_ if isinstance(arg, dict)]
-        if not args_ or not arg_list:
-            message = f"""
-                       [-] ADetailer: Invalid arguments passed to ADetailer.
-                           input: {args_!r}
-                           ADetailer disabled.
-                       """
-            print(dedent(message), file=sys.stderr)
+    def is_ad_enabled(self, *args) -> bool:
+        arg_list = [arg for arg in args if isinstance(arg, dict)]
+        if not arg_list:
             return False
 
-        ad_enabled = args_[0] if isinstance(args_[0], bool) else True
-        pydantic_args = []
+        ad_enabled = args[0] if isinstance(args[0], bool) else True
+
+        not_none = False
         for arg in arg_list:
             try:
-                pydantic_args.append(ADetailerArgs(**arg))
+                adarg = ADetailerArgs(**arg)
             except ValueError:  # noqa: PERF203
                 continue
-        not_none = not all(arg.need_skip() for arg in pydantic_args)
+            else:
+                if not adarg.need_skip():
+                    not_none = True
+                    break
         return ad_enabled and not_none
 
     def set_skip_img2img(self, p, *args_) -> None:
@@ -232,9 +229,6 @@ class AfterDetailerScript(scripts.Script):
         p.height = 128
 
     def get_args(self, p, *args_) -> list[ADetailerArgs]:
-        """
-        `args_` is at least 1 in length by `is_ad_enabled` immediately above
-        """
         args = [arg for arg in args_ if isinstance(arg, dict)]
 
         if not args:
@@ -244,21 +238,21 @@ class AfterDetailerScript(scripts.Script):
         if hasattr(p, "_ad_xyz"):
             args[0] = {**args[0], **p._ad_xyz}
 
-        all_inputs = []
+        all_inputs: list[ADetailerArgs] = []
 
         for n, arg_dict in enumerate(args, 1):
             try:
                 inp = ADetailerArgs(**arg_dict)
-            except ValueError as e:
-                msg = f"[-] ADetailer: ValidationError when validating {ordinal(n)} arguments"
-                if hasattr(e, "add_note"):
-                    e.add_note(msg)
-                else:
-                    print(msg, file=sys.stderr)
-                raise
+            except ValueError:
+                msg = f"[-] ADetailer: ValidationError when validating {ordinal(n)} arguments:"
+                print(msg, arg_dict, file=sys.stderr)
+                continue
 
             all_inputs.append(inp)
 
+        if not all_inputs:
+            msg = "[-] ADetailer: No valid arguments found."
+            raise ValueError(msg)
         return all_inputs
 
     def extra_params(self, arg_list: list[ADetailerArgs]) -> dict:
@@ -643,7 +637,7 @@ class AfterDetailerScript(scripts.Script):
             )
 
     @staticmethod
-    def get_i2i_init_image(p, pp):
+    def get_i2i_init_image(p, pp: PPImage):
         if is_skip_img2img(p):
             return p.init_images[0]
         return pp.image
