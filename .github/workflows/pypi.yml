@@ -7,7 +7,7 @@ on:
 jobs:
   test:
     name: test
-    runs-on: macos-14
+    runs-on: macos-latest
     strategy:
       matrix:
         python-version:
@@ -27,7 +27,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          uv pip install --system . pytest
+          uv pip install --system ".[test]"
 
       - name: Run tests
         run: pytest -v
