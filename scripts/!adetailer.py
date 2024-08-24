@@ -566,9 +566,14 @@ class AfterDetailerScript(scripts.Script):
         seed, _ = self.get_seed(p)
 
         if opts.data.get(condition, False):
+            ad_save_images_dir = opts.data.get("ad_save_images_dir", None)
+
+            if not bool(ad_save_images_dir and ad_save_images_dir.strip()):
+                ad_save_images_dir = p.outpath_samples
+
             images.save_image(
                 image=image,
-                path=p.outpath_samples,
+                path=ad_save_images_dir,
                 basename="",
                 seed=seed,
                 prompt=save_prompt,
@@ -971,6 +976,16 @@ def on_ui_settings():
         )
         .info("eg. path\\to\\models|C:\\path\\to\\models|another/path/to/models")
         .needs_reload_ui(),
+    )
+
+    shared.opts.add_option(
+        "ad_save_images_dir",
+        shared.OptionInfo(
+            default="",
+            label="Output directory for adetailer images",
+            component=gr.Textbox,
+            section=section,
+        ),
     )
 
     shared.opts.add_option(
