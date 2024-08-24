@@ -4,6 +4,7 @@ import platform
 import re
 import sys
 import traceback
+from collections.abc import Sequence
 from copy import copy
 from functools import partial
 from pathlib import Path
@@ -45,6 +46,7 @@ from adetailer.args import (
     INPAINT_BBOX_MATCH_MODES,
     SCRIPT_DEFAULT,
     ADetailerArgs,
+    InpaintBBoxMatchMode,
     SkipImg2ImgOrig,
 )
 from adetailer.common import PredictOutput, ensure_pil_image, safe_mkdir
@@ -56,6 +58,7 @@ from adetailer.mask import (
     mask_preprocess,
     sort_bboxes,
 )
+from adetailer.opts import dynamic_denoise_strength, optimal_crop_size
 from controlnet_ext import (
     CNHijackRestore,
     ControlNetExt,
@@ -675,84 +678,54 @@ class AfterDetailerScript(scripts.Script):
         return images.resize_image(p.resize_mode, mask, width, height)
 
     @staticmethod
-    def get_dynamic_denoise_strength(denoise_strength, bbox, image):
+    def get_dynamic_denoise_strength(
+        denoise_strength: float, bbox: Sequence[Any], image_size: tuple[int, int]
+    ):
         denoise_power = opts.data.get("ad_dynamic_denoise_power", 0)
         if denoise_power == 0:
             return denoise_strength
 
-        image_pixels = image.width * image.height
-        bbox_pixels = (bbox[2] - bbox[0]) * (bbox[3] - bbox[1])
-
-        normalized_area = bbox_pixels / image_pixels
-        denoise_modifier = (1.0 - normalized_area) ** denoise_power
-
-        print(
-            f"[-] ADetailer: dynamic denoising -- {denoise_modifier:.2f} * {denoise_strength:.2f} = {denoise_strength * denoise_modifier:.2f}"
+        modified_strength = dynamic_denoise_strength(
+            denoise_power=denoise_power,
+            denoise_strength=denoise_strength,
+            bbox=bbox,
+            image_size=image_size,
         )
 
-        return denoise_strength * denoise_modifier
+        print(
+            f"[-] ADetailer: dynamic denoising -- {denoise_strength:.2f} -> {modified_strength:.2f}"
+        )
+
+        return modified_strength
 
     @staticmethod
-    def get_optimal_crop_image_size(inpaint_width, inpaint_height, bbox):
-        calculate_optimal_crop = opts.data.get("ad_match_inpaint_bbox_size", "Off")
-        if calculate_optimal_crop == "Off":
+    def get_optimal_crop_image_size(
+        inpaint_width: int, inpaint_height: int, bbox: Sequence[Any]
+    ):
+        calculate_optimal_crop = opts.data.get(
+            "ad_match_inpaint_bbox_size", InpaintBBoxMatchMode.OFF.value
+        )
+
+        if calculate_optimal_crop == InpaintBBoxMatchMode.OFF.value:
             return (inpaint_width, inpaint_height)
 
-        optimal_resolution = None
+        optimal_resolution: tuple[int, int] | None = None
 
-        bbox_width = bbox[2] - bbox[0]
-        bbox_height = bbox[3] - bbox[1]
-        bbox_aspect_ratio = bbox_width / bbox_height
-
-        if calculate_optimal_crop == "Strict (SDXL only)":
+        if calculate_optimal_crop == InpaintBBoxMatchMode.STRICT.value:
             if not shared.sd_model.is_sdxl:
                 msg = "[-] ADetailer: strict inpaint bounding box size matching is only available for SDXL. Use Free mode instead."
                 print(msg)
                 return (inpaint_width, inpaint_height)
 
-            # Limit resolutions to those SDXL was trained on.
-            resolutions = [
-                (1024, 1024),
-                (1152, 896),
-                (896, 1152),
-                (1216, 832),
-                (832, 1216),
-                (1344, 768),
-                (768, 1344),
-                (1536, 640),
-                (640, 1536),
-            ]
-
-            # Filter resolutions smaller than bbox, and any that could result in a total pixel size smaller than the current inpaint dimensions.
-            resolutions = [
-                res
-                for res in resolutions
-                if (res[0] >= bbox_width and res[1] >= bbox_height)
-                and (res[0] >= inpaint_width or res[1] >= inpaint_height)
-            ]
-
-            if not resolutions:
-                return (inpaint_width, inpaint_height)
-
-            optimal_resolution = min(
-                resolutions,
-                key=lambda res: abs((res[0] / res[1]) - bbox_aspect_ratio),
+            optimal_resolution = optimal_crop_size.sdxl(
+                inpaint_width, inpaint_height, bbox
             )
-        elif calculate_optimal_crop == "Free":
-            scale_size = max(inpaint_width, inpaint_height)
 
-            if bbox_aspect_ratio > 1:
-                optimal_width = scale_size
-                optimal_height = scale_size / bbox_aspect_ratio
-            else:
-                optimal_width = scale_size * bbox_aspect_ratio
-                optimal_height = scale_size
+        elif calculate_optimal_crop == InpaintBBoxMatchMode.FREE.value:
+            optimal_resolution = optimal_crop_size.free(
+                inpaint_width, inpaint_height, bbox
+            )
 
-            # Round up to the nearest multiple of 8 to make the dimensions friendly for upscaling/diffusion.
-            optimal_width = ((optimal_width + 8 - 1) // 8) * 8
-            optimal_height = ((optimal_height + 8 - 1) // 8) * 8
-
-            optimal_resolution = (int(optimal_width), int(optimal_height))
         else:
             msg = "[-] ADetailer: unsupported inpaint bounding box match mode. Original inpainting dimensions will be used."
             print(msg)
@@ -873,13 +846,12 @@ class AfterDetailerScript(scripts.Script):
 
             p2.seed = self.get_each_tab_seed(seed, j)
             p2.subseed = self.get_each_tab_seed(subseed, j)
+            p2.denoising_strength = self.get_dynamic_denoise_strength(
+                p2.denoising_strength, pred.bboxes[j], pp.image.size
+            )
 
             p2.cached_c = [None, None]
             p2.cached_uc = [None, None]
-
-            p2.denoising_strength = self.get_dynamic_denoise_strength(
-                p2.denoising_strength, pred.bboxes[j], pp.image
-            )
 
             # Don't override user-defined dimensions.
             if not args.ad_use_inpaint_width_height:
@@ -1055,7 +1027,7 @@ def on_ui_settings():
     shared.opts.add_option(
         "ad_match_inpaint_bbox_size",
         shared.OptionInfo(
-            default="Off",
+            default=InpaintBBoxMatchMode.OFF.value,  # Off
             component=gr.Radio,
             component_args={"choices": INPAINT_BBOX_MATCH_MODES},
             label="Try to match inpainting size to bounding box size, if 'Use separate width/height' is not set",

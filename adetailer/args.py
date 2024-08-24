@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections import UserList
 from dataclasses import dataclass
+from enum import Enum
 from functools import cached_property, partial
 from typing import Any, Literal, NamedTuple, Optional
 
@@ -262,11 +263,7 @@ BBOX_SORTBY = [
     "Position (center to edge)",
     "Area (large to small)",
 ]
-INPAINT_BBOX_MATCH_MODES = [
-    "Off",
-    "Strict (SDXL only)",
-    "Free",
-]
+
 MASK_MERGE_INVERT = ["None", "Merge", "Merge and Invert"]
 
 _script_default = (
@@ -281,3 +278,16 @@ SCRIPT_DEFAULT = ",".join(sorted(_script_default))
 
 _builtin_script = ("soft_inpainting", "hypertile_script")
 BUILTIN_SCRIPT = ",".join(sorted(_builtin_script))
+
+
+class InpaintBBoxMatchMode(Enum):
+    OFF = "Off"
+    STRICT = "Strict (SDXL only)"
+    FREE = "Free"
+
+
+INPAINT_BBOX_MATCH_MODES = [
+    InpaintBBoxMatchMode.OFF.value,
+    InpaintBBoxMatchMode.STRICT.value,
+    InpaintBBoxMatchMode.FREE.value,
+]

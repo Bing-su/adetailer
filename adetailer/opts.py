@@ -8,12 +8,16 @@ import numpy as np
 T = TypeVar("T", int, float)
 
 
-def get_dynamic_denoise_strength(
+def dynamic_denoise_strength(
     denoise_power: float,
     denoise_strength: float,
     bbox: Sequence[T],
     image_size: tuple[int, int],
 ) -> float:
+    if len(bbox) != 4:
+        msg = f"bbox length must be 4, got {len(bbox)}"
+        raise ValueError(msg)
+
     if np.isclose(denoise_power, 0.0) or len(bbox) != 4:
         return denoise_strength
 
@@ -45,7 +49,8 @@ class _OptimalCropSize:
         self, inpaint_width: int, inpaint_height: int, bbox: Sequence[T]
     ) -> tuple[int, int]:
         if len(bbox) != 4:
-            return inpaint_width, inpaint_height
+            msg = f"bbox length must be 4, got {len(bbox)}"
+            raise ValueError(msg)
 
         bbox_width = bbox[2] - bbox[0]
         bbox_height = bbox[3] - bbox[1]
@@ -70,7 +75,8 @@ class _OptimalCropSize:
         self, inpaint_width: int, inpaint_height: int, bbox: Sequence[T]
     ) -> tuple[int, int]:
         if len(bbox) != 4:
-            return inpaint_width, inpaint_height
+            msg = f"bbox length must be 4, got {len(bbox)}"
+            raise ValueError(msg)
 
         bbox_width = bbox[2] - bbox[0]
         bbox_height = bbox[3] - bbox[1]

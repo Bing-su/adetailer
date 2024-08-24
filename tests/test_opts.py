@@ -5,7 +5,7 @@ import pytest
 from hypothesis import assume, given
 from hypothesis import strategies as st
 
-from adetailer.opts import get_dynamic_denoise_strength, optimal_crop_size
+from adetailer.opts import dynamic_denoise_strength, optimal_crop_size
 
 
 @pytest.mark.parametrize(
@@ -17,29 +17,29 @@ from adetailer.opts import get_dynamic_denoise_strength, optimal_crop_size
         (-0.5, 0.5, [0, 0, 100, 100], (1000, 1000), 0.502518907629606),
     ],
 )
-def test_get_dynamic_denoise_strength(
+def test_dynamic_denoise_strength(
     denoise_power: float,
     denoise_strength: float,
     bbox: list[int],
     image_size: tuple[int, int],
     expected_result: float,
 ):
-    result = get_dynamic_denoise_strength(
-        denoise_power, denoise_strength, bbox, image_size
-    )
+    result = dynamic_denoise_strength(denoise_power, denoise_strength, bbox, image_size)
     assert np.isclose(result, expected_result)
 
 
 @given(denoise_strength=st.floats(allow_nan=False))
-def test_get_dynamic_denoise_strength_no_bbox(denoise_strength: float):
-    result = get_dynamic_denoise_strength(0.5, denoise_strength, [], (1000, 1000))
-    assert result == denoise_strength
+def test_dynamic_denoise_strength_no_bbox(denoise_strength: float):
+    with pytest.raises(ValueError, match="bbox length must be 4, got 0"):
+        dynamic_denoise_strength(0.5, denoise_strength, [], (1000, 1000))
 
 
 @given(denoise_strength=st.floats(allow_nan=False))
-def test_get_dynamic_denoise_strength_zero_power(denoise_strength: float):
-    result = get_dynamic_denoise_strength(0.0, denoise_strength, [], (1000, 1000))
-    assert result == denoise_strength
+def test_dynamic_denoise_strength_zero_power(denoise_strength: float):
+    result = dynamic_denoise_strength(
+        0.0, denoise_strength, [0, 0, 100, 100], (1000, 1000)
+    )
+    assert np.isclose(result, denoise_strength)
 
 
 @given(
