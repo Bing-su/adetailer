@@ -696,16 +696,18 @@ class AfterDetailerScript(scripts.Script):
     @staticmethod
     def get_optimal_crop_image_size(
         inpaint_width: int, inpaint_height: int, bbox: Sequence[Any]
-    ):
+    ) -> tuple[int, int]:
         calculate_optimal_crop = opts.data.get(
             "ad_match_inpaint_bbox_size", InpaintBBoxMatchMode.OFF.value
         )
 
+        optimal_resolution: tuple[int, int] | None = None
+
+        # Off
         if calculate_optimal_crop == InpaintBBoxMatchMode.OFF.value:
             return (inpaint_width, inpaint_height)
 
-        optimal_resolution: tuple[int, int] | None = None
-
+        # Strict (SDXL only)
         if calculate_optimal_crop == InpaintBBoxMatchMode.STRICT.value:
             if not shared.sd_model.is_sdxl:
                 msg = "[-] ADetailer: strict inpaint bounding box size matching is only available for SDXL. Use Free mode instead."
@@ -716,16 +718,15 @@ class AfterDetailerScript(scripts.Script):
                 inpaint_width, inpaint_height, bbox
             )
 
+        # Free
         elif calculate_optimal_crop == InpaintBBoxMatchMode.FREE.value:
             optimal_resolution = optimal_crop_size.free(
                 inpaint_width, inpaint_height, bbox
             )
 
-        else:
+        if optimal_resolution is None:
             msg = "[-] ADetailer: unsupported inpaint bounding box match mode. Original inpainting dimensions will be used."
             print(msg)
-
-        if optimal_resolution is None:
             return (inpaint_width, inpaint_height)
 
         # Only use optimal dimensions if they're different enough to current inpaint dimensions.
@@ -874,7 +875,7 @@ class AfterDetailerScript(scripts.Script):
 
             self.compare_prompt(p.extra_generation_params, processed, n=n)
             p2 = copy(i2i)
-            p2.init_images = [processed.images[0]]
+            p2.init_images = processed.images
 
         if processed is not None:
             pp.image = processed.images[0]
