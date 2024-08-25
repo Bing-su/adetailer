@@ -78,6 +78,7 @@ class ControlNetExt:
                 guidance_start=guidance_start,
                 guidance_end=guidance_end,
                 pixel_perfect=True,
+                enabled=True,
             )
         ]
 
