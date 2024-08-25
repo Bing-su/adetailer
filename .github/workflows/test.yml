@@ -1,0 +1,34 @@
+name: Test on PR
+
+on:
+  pull_request:
+    paths:
+      - "adetailer/**.py"
+
+jobs:
+  test:
+    name: Test on python ${{ matrix.python-version }}
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        python-version:
+          - "3.10"
+          - "3.11"
+          - "3.12"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - uses: yezz123/setup-uv@v4
+
+      - name: Install dependencies
+        run: |
+          uv pip install --system ".[test]"
+
+      - name: Run tests
+        run: pytest -v
