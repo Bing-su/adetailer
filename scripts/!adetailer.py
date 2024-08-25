@@ -818,8 +818,9 @@ class AfterDetailerScript(scripts.Script):
 
         else:
             with change_torch_load():
+                ad_model = self.get_ad_model(args.ad_model)
                 pred = ultralytics_predict(
-                    args.ad_model,
+                    ad_model,
                     image=pp.image,
                     confidence=args.ad_confidence,
                     device=self.ultralytics_device,
