@@ -876,7 +876,7 @@ class AfterDetailerScript(scripts.Script):
 
             self.compare_prompt(p.extra_generation_params, processed, n=n)
             p2 = copy(i2i)
-            p2.init_images = processed.images
+            p2.init_images = [processed.images[0]]
 
         if processed is not None:
             pp.image = processed.images[0]
