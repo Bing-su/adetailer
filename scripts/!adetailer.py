@@ -658,6 +658,7 @@ class AfterDetailerScript(scripts.Script):
     @staticmethod
     def get_image_mask(p) -> Image.Image:
         mask = p.image_mask
+        mask = ensure_pil_image(mask, "L")
         if getattr(p, "inpainting_mask_invert", False):
             mask = ImageChops.invert(mask)
         mask = create_binary_mask(mask)
