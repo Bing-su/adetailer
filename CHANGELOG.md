@@ -1,5 +1,14 @@
 # Changelog
 
+## 2024-09-02
+
+- v24.9.0
+- Dynamic Denoising, Inpaint bbox sizing 기능 (PR #678)
+- `ad_save_images_dir` 옵션 추가 - ad 이미지를 저장하는 장소 지정 (PR #689)
+
+- forge와 관련된 버그 몇 개 수정
+- pydantic validation에 실패해도 에러를 일으키지 않고 넘어가도록 수정
+
 ## 2024-08-03
 
 - v24.8.0
