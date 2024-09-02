@@ -25,7 +25,7 @@ tasks:
 
   update:
     cmds:
-      - "{{.PYTHON}} -m uv pip install -U ultralytics mediapipe ruff pre-commit black devtools pytest"
+      - "{{.PYTHON}} -m uv pip install -U ultralytics mediapipe ruff pre-commit black devtools pytest hypothesis"
 
   update-torch:
     cmds:
