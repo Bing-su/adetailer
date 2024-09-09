@@ -474,18 +474,26 @@ class AfterDetailerScript(scripts.Script):
         script_runner.alwayson_scripts = filtered_alwayson
         return script_runner, script_args
 
-    def disable_controlnet_units(
-        self, script_args: list[Any] | tuple[Any, ...]
-    ) -> None:
-        for obj in script_args:
-            if "controlnet" in obj.__class__.__name__.lower():
-                if hasattr(obj, "enabled"):
-                    obj.enabled = False
-                if hasattr(obj, "input_mode"):
-                    obj.input_mode = getattr(obj.input_mode, "SIMPLE", "simple")
+    def disable_controlnet_units(self, script_args: Sequence[Any]) -> list[Any]:
+        new_args = []
+        for arg in script_args:
+            if "controlnet" in arg.__class__.__name__.lower():
+                new = copy(arg)
+                if hasattr(new, "enabled"):
+                    new.enabled = False
+                if hasattr(new, "input_mode"):
+                    new.input_mode = getattr(new.input_mode, "SIMPLE", "simple")
+                new_args.append(new)
 
-            elif isinstance(obj, dict) and "module" in obj:
-                obj["enabled"] = False
+            elif isinstance(arg, dict) and "module" in arg:
+                new = copy(arg)
+                new["enabled"] = False
+                new_args.append(new)
+
+            else:
+                new_args.append(arg)
+
+        return new_args
 
     def get_i2i_p(self, p, args: ADetailerArgs, image):
         seed, subseed = self.get_seed(p)
@@ -545,7 +553,7 @@ class AfterDetailerScript(scripts.Script):
         i2i._ad_inner = True
 
         if args.ad_controlnet_model != "Passthrough" and controlnet_type != "forge":
-            self.disable_controlnet_units(i2i.script_args)
+            i2i.script_args = self.disable_controlnet_units(i2i.script_args)
 
         if args.ad_controlnet_model not in ["None", "Passthrough"]:
             self.update_controlnet_args(i2i, args)
