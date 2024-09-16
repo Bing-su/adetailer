@@ -48,6 +48,7 @@ from adetailer.args import (
     ADetailerArgs,
     InpaintBBoxMatchMode,
     SkipImg2ImgOrig,
+    _all_args,
 )
 from adetailer.common import PredictOutput, ensure_pil_image, safe_mkdir
 from adetailer.mask import (
@@ -563,7 +564,7 @@ class AfterDetailerScript(scripts.Script):
             save_prompt = p.prompt
         seed, _ = self.get_seed(p)
 
-        if opts.data.get(condition, False):
+        if condition is True or opts.data.get(condition, False):
             ad_save_images_dir: str = opts.data.get("ad_save_images_dir", "")
 
             if not ad_save_images_dir.strip():
@@ -901,17 +902,56 @@ class AfterDetailerScript(scripts.Script):
             with preserve_prompts(p):
                 p.scripts.postprocess(copy(p), dummy)
 
+        last_index = 0
+        for n, args in enumerate(arg_list):
+            if args.need_skip() and args.ad_solo_generation is False:
+                last_index = n
+
+        save_incrementals = []
+        save_solos = []
+
         is_processed = False
         with CNHijackRestore(), pause_total_tqdm(), cn_allow_script_control():
             for n, args in enumerate(arg_list):
-                if args.need_skip():
+                if args.need_skip() or args.ad_solo_generation:
                     continue
                 is_processed |= self._postprocess_image_inner(p, pp, args, n=n)
 
-        if is_processed and not is_skip_img2img(p):
-            self.save_image(
-                p, init_image, condition="ad_save_images_before", suffix="-ad-before"
-            )
+                if n < last_index:
+                    save_incrementals.append((n,copy(pp.image)))
+
+            for n, args in enumerate(arg_list):
+                if args.need_skip() or args.ad_solo_generation is False:
+                    continue
+                pp_solo = copy(pp)
+                pp_solo.image = init_image
+                if self._postprocess_image_inner(p, pp_solo, args, n=n):
+                    save_solos.append((n, pp_solo.image, args))
+
+        if is_processed:
+            if not is_skip_img2img(p):
+                self.save_image(
+                    p, init_image, condition="ad_save_images_before", suffix="-ad-before"
+                )
+
+            for save in save_incrementals:
+                self.save_image(
+                    p,
+                    save[1],
+                    condition="ad_save_step_images",
+                    suffix=f"-ad-step-{save[0]+1}",
+                )
+
+            all_extra_params = p.extra_generation_params
+            for save in save_solos:
+                p.extra_generation_params = self.fix_extra_generation_params(all_extra_params, save[2])
+                self.save_image(
+                    p,
+                    save[1],
+                    condition=True,
+                    suffix=f"-ad-solo-{save[0]+1}",
+                )
+                p.extra_generation_params = all_extra_params
 
         if need_call_process(p):
             with preserve_prompts(p):
@@ -921,7 +961,24 @@ class AfterDetailerScript(scripts.Script):
 
         self.write_params_txt(params_txt_content)
 
+    def fix_extra_generation_params(self, params:dict, args:ADetailerArgs):
+        ad_params = {}
+        for params_k in list(params.keys()):
+            found = False
+            for i, (k,v) in enumerate (_all_args):
+                if v in params_k:
+                    found = True
+                    break
+            if not found:
+                ad_params[params_k] = params[params_k]
 
+        for i, (k,v) in enumerate (_all_args):
+            if hasattr(args,k):
+                args_v = getattr(args,k)
+                if args_v is not None and args_v != '':
+                    ad_params[v] = args_v
+        return ad_params
+    
 def on_after_component(component, **_kwargs):
     global txt2img_submit_button, img2img_submit_button
     if getattr(component, "elem_id", None) == "txt2img_generate":
@@ -975,6 +1032,11 @@ def on_ui_settings():
     shared.opts.add_option(
         "ad_save_images_before",
         shared.OptionInfo(False, "Save images before ADetailer", section=section),
+    )
+
+    shared.opts.add_option(
+        "ad_save_step_images",
+        shared.OptionInfo(False, "Save incremental step images", section=section),
     )
 
     shared.opts.add_option(
