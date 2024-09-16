@@ -140,7 +140,6 @@ def mediapipe_face_mesh_eyes_only(
 
         preview = image.copy()
         masks = []
-
         for landmarks in pred.multi_face_landmarks:
             points = np.array(
                 [[land.x * w, land.y * h] for land in landmarks.landmark], dtype=int
@@ -155,10 +154,10 @@ def mediapipe_face_mesh_eyes_only(
             for outline in (left_outline, right_outline):
                 draw.polygon(outline, fill="white")
             masks.append(mask)
-
+            
         bboxes = create_bbox_from_mask(masks, image.size)
         preview = draw_preview(preview, bboxes, masks)
-        return PredictOutput(bboxes=bboxes, masks=masks, confidences=confidences, preview=preview)
+        return PredictOutput(bboxes=bboxes, masks=masks, preview=preview)
 
 
 def draw_preview(
