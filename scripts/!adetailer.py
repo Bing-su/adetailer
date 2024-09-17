@@ -4,10 +4,10 @@ import platform
 import re
 import sys
 import traceback
+from collections.abc import Sequence
 from copy import copy
 from functools import partial
 from pathlib import Path
-from textwrap import dedent
 from typing import TYPE_CHECKING, Any, NamedTuple, cast
 
 import gradio as gr
@@ -17,10 +17,11 @@ from rich import print
 import modules
 from aaaaaa.conditional import create_binary_mask, schedulers
 from aaaaaa.helper import (
+    PPImage,
     change_torch_load,
     copy_extra_params,
     pause_total_tqdm,
-    preseve_prompts,
+    preserve_prompts,
 )
 from aaaaaa.p_method import (
     get_i,
@@ -33,7 +34,7 @@ from aaaaaa.p_method import (
 from aaaaaa.traceback import rich_traceback
 from aaaaaa.ui import WebuiInfo, adui, ordinal, suffix
 from adetailer import (
-    AFTER_DETAILER,
+    ADETAILER,
     __version__,
     get_models,
     mediapipe_predict,
@@ -42,8 +43,10 @@ from adetailer import (
 from adetailer.args import (
     BBOX_SORTBY,
     BUILTIN_SCRIPT,
+    INPAINT_BBOX_MATCH_MODES,
     SCRIPT_DEFAULT,
     ADetailerArgs,
+    InpaintBBoxMatchMode,
     SkipImg2ImgOrig,
 )
 from adetailer.common import PredictOutput, ensure_pil_image, safe_mkdir
@@ -56,6 +59,7 @@ from adetailer.mask import (
     mask_preprocess,
     sort_bboxes,
 )
+from adetailer.opts import dynamic_denoise_strength, optimal_crop_size
 from controlnet_ext import (
     CNHijackRestore,
     ControlNetExt,
@@ -111,7 +115,7 @@ class AfterDetailerScript(scripts.Script):
         return f"{self.__class__.__name__}(version={__version__})"
 
     def title(self):
-        return AFTER_DETAILER
+        return ADETAILER
 
     def show(self, is_img2img):
         return scripts.AlwaysVisible
@@ -122,10 +126,7 @@ class AfterDetailerScript(scripts.Script):
         sampler_names = [sampler.name for sampler in all_samplers]
         scheduler_names = [x.label for x in schedulers]
 
-        try:
-            checkpoint_list = modules.sd_models.checkpoint_tiles(use_shorts=True)
-        except TypeError:
-            checkpoint_list = modules.sd_models.checkpoint_tiles()
+        checkpoint_list = modules.sd_models.checkpoint_tiles(use_short=True)
         vae_list = modules.shared_items.sd_vae_items()
 
         webui_info = WebuiInfo(
@@ -176,25 +177,23 @@ class AfterDetailerScript(scripts.Script):
                 guidance_end=args.ad_controlnet_guidance_end,
             )
 
-    def is_ad_enabled(self, *args_) -> bool:
-        arg_list = [arg for arg in args_ if isinstance(arg, dict)]
-        if not args_ or not arg_list:
-            message = f"""
-                       [-] ADetailer: Invalid arguments passed to ADetailer.
-                           input: {args_!r}
-                           ADetailer disabled.
-                       """
-            print(dedent(message), file=sys.stderr)
+    def is_ad_enabled(self, *args) -> bool:
+        arg_list = [arg for arg in args if isinstance(arg, dict)]
+        if not arg_list:
             return False
 
-        ad_enabled = args_[0] if isinstance(args_[0], bool) else True
-        pydantic_args = []
+        ad_enabled = args[0] if isinstance(args[0], bool) else True
+
+        not_none = False
         for arg in arg_list:
             try:
-                pydantic_args.append(ADetailerArgs(**arg))
+                adarg = ADetailerArgs(**arg)
             except ValueError:  # noqa: PERF203
                 continue
-        not_none = not all(arg.need_skip() for arg in pydantic_args)
+            else:
+                if not adarg.need_skip():
+                    not_none = True
+                    break
         return ad_enabled and not_none
 
     def set_skip_img2img(self, p, *args_) -> None:
@@ -231,9 +230,6 @@ class AfterDetailerScript(scripts.Script):
         p.height = 128
 
     def get_args(self, p, *args_) -> list[ADetailerArgs]:
-        """
-        `args_` is at least 1 in length by `is_ad_enabled` immediately above
-        """
         args = [arg for arg in args_ if isinstance(arg, dict)]
 
         if not args:
@@ -243,21 +239,21 @@ class AfterDetailerScript(scripts.Script):
         if hasattr(p, "_ad_xyz"):
             args[0] = {**args[0], **p._ad_xyz}
 
-        all_inputs = []
+        all_inputs: list[ADetailerArgs] = []
 
         for n, arg_dict in enumerate(args, 1):
             try:
                 inp = ADetailerArgs(**arg_dict)
-            except ValueError as e:
-                msg = f"[-] ADetailer: ValidationError when validating {ordinal(n)} arguments"
-                if hasattr(e, "add_note"):
-                    e.add_note(msg)
-                else:
-                    print(msg, file=sys.stderr)
-                raise
+            except ValueError:
+                msg = f"[-] ADetailer: ValidationError when validating {ordinal(n)} arguments:"
+                print(msg, arg_dict, file=sys.stderr)
+                continue
 
             all_inputs.append(inp)
 
+        if not all_inputs:
+            msg = "[-] ADetailer: No valid arguments found."
+            raise ValueError(msg)
         return all_inputs
 
     def extra_params(self, arg_list: list[ADetailerArgs]) -> dict:
@@ -378,7 +374,10 @@ class AfterDetailerScript(scripts.Script):
 
     def get_sampler(self, p, args: ADetailerArgs) -> str:
         if args.ad_use_sampler:
+            if args.ad_sampler == "Use same sampler":
+                return p.sampler_name
             return args.ad_sampler
+
         if hasattr(p, "_ad_orig"):
             return p._ad_orig.sampler_name
         return p.sampler_name
@@ -386,7 +385,7 @@ class AfterDetailerScript(scripts.Script):
     def get_scheduler(self, p, args: ADetailerArgs) -> dict[str, str]:
         "webui >= 1.9.0"
         if not args.ad_use_sampler:
-            return {}
+            return {"scheduler": getattr(p, "scheduler", "Automatic")}
 
         if args.ad_scheduler == "Use same scheduler":
             value = getattr(p, "scheduler", "Automatic")
@@ -451,8 +450,8 @@ class AfterDetailerScript(scripts.Script):
         script_runner = copy(p.scripts)
         script_args = self.script_args_copy(p.script_args)
 
-        ad_only_seleted_scripts = opts.data.get("ad_only_seleted_scripts", True)
-        if not ad_only_seleted_scripts:
+        ad_only_selected_scripts = opts.data.get("ad_only_selected_scripts", True)
+        if not ad_only_selected_scripts:
             return script_runner, script_args
 
         ad_script_names_string: str = opts.data.get("ad_script_names", SCRIPT_DEFAULT)
@@ -566,9 +565,14 @@ class AfterDetailerScript(scripts.Script):
         seed, _ = self.get_seed(p)
 
         if opts.data.get(condition, False):
+            ad_save_images_dir: str = opts.data.get("ad_save_images_dir", "")
+
+            if not ad_save_images_dir.strip():
+                ad_save_images_dir = p.outpath_samples
+
             images.save_image(
                 image=image,
-                path=p.outpath_samples,
+                path=ad_save_images_dir,
                 basename="",
                 seed=seed,
                 prompt=save_prompt,
@@ -623,33 +627,28 @@ class AfterDetailerScript(scripts.Script):
         i2i.negative_prompt = negative_prompt
 
     @staticmethod
-    def compare_prompt(p, extra_params: dict[str, Any], processed, n: int = 0):
-        if not hasattr(p, "_ad_extra_params_result"):
-            p._ad_extra_params_result = {}
-
+    def compare_prompt(extra_params: dict[str, Any], processed, n: int = 0):
         pt = "ADetailer prompt" + suffix(n)
         if pt in extra_params and extra_params[pt] != processed.all_prompts[0]:
             print(
                 f"[-] ADetailer: applied {ordinal(n + 1)} ad_prompt: {processed.all_prompts[0]!r}"
             )
-            p._ad_extra_params_result[pt] = processed.all_prompts[0]
 
         ng = "ADetailer negative prompt" + suffix(n)
         if ng in extra_params and extra_params[ng] != processed.all_negative_prompts[0]:
             print(
                 f"[-] ADetailer: applied {ordinal(n + 1)} ad_negative_prompt: {processed.all_negative_prompts[0]!r}"
             )
-            p._ad_extra_params_result[ng] = processed.all_negative_prompts[0]
 
     @staticmethod
-    def get_i2i_init_image(p, pp):
+    def get_i2i_init_image(p, pp: PPImage):
         if is_skip_img2img(p):
             return p.init_images[0]
         return pp.image
 
     @staticmethod
-    def get_each_tap_seed(seed: int, i: int):
-        use_same_seed = shared.opts.data.get("ad_same_seed_for_each_tap", False)
+    def get_each_tab_seed(seed: int, i: int):
+        use_same_seed = shared.opts.data.get("ad_same_seed_for_each_tab", False)
         return seed if use_same_seed else seed + i
 
     @staticmethod
@@ -663,6 +662,7 @@ class AfterDetailerScript(scripts.Script):
     @staticmethod
     def get_image_mask(p) -> Image.Image:
         mask = p.image_mask
+        mask = ensure_pil_image(mask, "L")
         if getattr(p, "inpainting_mask_invert", False):
             mask = ImageChops.invert(mask)
         mask = create_binary_mask(mask)
@@ -676,6 +676,93 @@ class AfterDetailerScript(scripts.Script):
         else:
             width, height = p.width, p.height
         return images.resize_image(p.resize_mode, mask, width, height)
+
+    @staticmethod
+    def get_dynamic_denoise_strength(
+        denoise_strength: float, bbox: Sequence[Any], image_size: tuple[int, int]
+    ):
+        denoise_power = opts.data.get("ad_dynamic_denoise_power", 0)
+        if denoise_power == 0:
+            return denoise_strength
+
+        modified_strength = dynamic_denoise_strength(
+            denoise_power=denoise_power,
+            denoise_strength=denoise_strength,
+            bbox=bbox,
+            image_size=image_size,
+        )
+
+        print(
+            f"[-] ADetailer: dynamic denoising -- {denoise_strength:.2f} -> {modified_strength:.2f}"
+        )
+
+        return modified_strength
+
+    @staticmethod
+    def get_optimal_crop_image_size(
+        inpaint_width: int, inpaint_height: int, bbox: Sequence[Any]
+    ) -> tuple[int, int]:
+        calculate_optimal_crop = opts.data.get(
+            "ad_match_inpaint_bbox_size", InpaintBBoxMatchMode.OFF.value
+        )
+
+        optimal_resolution: tuple[int, int] | None = None
+
+        # Off
+        if calculate_optimal_crop == InpaintBBoxMatchMode.OFF.value:
+            return (inpaint_width, inpaint_height)
+
+        # Strict (SDXL only)
+        if calculate_optimal_crop == InpaintBBoxMatchMode.STRICT.value:
+            if not shared.sd_model.is_sdxl:
+                msg = "[-] ADetailer: strict inpaint bounding box size matching is only available for SDXL. Use Free mode instead."
+                print(msg)
+                return (inpaint_width, inpaint_height)
+
+            optimal_resolution = optimal_crop_size.sdxl(
+                inpaint_width, inpaint_height, bbox
+            )
+
+        # Free
+        elif calculate_optimal_crop == InpaintBBoxMatchMode.FREE.value:
+            optimal_resolution = optimal_crop_size.free(
+                inpaint_width, inpaint_height, bbox
+            )
+
+        if optimal_resolution is None:
+            msg = "[-] ADetailer: unsupported inpaint bounding box match mode. Original inpainting dimensions will be used."
+            print(msg)
+            return (inpaint_width, inpaint_height)
+
+        # Only use optimal dimensions if they're different enough to current inpaint dimensions.
+        if (
+            abs(optimal_resolution[0] - inpaint_width) > inpaint_width * 0.1
+            or abs(optimal_resolution[1] - inpaint_height) > inpaint_height * 0.1
+        ):
+            print(
+                f"[-] ADetailer: inpaint dimensions optimized -- {inpaint_width}x{inpaint_height} -> {optimal_resolution[0]}x{optimal_resolution[1]}"
+            )
+
+        return optimal_resolution
+
+    def fix_p2(  # noqa: PLR0913
+        self, p, p2, pp: PPImage, args: ADetailerArgs, pred: PredictOutput, j: int
+    ):
+        seed, subseed = self.get_seed(p)
+        p2.seed = self.get_each_tab_seed(seed, j)
+        p2.subseed = self.get_each_tab_seed(subseed, j)
+        p2.denoising_strength = self.get_dynamic_denoise_strength(
+            p2.denoising_strength, pred.bboxes[j], pp.image.size
+        )
+
+        p2.cached_c = [None, None]
+        p2.cached_uc = [None, None]
+
+        # Don't override user-defined dimensions.
+        if not args.ad_use_inpaint_width_height:
+            p2.width, p2.height = self.get_optimal_crop_image_size(
+                p2.width, p2.height, pred.bboxes[j]
+            )
 
     @rich_traceback
     def process(self, p, *args_):
@@ -712,7 +799,7 @@ class AfterDetailerScript(scripts.Script):
         p.extra_generation_params.update(extra_params)
 
     def _postprocess_image_inner(
-        self, p, pp, args: ADetailerArgs, *, n: int = 0
+        self, p, pp: PPImage, args: ADetailerArgs, *, n: int = 0
     ) -> bool:
         """
         Returns
@@ -727,23 +814,23 @@ class AfterDetailerScript(scripts.Script):
         i = get_i(p)
 
         i2i = self.get_i2i_p(p, args, pp.image)
-        seed, subseed = self.get_seed(p)
         ad_prompts, ad_negatives = self.get_prompt(p, args)
 
         is_mediapipe = args.is_mediapipe()
 
-        kwargs = {}
         if is_mediapipe:
-            predictor = mediapipe_predict
-            ad_model = args.ad_model
-        else:
-            predictor = ultralytics_predict
-            ad_model = self.get_ad_model(args.ad_model)
-            kwargs["device"] = self.ultralytics_device
-            kwargs["classes"] = args.ad_model_classes
+            pred = mediapipe_predict(args.ad_model, pp.image, args.ad_confidence)
 
-        with change_torch_load():
-            pred = predictor(ad_model, pp.image, args.ad_confidence, **kwargs)
+        else:
+            with change_torch_load():
+                ad_model = self.get_ad_model(args.ad_model)
+                pred = ultralytics_predict(
+                    ad_model,
+                    image=pp.image,
+                    confidence=args.ad_confidence,
+                    device=self.ultralytics_device,
+                    classes=args.ad_model_classes,
+                )
 
         if pred.preview is None:
             print(
@@ -777,11 +864,8 @@ class AfterDetailerScript(scripts.Script):
             if re.match(r"^\s*\[SKIP\]\s*$", p2.prompt):
                 continue
 
-            p2.seed = self.get_each_tap_seed(seed, j)
-            p2.subseed = self.get_each_tap_seed(subseed, j)
+            self.fix_p2(p, p2, pp, args, pred, j)
 
-            p2.cached_c = [None, None]
-            p2.cached_uc = [None, None]
             try:
                 processed = process_images(p2)
             except NansException as e:
@@ -791,7 +875,11 @@ class AfterDetailerScript(scripts.Script):
             finally:
                 p2.close()
 
-            self.compare_prompt(p, p.extra_generation_params, processed, n=n)
+            if not processed.images:
+                processed = None
+                break
+
+            self.compare_prompt(p.extra_generation_params, processed, n=n)
             p2 = copy(i2i)
             p2.init_images = [processed.images[0]]
 
@@ -802,7 +890,7 @@ class AfterDetailerScript(scripts.Script):
         return False
 
     @rich_traceback
-    def postprocess_image(self, p, pp, *args_):
+    def postprocess_image(self, p, pp: PPImage, *args_):
         if getattr(p, "_ad_disabled", False) or not self.is_ad_enabled(*args_):
             return
 
@@ -814,7 +902,7 @@ class AfterDetailerScript(scripts.Script):
 
         if need_call_postprocess(p):
             dummy = Processed(p, [], p.seed, "")
-            with preseve_prompts(p):
+            with preserve_prompts(p):
                 p.scripts.postprocess(copy(p), dummy)
 
         is_processed = False
@@ -830,16 +918,12 @@ class AfterDetailerScript(scripts.Script):
             )
 
         if need_call_process(p):
-            with preseve_prompts(p):
+            with preserve_prompts(p):
                 copy_p = copy(p)
-                if hasattr(p.scripts, "before_process"):
-                    p.scripts.before_process(copy_p)
+                p.scripts.before_process(copy_p)
                 p.scripts.process(copy_p)
 
         self.write_params_txt(params_txt_content)
-
-        if hasattr(p, "_ad_extra_params_result"):
-            p.extra_generation_params.update(p._ad_extra_params_result)
 
 
 def on_after_component(component, **_kwargs):
@@ -853,28 +937,38 @@ def on_after_component(component, **_kwargs):
 
 
 def on_ui_settings():
-    section = ("ADetailer", AFTER_DETAILER)
+    section = ("ADetailer", ADETAILER)
     shared.opts.add_option(
         "ad_max_models",
         shared.OptionInfo(
             default=4,
-            label="Max models",
+            label="Max tabs",
             component=gr.Slider,
             component_args={"minimum": 1, "maximum": 15, "step": 1},
             section=section,
-        ),
+        ).needs_reload_ui(),
     )
 
     shared.opts.add_option(
         "ad_extra_models_dir",
         shared.OptionInfo(
             default="",
-            label="Extra paths to scan adetailer models seperated by vertical bars(|)",
+            label="Extra paths to scan adetailer models separated by vertical bars(|)",
             component=gr.Textbox,
             section=section,
         )
         .info("eg. path\\to\\models|C:\\path\\to\\models|another/path/to/models")
         .needs_reload_ui(),
+    )
+
+    shared.opts.add_option(
+        "ad_save_images_dir",
+        shared.OptionInfo(
+            default="",
+            label="Output directory for adetailer images",
+            component=gr.Textbox,
+            section=section,
+        ),
     )
 
     shared.opts.add_option(
@@ -888,7 +982,7 @@ def on_ui_settings():
     )
 
     shared.opts.add_option(
-        "ad_only_seleted_scripts",
+        "ad_only_selected_scripts",
         shared.OptionInfo(
             True, "Apply only selected scripts to ADetailer", section=section
         ),
@@ -922,9 +1016,35 @@ def on_ui_settings():
     )
 
     shared.opts.add_option(
-        "ad_same_seed_for_each_tap",
+        "ad_same_seed_for_each_tab",
         shared.OptionInfo(
             False, "Use same seed for each tab in adetailer", section=section
+        ),
+    )
+
+    shared.opts.add_option(
+        "ad_dynamic_denoise_power",
+        shared.OptionInfo(
+            default=0,
+            label="Power scaling for dynamic denoise strength based on bounding box size",
+            component=gr.Slider,
+            component_args={"minimum": -10, "maximum": 10, "step": 0.01},
+            section=section,
+        ).info(
+            "Smaller areas get higher denoising, larger areas less. Maximum denoise strength is set by 'Inpaint denoising strength'. 0 = disabled; 1 = linear; 2-4 = recommended"
+        ),
+    )
+
+    shared.opts.add_option(
+        "ad_match_inpaint_bbox_size",
+        shared.OptionInfo(
+            default=InpaintBBoxMatchMode.OFF.value,  # Off
+            component=gr.Radio,
+            component_args={"choices": INPAINT_BBOX_MATCH_MODES},
+            label="Try to match inpainting size to bounding box size, if 'Use separate width/height' is not set",
+            section=section,
+        ).info(
+            "Strict is for SDXL only, and matches exactly to trained SDXL resolutions. Free works with any model, but will use potentially unsupported dimensions."
         ),
     )
 

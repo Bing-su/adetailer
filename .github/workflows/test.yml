@@ -1,12 +1,13 @@
-name: Publish to PyPI
+name: Test on PR
+
 on:
-  push:
-    tags:
-      - "v*"
+  pull_request:
+    paths:
+      - "adetailer/**.py"
 
 jobs:
   test:
-    name: test
+    name: Test on python ${{ matrix.python-version }}
     runs-on: macos-latest
     strategy:
       matrix:
@@ -31,19 +32,3 @@ jobs:
 
       - name: Run tests
         run: pytest -v
-
-  build:
-    name: build
-    runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-    needs: [test]
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Build wheel
-        run: pipx run build
-
-      - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1

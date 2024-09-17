@@ -26,8 +26,6 @@ body:
       label: Steps to reproduce
       description: |
         Description of how we can reproduce this issue.
-    validations:
-      required: true
 
   - type: textarea
     attributes:
@@ -38,7 +36,7 @@ body:
     attributes:
       label: Console logs, from start to end.
       description: |
-        The full console log of your terminal.
+        The FULL console log of your terminal.
       placeholder: |
         Python ...
         Version: ...

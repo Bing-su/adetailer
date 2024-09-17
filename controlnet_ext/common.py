@@ -8,4 +8,5 @@ cn_model_module = {
     "tile": "tile_resample",
     "depth": "depth_midas",
 }
-cn_model_regex = re.compile("|".join(cn_model_module.keys()), flags=re.I)
+_names = [*cn_model_module, "union"]
+cn_model_regex = re.compile("|".join(_names), flags=re.IGNORECASE)

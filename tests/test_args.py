@@ -35,7 +35,7 @@ def test_need_skip(ad_model: str, expect: bool) -> None:
 
 
 @pytest.mark.parametrize(
-    ("ad_model", "ad_tap_enable", "expect"),
+    ("ad_model", "ad_tab_enable", "expect"),
     [
         ("face_yolov8n.pt", False, True),
         ("mediapipe_face_full", False, True),
@@ -43,6 +43,6 @@ def test_need_skip(ad_model: str, expect: bool) -> None:
         ("ace_yolov8s.pt", True, False),
     ],
 )
-def test_need_skip_tap_enable(ad_model: str, ad_tap_enable: bool, expect: bool) -> None:
-    args = ADetailerArgs(ad_model=ad_model, ad_tap_enable=ad_tap_enable)
+def test_need_skip_tab_enable(ad_model: str, ad_tab_enable: bool, expect: bool) -> None:
+    args = ADetailerArgs(ad_model=ad_model, ad_tab_enable=ad_tab_enable)
     assert args.need_skip() is expect

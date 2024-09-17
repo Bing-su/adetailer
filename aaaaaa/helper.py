@@ -5,6 +5,8 @@ from copy import copy
 from typing import TYPE_CHECKING, Any, Union
 
 import torch
+from PIL import Image
+from typing_extensions import Protocol
 
 from modules import safe
 from modules.shared import opts
@@ -45,7 +47,7 @@ def pause_total_tqdm():
 
 
 @contextmanager
-def preseve_prompts(p: PT):
+def preserve_prompts(p: PT):
     all_pt = copy(p.all_prompts)
     all_ng = copy(p.all_negative_prompts)
     try:
@@ -57,3 +59,7 @@ def preseve_prompts(p: PT):
 
 def copy_extra_params(extra_params: dict[str, Any]) -> dict[str, Any]:
     return {k: v for k, v in extra_params.items() if not callable(v)}
+
+
+class PPImage(Protocol):
+    image: Image.Image

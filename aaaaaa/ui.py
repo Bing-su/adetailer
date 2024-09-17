@@ -2,12 +2,14 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from functools import partial
+from itertools import chain
 from types import SimpleNamespace
 from typing import Any
 
 import gradio as gr
 
-from adetailer import AFTER_DETAILER, __version__
+from aaaaaa.conditional import InputAccordion
+from adetailer import ADETAILER, __version__
 from adetailer.args import ALL_ARGS, MASK_MERGE_INVERT
 from controlnet_ext import controlnet_exists, controlnet_type, get_cn_models
 
@@ -40,6 +42,9 @@ else:
         "scribble": ["t2ia_sketch_pidi"],
         "depth": ["depth_midas", "depth_hand_refiner"],
     }
+
+union = list(chain.from_iterable(cn_module_choices.values()))
+cn_module_choices["union"] = union
 
 
 class Widgets(SimpleNamespace):
@@ -81,7 +86,7 @@ def on_widget_change(state: dict, value: Any, *, attr: str):
 
 def on_generate_click(state: dict, *values: Any):
     for attr, value in zip(ALL_ARGS.attrs, values):
-        state[attr] = value
+        state[attr] = value  # noqa: PERF403
     state["is_api"] = ()
     return state
 
@@ -105,9 +110,9 @@ def on_cn_model_update(cn_model_name: str):
 
 
 def elem_id(item_id: str, n: int, is_img2img: bool) -> str:
-    tap = "img2img" if is_img2img else "txt2img"
+    tab = "img2img" if is_img2img else "txt2img"
     suf = suffix(n, "_")
-    return f"script_{tap}_adetailer_{item_id}{suf}"
+    return f"script_{tab}_adetailer_{item_id}{suf}"
 
 
 def state_init(w: Widgets) -> dict[str, Any]:
@@ -123,17 +128,14 @@ def adui(
     infotext_fields = []
     eid = partial(elem_id, n=0, is_img2img=is_img2img)
 
-    with gr.Accordion(AFTER_DETAILER, open=False, elem_id=eid("ad_main_accordion")):
+    with InputAccordion(
+        value=False,
+        elem_id=eid("ad_main_accordion"),
+        label=ADETAILER,
+        visible=True,
+    ) as ad_enable:
         with gr.Row():
-            with gr.Column(scale=6):
-                ad_enable = gr.Checkbox(
-                    label="Enable ADetailer",
-                    value=False,
-                    visible=True,
-                    elem_id=eid("ad_enable"),
-                )
-
-            with gr.Column(scale=6):
+            with gr.Column(scale=8):
                 ad_skip_img2img = gr.Checkbox(
                     label="Skip img2img",
                     value=False,
@@ -179,11 +181,11 @@ def one_ui_group(n: int, is_img2img: bool, webui_info: WebuiInfo):
 
     with gr.Group():
         with gr.Row(variant="compact"):
-            w.ad_tap_enable = gr.Checkbox(
-                label=f"Enable this tap ({ordinal(n + 1)})",
+            w.ad_tab_enable = gr.Checkbox(
+                label=f"Enable this tab ({ordinal(n + 1)})",
                 value=True,
                 visible=True,
-                elem_id=eid("ad_tap_enable"),
+                elem_id=eid("ad_tab_enable"),
             )
 
         with gr.Row():
@@ -217,6 +219,7 @@ def one_ui_group(n: int, is_img2img: bool, webui_info: WebuiInfo):
     with gr.Group():
         with gr.Row(elem_id=eid("ad_toprow_prompt")):
             w.ad_prompt = gr.Textbox(
+                value="",
                 label="ad_prompt" + suffix(n),
                 show_label=False,
                 lines=3,
@@ -228,6 +231,7 @@ def one_ui_group(n: int, is_img2img: bool, webui_info: WebuiInfo):
 
         with gr.Row(elem_id=eid("ad_toprow_negative_prompt")):
             w.ad_negative_prompt = gr.Textbox(
+                value="",
                 label="ad_negative_prompt" + suffix(n),
                 show_label=False,
                 lines=2,
@@ -374,7 +378,7 @@ def mask_preprocessing(w: Widgets, n: int, is_img2img: bool):
             )
 
 
-def inpainting(w: Widgets, n: int, is_img2img: bool, webui_info: WebuiInfo):
+def inpainting(w: Widgets, n: int, is_img2img: bool, webui_info: WebuiInfo):  # noqa: PLR0915
     eid = partial(elem_id, n=n, is_img2img=is_img2img)
 
     with gr.Group():
@@ -555,11 +559,16 @@ def inpainting(w: Widgets, n: int, is_img2img: bool, webui_info: WebuiInfo):
                 elem_id=eid("ad_use_sampler"),
             )
 
+            sampler_names = [
+                "Use same sampler",
+                *webui_info.sampler_names,
+            ]
+
             with gr.Row():
                 w.ad_sampler = gr.Dropdown(
                     label="ADetailer sampler" + suffix(n),
-                    choices=webui_info.sampler_names,
-                    value=webui_info.sampler_names[0],
+                    choices=sampler_names,
+                    value=sampler_names[1],
                     visible=True,
                     elem_id=eid("ad_sampler"),
                 )
