@@ -238,8 +238,8 @@ def filter_k_largest(pred: PredictOutput[T], k: int = 0) -> PredictOutput[T]:
     pred.masks = [pred.masks[i] for i in idx]
     return pred
 
-def filter_k_most_confident(pred: PredictOutput, k: int = 0) -> PredictOutput:
-    if len(pred.confidences) == 0 or k == 0:
+def filter_k_most_confident(pred: PredictOutput[T], k: int = 0) -> PredictOutput[T]:
+    if not pred.bboxes or not pred.confidences or k == 0:
         return pred
     idx = np.argsort(pred.confidences)[-k:]
     idx = idx[::-1]
