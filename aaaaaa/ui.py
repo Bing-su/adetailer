@@ -712,4 +712,8 @@ def controlnet(w: Widgets, n: int, is_img2img: bool):
             )
 
         with gr.Column(variant="compact"):
-            w.ad_solo_generation = gr.Checkbox(label="Solo generation" + suffix(n), value=False, elem_id=eid("ad_solo_generation"))                                
+            w.ad_solo_generation = gr.Checkbox(
+                label="Solo generation" + suffix(n),
+                value=False,
+                elem_id=eid("ad_solo_generation"),
+            )

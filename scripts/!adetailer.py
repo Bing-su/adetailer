@@ -934,7 +934,10 @@ class AfterDetailerScript(scripts.Script):
         if is_processed:
             if not is_skip_img2img(p):
                 self.save_image(
-                    p, init_image, condition="ad_save_images_before", suffix="-ad-before"
+                    p,
+                    init_image,
+                    condition="ad_save_images_before",
+                    suffix="-ad-before",
                 )
 
             for save in filter(None, save_incrementals):
