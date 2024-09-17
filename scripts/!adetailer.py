@@ -886,7 +886,7 @@ class AfterDetailerScript(scripts.Script):
 
         return False
 
-    def _postprocess_fork(self, init_image, p, pp:PPImage, args, n):
+    def _postprocess_fork(self, init_image, p, pp: PPImage, args, n):
         processed = False
         save_incremental = None
         save_solo = None
@@ -894,7 +894,7 @@ class AfterDetailerScript(scripts.Script):
             if not args.ad_solo_generation:
                 processed = self._postprocess_image_inner(p, pp, args, n=n[0])
                 if n[0] < n[1]:
-                    save_incremental = (n[0],copy(pp.image))
+                    save_incremental = (n[0], copy(pp.image))
             elif not args.need_skip() and args.ad_solo_generation:
                 pp_solo = copy(pp)
                 pp_solo.image = init_image
@@ -926,7 +926,9 @@ class AfterDetailerScript(scripts.Script):
         is_processed = False
         with CNHijackRestore(), pause_total_tqdm(), cn_allow_script_control():
             for n, args in enumerate(arg_list):
-                fork_result = self._postprocess_fork(init_image, p, pp, args, (n,last_index))
+                fork_result = self._postprocess_fork(
+                    init_image, p, pp, args, (n, last_index)
+                )
                 is_processed |= fork_result[0]
                 save_incrementals.append(fork_result[1])
                 save_solos.append(fork_result[2])
@@ -950,7 +952,9 @@ class AfterDetailerScript(scripts.Script):
 
             all_extra_params = p.extra_generation_params
             for save in filter(None, save_solos):
-                p.extra_generation_params = self._fix_extra_generation_params(all_extra_params, save[2])
+                p.extra_generation_params = self._fix_extra_generation_params(
+                    all_extra_params, save[2]
+                )
                 self.save_image(
                     p,
                     save[1],
@@ -974,23 +978,24 @@ class AfterDetailerScript(scripts.Script):
                 last_index = n
         return last_index
 
-    def _fix_extra_generation_params(self, params:dict, args:ADetailerArgs):
+    def _fix_extra_generation_params(self, params: dict, args: ADetailerArgs):
         ad_params = {}
         for params_k in list(params.keys()):
             found = False
-            for _, (_,v) in enumerate (_all_args):
+            for _, (_, v) in enumerate(_all_args):
                 if v in params_k:
                     found = True
                     break
             if not found:
                 ad_params[params_k] = params[params_k]
 
-        for _, (k,v) in enumerate (_all_args):
-            if hasattr(args,k):
-                args_v = getattr(args,k)
-                if args_v is not None and args_v != '':
+        for _, (k, v) in enumerate(_all_args):
+            if hasattr(args, k):
+                args_v = getattr(args, k)
+                if args_v is not None and args_v != "":
                     ad_params[v] = args_v
         return ad_params
+
 
 def on_after_component(component, **_kwargs):
     global txt2img_submit_button, img2img_submit_button
