@@ -238,6 +238,7 @@ def filter_k_largest(pred: PredictOutput[T], k: int = 0) -> PredictOutput[T]:
     pred.masks = [pred.masks[i] for i in idx]
     return pred
 
+
 def filter_k_most_confident(pred: PredictOutput[T], k: int = 0) -> PredictOutput[T]:
     if not pred.bboxes or not pred.confidences or k == 0:
         return pred
@@ -246,6 +247,7 @@ def filter_k_most_confident(pred: PredictOutput[T], k: int = 0) -> PredictOutput
     pred.bboxes = [pred.bboxes[i] for i in idx]
     pred.masks = [pred.masks[i] for i in idx]
     return pred
+
 
 # Merge / Invert
 def mask_merge(masks: list[Image.Image]) -> list[Image.Image]:

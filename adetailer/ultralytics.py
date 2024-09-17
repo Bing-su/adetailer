@@ -44,7 +44,9 @@ def ultralytics_predict(
     preview = cv2.cvtColor(preview, cv2.COLOR_BGR2RGB)
     preview = Image.fromarray(preview)
 
-    return PredictOutput(bboxes=bboxes, masks=masks, confidences=confidences, preview=preview)
+    return PredictOutput(
+        bboxes=bboxes, masks=masks, confidences=confidences, preview=preview
+    )
 
 
 def apply_classes(model: YOLO | YOLOWorld, model_path: str | Path, classes: str):
