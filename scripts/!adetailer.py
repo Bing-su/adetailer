@@ -970,7 +970,7 @@ class AfterDetailerScript(scripts.Script):
     def _find_last_index(self, arg_list):
         last_index = 0
         for n, args in enumerate(arg_list):
-            if args.need_skip() and args.ad_solo_generation is False:
+            if not args.need_skip() and args.ad_solo_generation is False:
                 last_index = n
         return last_index
 
