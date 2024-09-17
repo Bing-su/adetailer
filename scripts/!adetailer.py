@@ -977,18 +977,22 @@ def on_ui_settings():
 
     shared.opts.add_option(
         "ad_save_previews",
-        shared.OptionInfo(False, "Save mask previews", section=section),
+        shared.OptionInfo(default=False, label="Save mask previews", section=section),
     )
 
     shared.opts.add_option(
         "ad_save_images_before",
-        shared.OptionInfo(False, "Save images before ADetailer", section=section),
+        shared.OptionInfo(
+            default=False, label="Save images before ADetailer", section=section
+        ),
     )
 
     shared.opts.add_option(
         "ad_only_selected_scripts",
         shared.OptionInfo(
-            True, "Apply only selected scripts to ADetailer", section=section
+            default=True,
+            label="Apply only selected scripts to ADetailer",
+            section=section,
         ),
     )
 
@@ -1022,7 +1026,9 @@ def on_ui_settings():
     shared.opts.add_option(
         "ad_same_seed_for_each_tab",
         shared.OptionInfo(
-            False, "Use same seed for each tab in adetailer", section=section
+            default=False,
+            label="Use same seed for each tab in adetailer",
+            section=section,
         ),
     )
 
@@ -1088,7 +1094,8 @@ def make_axis_on_xyz_grid():
         return
 
     model_list = ["None", *model_mapping.keys()]
-    samplers = [sampler.name for sampler in all_samplers]
+    xyz_samplers = [sampler.name for sampler in all_samplers]
+    xyz_schedulers = [scheduler.label for scheduler in schedulers]
 
     axis = [
         xyz_grid.AxisOption(
@@ -1128,6 +1135,11 @@ def make_axis_on_xyz_grid():
             partial(set_value, field="ad_denoising_strength"),
         ),
         xyz_grid.AxisOption(
+            "[ADetailer] CFG scale 1st",
+            float,
+            partial(set_value, field="ad_cfg_scale"),
+        ),
+        xyz_grid.AxisOption(
             "[ADetailer] Inpaint only masked 1st",
             str,
             partial(set_value, field="ad_inpaint_only_masked"),
@@ -1142,7 +1154,18 @@ def make_axis_on_xyz_grid():
             "[ADetailer] ADetailer sampler 1st",
             str,
             partial(set_value, field="ad_sampler"),
-            choices=lambda: samplers,
+            choices=lambda: xyz_samplers,
+        ),
+        xyz_grid.AxisOption(
+            "[ADetailer] ADetailer scheduler 1st",
+            str,
+            partial(set_value, field="ad_scheduler"),
+            choices=lambda: xyz_schedulers,
+        ),
+        xyz_grid.AxisOption(
+            "[ADetailer] noise multiplier 1st",
+            float,
+            partial(set_value, field="ad_noise_multiplier"),
         ),
         xyz_grid.AxisOption(
             "[ADetailer] ControlNet model 1st",
