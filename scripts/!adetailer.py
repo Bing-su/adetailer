@@ -886,6 +886,22 @@ class AfterDetailerScript(scripts.Script):
 
         return False
 
+    def _postprocess_fork(self, init_image, p, pp:PPImage, args, n):
+        processed = False
+        save_incremental = None
+        save_solo = None
+        if not args.need_skip():
+            if not args.ad_solo_generation:
+                processed = self._postprocess_image_inner(p, pp, args, n=n[0])
+                if n[0] < n[1]:
+                    save_incremental = (n[0],copy(pp.image))
+            elif not args.need_skip() and args.ad_solo_generation:
+                pp_solo = copy(pp)
+                pp_solo.image = init_image
+                if self._postprocess_image_inner(p, pp_solo, args, n=n[0]):
+                    save_solo = (n[0], pp_solo.image, args)
+        return (processed, save_incremental, save_solo)
+
     @rich_traceback
     def postprocess_image(self, p, pp: PPImage, *args_):
         if getattr(p, "_ad_disabled", False) or not self.is_ad_enabled(*args_):
@@ -902,10 +918,7 @@ class AfterDetailerScript(scripts.Script):
             with preserve_prompts(p):
                 p.scripts.postprocess(copy(p), dummy)
 
-        last_index = 0
-        for n, args in enumerate(arg_list):
-            if args.need_skip() and args.ad_solo_generation is False:
-                last_index = n
+        last_index = self._find_last_index(arg_list)
 
         save_incrementals = []
         save_solos = []
@@ -913,20 +926,10 @@ class AfterDetailerScript(scripts.Script):
         is_processed = False
         with CNHijackRestore(), pause_total_tqdm(), cn_allow_script_control():
             for n, args in enumerate(arg_list):
-                if args.need_skip() or args.ad_solo_generation:
-                    continue
-                is_processed |= self._postprocess_image_inner(p, pp, args, n=n)
-
-                if n < last_index:
-                    save_incrementals.append((n,copy(pp.image)))
-
-            for n, args in enumerate(arg_list):
-                if args.need_skip() or args.ad_solo_generation is False:
-                    continue
-                pp_solo = copy(pp)
-                pp_solo.image = init_image
-                if self._postprocess_image_inner(p, pp_solo, args, n=n):
-                    save_solos.append((n, pp_solo.image, args))
+                fork_result = self._postprocess_fork(init_image, p, pp, args, (n,last_index))
+                is_processed |= fork_result[0]
+                save_incrementals.append(fork_result[1])
+                save_solos.append(fork_result[2])
 
         if is_processed:
             if not is_skip_img2img(p):
@@ -934,7 +937,7 @@ class AfterDetailerScript(scripts.Script):
                     p, init_image, condition="ad_save_images_before", suffix="-ad-before"
                 )
 
-            for save in save_incrementals:
+            for save in filter(None, save_incrementals):
                 self.save_image(
                     p,
                     save[1],
@@ -943,8 +946,8 @@ class AfterDetailerScript(scripts.Script):
                 )
 
             all_extra_params = p.extra_generation_params
-            for save in save_solos:
-                p.extra_generation_params = self.fix_extra_generation_params(all_extra_params, save[2])
+            for save in filter(None, save_solos):
+                p.extra_generation_params = self._fix_extra_generation_params(all_extra_params, save[2])
                 self.save_image(
                     p,
                     save[1],
@@ -961,24 +964,31 @@ class AfterDetailerScript(scripts.Script):
 
         self.write_params_txt(params_txt_content)
 
-    def fix_extra_generation_params(self, params:dict, args:ADetailerArgs):
+    def _find_last_index(self, arg_list):
+        last_index = 0
+        for n, args in enumerate(arg_list):
+            if args.need_skip() and args.ad_solo_generation is False:
+                last_index = n
+        return last_index
+
+    def _fix_extra_generation_params(self, params:dict, args:ADetailerArgs):
         ad_params = {}
         for params_k in list(params.keys()):
             found = False
-            for i, (k,v) in enumerate (_all_args):
+            for _, (_,v) in enumerate (_all_args):
                 if v in params_k:
                     found = True
                     break
             if not found:
                 ad_params[params_k] = params[params_k]
 
-        for i, (k,v) in enumerate (_all_args):
+        for _, (k,v) in enumerate (_all_args):
             if hasattr(args,k):
                 args_v = getattr(args,k)
                 if args_v is not None and args_v != '':
                     ad_params[v] = args_v
         return ad_params
-    
+
 def on_after_component(component, **_kwargs):
     global txt2img_submit_button, img2img_submit_button
     if getattr(component, "elem_id", None) == "txt2img_generate":
