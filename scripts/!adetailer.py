@@ -918,7 +918,7 @@ class AfterDetailerScript(scripts.Script):
                 is_processed |= self._postprocess_image_inner(p, pp, args, n=n)
 
                 if n < last_index:
-                    save_incrementals.append((n,copy(pp.image)))
+                    save_incrementals.append((n, copy(pp.image)))
 
             for n, args in enumerate(arg_list):
                 if args.need_skip() or args.ad_solo_generation is False:
@@ -931,7 +931,10 @@ class AfterDetailerScript(scripts.Script):
         if is_processed:
             if not is_skip_img2img(p):
                 self.save_image(
-                    p, init_image, condition="ad_save_images_before", suffix="-ad-before"
+                    p,
+                    init_image,
+                    condition="ad_save_images_before",
+                    suffix="-ad-before",
                 )
 
             for save in save_incrementals:
@@ -944,7 +947,9 @@ class AfterDetailerScript(scripts.Script):
 
             all_extra_params = p.extra_generation_params
             for save in save_solos:
-                p.extra_generation_params = self.fix_extra_generation_params(all_extra_params, save[2])
+                p.extra_generation_params = self.fix_extra_generation_params(
+                    all_extra_params, save[2]
+                )
                 self.save_image(
                     p,
                     save[1],
@@ -961,24 +966,25 @@ class AfterDetailerScript(scripts.Script):
 
         self.write_params_txt(params_txt_content)
 
-    def fix_extra_generation_params(self, params:dict, args:ADetailerArgs):
+    def fix_extra_generation_params(self, params: dict, args: ADetailerArgs):
         ad_params = {}
         for params_k in list(params.keys()):
             found = False
-            for i, (k,v) in enumerate (_all_args):
+            for i, (k, v) in enumerate(_all_args):
                 if v in params_k:
                     found = True
                     break
             if not found:
                 ad_params[params_k] = params[params_k]
 
-        for i, (k,v) in enumerate (_all_args):
-            if hasattr(args,k):
-                args_v = getattr(args,k)
-                if args_v is not None and args_v != '':
+        for i, (k, v) in enumerate(_all_args):
+            if hasattr(args, k):
+                args_v = getattr(args, k)
+                if args_v is not None and args_v != "":
                     ad_params[v] = args_v
         return ad_params
-    
+
+
 def on_after_component(component, **_kwargs):
     global txt2img_submit_button, img2img_submit_button
     if getattr(component, "elem_id", None) == "txt2img_generate":
