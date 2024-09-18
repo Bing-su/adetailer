@@ -132,7 +132,11 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
         ppop("ADetailer prompt")
         ppop("ADetailer negative prompt")
         p.pop("ADetailer tab enable", None)  # always pop
-        ppop("ADetailer mask only top k largest", cond=0)
+        ppop(
+            "ADetailer mask only top k",
+            ["ADetailer mask only top k", "ADetailer method to decide top k masks"],
+            cond=0,
+        )
         ppop("ADetailer mask min ratio", cond=0.0)
         ppop("ADetailer mask max ratio", cond=1.0)
         ppop("ADetailer x offset", cond=0)
