@@ -225,6 +225,7 @@ def filter_by_ratio(
     idx = [i for i in range(items) if is_in_ratio(pred.bboxes[i], low, high, orig_area)]
     pred.bboxes = [pred.bboxes[i] for i in idx]
     pred.masks = [pred.masks[i] for i in idx]
+    pred.confidences = [pred.confidences[i] for i in idx]
     return pred
 
 
@@ -236,6 +237,7 @@ def filter_k_largest(pred: PredictOutput[T], k: int = 0) -> PredictOutput[T]:
     idx = idx[::-1]
     pred.bboxes = [pred.bboxes[i] for i in idx]
     pred.masks = [pred.masks[i] for i in idx]
+    pred.confidences = [pred.confidences[i] for i in idx]
     return pred
 
 
@@ -246,6 +248,7 @@ def filter_k_most_confident(pred: PredictOutput[T], k: int = 0) -> PredictOutput
     idx = idx[::-1]
     pred.bboxes = [pred.bboxes[i] for i in idx]
     pred.masks = [pred.masks[i] for i in idx]
+    pred.confidences = [pred.confidences[i] for i in idx]
     return pred
 
 
