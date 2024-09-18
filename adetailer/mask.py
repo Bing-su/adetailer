@@ -252,6 +252,16 @@ def filter_k_most_confident(pred: PredictOutput[T], k: int = 0) -> PredictOutput
     return pred
 
 
+def filter_k_by(
+    pred: PredictOutput[T], k: int = 0, by: str = "Area"
+) -> PredictOutput[T]:
+    if by == "Area":
+        return filter_k_largest(pred, k)
+    if by == "Confidence":
+        return filter_k_most_confident(pred, k)
+    raise RuntimeError
+
+
 # Merge / Invert
 def mask_merge(masks: list[Image.Image]) -> list[Image.Image]:
     arrs = [np.array(m) for m in masks]
