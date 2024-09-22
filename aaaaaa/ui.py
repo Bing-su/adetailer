@@ -204,7 +204,7 @@ def one_ui_group(n: int, is_img2img: bool, webui_info: WebuiInfo):
                 label="ADetailer detector classes" + suffix(n),
                 value="",
                 visible=False,
-                elem_id=eid("ad_classes"),
+                elem_id=eid("ad_model_classes"),
             )
 
             w.ad_model.change(
