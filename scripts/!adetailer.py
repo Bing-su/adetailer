@@ -52,7 +52,7 @@ from adetailer.args import (
 from adetailer.common import PredictOutput, ensure_pil_image, safe_mkdir
 from adetailer.mask import (
     filter_by_ratio,
-    filter_k_largest,
+    filter_k_by,
     has_intersection,
     is_all_black,
     mask_preprocess,
@@ -596,7 +596,7 @@ class AfterDetailerScript(scripts.Script):
         pred = filter_by_ratio(
             pred, low=args.ad_mask_min_ratio, high=args.ad_mask_max_ratio
         )
-        pred = filter_k_largest(pred, k=args.ad_mask_k_largest)
+        pred = filter_k_by(pred, k=args.ad_mask_k, by=args.ad_mask_filter_method)
         pred = self.sort_bboxes(pred)
         masks = mask_preprocess(
             pred.masks,
