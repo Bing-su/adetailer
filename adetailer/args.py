@@ -60,7 +60,8 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
     ad_prompt: str = ""
     ad_negative_prompt: str = ""
     ad_confidence: confloat(ge=0.0, le=1.0) = 0.3
-    ad_mask_k_largest: NonNegativeInt = 0
+    ad_mask_filter_method: Literal["Area", "Confidence"] = "Area"
+    ad_mask_k: NonNegativeInt = 0
     ad_mask_min_ratio: confloat(ge=0.0, le=1.0) = 0.0
     ad_mask_max_ratio: confloat(ge=0.0, le=1.0) = 1.0
     ad_dilate_erode: int = 4
@@ -131,7 +132,11 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
         ppop("ADetailer prompt")
         ppop("ADetailer negative prompt")
         p.pop("ADetailer tab enable", None)  # always pop
-        ppop("ADetailer mask only top k largest", cond=0)
+        ppop(
+            "ADetailer mask only top k",
+            ["ADetailer mask only top k", "ADetailer method to decide top k masks"],
+            cond=0,
+        )
         ppop("ADetailer mask min ratio", cond=0.0)
         ppop("ADetailer mask max ratio", cond=1.0)
         ppop("ADetailer x offset", cond=0)
@@ -217,7 +222,8 @@ _all_args = [
     ("ad_prompt", "ADetailer prompt"),
     ("ad_negative_prompt", "ADetailer negative prompt"),
     ("ad_confidence", "ADetailer confidence"),
-    ("ad_mask_k_largest", "ADetailer mask only top k largest"),
+    ("ad_mask_filter_method", "ADetailer method to decide top k masks"),
+    ("ad_mask_k", "ADetailer mask only top k"),
     ("ad_mask_min_ratio", "ADetailer mask min ratio"),
     ("ad_mask_max_ratio", "ADetailer mask max ratio"),
     ("ad_x_offset", "ADetailer x offset"),

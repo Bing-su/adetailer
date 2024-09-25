@@ -225,6 +225,7 @@ def filter_by_ratio(
     idx = [i for i in range(items) if is_in_ratio(pred.bboxes[i], low, high, orig_area)]
     pred.bboxes = [pred.bboxes[i] for i in idx]
     pred.masks = [pred.masks[i] for i in idx]
+    pred.confidences = [pred.confidences[i] for i in idx]
     return pred
 
 
@@ -236,7 +237,29 @@ def filter_k_largest(pred: PredictOutput[T], k: int = 0) -> PredictOutput[T]:
     idx = idx[::-1]
     pred.bboxes = [pred.bboxes[i] for i in idx]
     pred.masks = [pred.masks[i] for i in idx]
+    pred.confidences = [pred.confidences[i] for i in idx]
     return pred
+
+
+def filter_k_most_confident(pred: PredictOutput[T], k: int = 0) -> PredictOutput[T]:
+    if not pred.bboxes or not pred.confidences or k == 0:
+        return pred
+    idx = np.argsort(pred.confidences)[-k:]
+    idx = idx[::-1]
+    pred.bboxes = [pred.bboxes[i] for i in idx]
+    pred.masks = [pred.masks[i] for i in idx]
+    pred.confidences = [pred.confidences[i] for i in idx]
+    return pred
+
+
+def filter_k_by(
+    pred: PredictOutput[T], k: int = 0, by: str = "Area"
+) -> PredictOutput[T]:
+    if by == "Area":
+        return filter_k_largest(pred, k)
+    if by == "Confidence":
+        return filter_k_most_confident(pred, k)
+    raise RuntimeError
 
 
 # Merge / Invert
