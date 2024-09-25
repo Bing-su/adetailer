@@ -297,7 +297,8 @@ def detection(w: Widgets, n: int, is_img2img: bool):
             w.ad_mask_filter_method = gr.Radio(
                 choices=["Area", "Confidence"],
                 value="Area",
-                label="Method to filter top k masks by (confidence or area)",
+                label="Method to filter top k masks by (confidence or area)"
+                + suffix(n),
                 visible=True,
                 elem_id=eid("ad_mask_filter_method"),
             )
