@@ -25,8 +25,8 @@ tasks:
 
   update:
     cmds:
-      - "{{.PYTHON}} -m uv pip install -U ultralytics mediapipe ruff pre-commit black devtools pytest hypothesis"
+      - "{{.PYTHON}} -m uv pip install -U ultralytics mediapipe ruff pre-commit-uv black devtools pytest hypothesis"
 
   update-torch:
     cmds:
-      - "{{.PYTHON}} -m uv pip install -U torch torchvision torchaudio -f https://download.pytorch.org/whl/torch_stable.html"
+      - "{{.PYTHON}} -m uv pip install -U torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu124"
