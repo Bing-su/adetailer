@@ -664,7 +664,7 @@ class AfterDetailerScript(scripts.Script):
         img2img_mask: Image.Image, ad_mask: list[Image.Image]
     ) -> list[Image.Image]:
         if ad_mask and img2img_mask.size != ad_mask[0].size:
-            img2img_mask = img2img_mask.resize(ad_mask[0].size, resample=images.LANCZOS)
+            img2img_mask = img2img_mask.resize(ad_mask[0].size, resample=Image.LANCZOS)
         return [mask for mask in ad_mask if has_intersection(img2img_mask, mask)]
 
     @staticmethod
