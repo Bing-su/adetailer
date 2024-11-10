@@ -204,7 +204,7 @@ def one_ui_group(n: int, is_img2img: bool, webui_info: WebuiInfo):
                 label="ADetailer detector classes" + suffix(n),
                 value="",
                 visible=False,
-                elem_id=eid("ad_classes"),
+                elem_id=eid("ad_model_classes"),
             )
 
             w.ad_model.change(
@@ -294,14 +294,22 @@ def detection(w: Widgets, n: int, is_img2img: bool):
                 visible=True,
                 elem_id=eid("ad_confidence"),
             )
-            w.ad_mask_k_largest = gr.Slider(
-                label="Mask only the top k largest (0 to disable)" + suffix(n),
+            w.ad_mask_filter_method = gr.Radio(
+                choices=["Area", "Confidence"],
+                value="Area",
+                label="Method to filter top k masks by (confidence or area)"
+                + suffix(n),
+                visible=True,
+                elem_id=eid("ad_mask_filter_method"),
+            )
+            w.ad_mask_k = gr.Slider(
+                label="Mask only the top k (0 to disable)" + suffix(n),
                 minimum=0,
                 maximum=10,
                 step=1,
                 value=0,
                 visible=True,
-                elem_id=eid("ad_mask_k_largest"),
+                elem_id=eid("ad_mask_k"),
             )
 
         with gr.Column(variant="compact"):

@@ -22,6 +22,7 @@ T = TypeVar("T", int, float)
 class PredictOutput(Generic[T]):
     bboxes: list[list[T]] = field(default_factory=list)
     masks: list[Image.Image] = field(default_factory=list)
+    confidences: list[float] = field(default_factory=list)
     preview: Optional[Image.Image] = None
 
 

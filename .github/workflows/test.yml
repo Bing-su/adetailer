@@ -1,9 +1,12 @@
-name: Test on PR
+name: Test
 
 on:
   pull_request:
     paths:
       - "adetailer/**.py"
+  workflow_call:
+  schedule:
+    - cron: "0 0 * * 0"
 
 jobs:
   test:
@@ -24,7 +27,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - uses: yezz123/setup-uv@v4
+      - uses: astral-sh/setup-uv@v3
 
       - name: Install dependencies
         run: |

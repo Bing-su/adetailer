@@ -52,7 +52,7 @@ from adetailer.args import (
 from adetailer.common import PredictOutput, ensure_pil_image, safe_mkdir
 from adetailer.mask import (
     filter_by_ratio,
-    filter_k_largest,
+    filter_k_by,
     has_intersection,
     is_all_black,
     mask_preprocess,
@@ -392,7 +392,7 @@ class AfterDetailerScript(scripts.Script):
             value = args.ad_scheduler
         return {"scheduler": value}
 
-    def get_override_settings(self, p, args: ADetailerArgs) -> dict[str, Any]:
+    def get_override_settings(self, _p, args: ADetailerArgs) -> dict[str, Any]:
         d = {}
 
         if args.ad_use_clip_skip:
@@ -413,7 +413,7 @@ class AfterDetailerScript(scripts.Script):
             d["sd_vae"] = args.ad_vae
         return d
 
-    def get_initial_noise_multiplier(self, p, args: ADetailerArgs) -> float | None:
+    def get_initial_noise_multiplier(self, _p, args: ADetailerArgs) -> float | None:
         return args.ad_noise_multiplier if args.ad_use_noise_multiplier else None
 
     @staticmethod
@@ -474,20 +474,30 @@ class AfterDetailerScript(scripts.Script):
         script_runner.alwayson_scripts = filtered_alwayson
         return script_runner, script_args
 
-    def disable_controlnet_units(
-        self, script_args: list[Any] | tuple[Any, ...]
-    ) -> None:
-        for obj in script_args:
-            if "controlnet" in obj.__class__.__name__.lower():
-                if hasattr(obj, "enabled"):
-                    obj.enabled = False
-                if hasattr(obj, "input_mode"):
-                    obj.input_mode = getattr(obj.input_mode, "SIMPLE", "simple")
+    def disable_controlnet_units(self, script_args: Sequence[Any]) -> list[Any]:
+        new_args = []
+        for arg in script_args:
+            if "controlnet" in arg.__class__.__name__.lower():
+                new = copy(arg)
+                if hasattr(new, "enabled"):
+                    new.enabled = False
+                if hasattr(new, "input_mode"):
+                    new.input_mode = getattr(new.input_mode, "SIMPLE", "simple")
+                new_args.append(new)
 
-            elif isinstance(obj, dict) and "module" in obj:
-                obj["enabled"] = False
+            elif isinstance(arg, dict) and "module" in arg:
+                new = copy(arg)
+                new["enabled"] = False
+                new_args.append(new)
 
-    def get_i2i_p(self, p, args: ADetailerArgs, image):
+            else:
+                new_args.append(arg)
+
+        return new_args
+
+    def get_i2i_p(
+        self, p, args: ADetailerArgs, image: Image.Image
+    ) -> StableDiffusionProcessingImg2Img:
         seed, subseed = self.get_seed(p)
         width, height = self.get_width_height(p, args)
         steps = self.get_steps(p, args)
@@ -545,7 +555,7 @@ class AfterDetailerScript(scripts.Script):
         i2i._ad_inner = True
 
         if args.ad_controlnet_model != "Passthrough" and controlnet_type != "forge":
-            self.disable_controlnet_units(i2i.script_args)
+            i2i.script_args = self.disable_controlnet_units(i2i.script_args)
 
         if args.ad_controlnet_model not in ["None", "Passthrough"]:
             self.update_controlnet_args(i2i, args)
@@ -555,6 +565,9 @@ class AfterDetailerScript(scripts.Script):
         return i2i
 
     def save_image(self, p, image, *, condition: str, suffix: str) -> None:
+        if not opts.data.get(condition, False):
+            return
+
         i = get_i(p)
         if p.all_prompts:
             i %= len(p.all_prompts)
@@ -563,23 +576,22 @@ class AfterDetailerScript(scripts.Script):
             save_prompt = p.prompt
         seed, _ = self.get_seed(p)
 
-        if opts.data.get(condition, False):
-            ad_save_images_dir: str = opts.data.get("ad_save_images_dir", "")
+        ad_save_images_dir: str = opts.data.get("ad_save_images_dir", "")
 
-            if not ad_save_images_dir.strip():
-                ad_save_images_dir = p.outpath_samples
+        if not ad_save_images_dir.strip():
+            ad_save_images_dir = p.outpath_samples
 
-            images.save_image(
-                image=image,
-                path=ad_save_images_dir,
-                basename="",
-                seed=seed,
-                prompt=save_prompt,
-                extension=opts.samples_format,
-                info=self.infotext(p),
-                p=p,
-                suffix=suffix,
-            )
+        images.save_image(
+            image=image,
+            path=ad_save_images_dir,
+            basename="",
+            seed=seed,
+            prompt=save_prompt,
+            extension=opts.samples_format,
+            info=self.infotext(p),
+            p=p,
+            suffix=suffix,
+        )
 
     def get_ad_model(self, name: str):
         if name not in model_mapping:
@@ -596,7 +608,7 @@ class AfterDetailerScript(scripts.Script):
         pred = filter_by_ratio(
             pred, low=args.ad_mask_min_ratio, high=args.ad_mask_max_ratio
         )
-        pred = filter_k_largest(pred, k=args.ad_mask_k_largest)
+        pred = filter_k_by(pred, k=args.ad_mask_k, by=args.ad_mask_filter_method)
         pred = self.sort_bboxes(pred)
         masks = mask_preprocess(
             pred.masks,
@@ -652,7 +664,7 @@ class AfterDetailerScript(scripts.Script):
         img2img_mask: Image.Image, ad_mask: list[Image.Image]
     ) -> list[Image.Image]:
         if ad_mask and img2img_mask.size != ad_mask[0].size:
-            img2img_mask = img2img_mask.resize(ad_mask[0].size, resample=images.LANCZOS)
+            img2img_mask = img2img_mask.resize(ad_mask[0].size, resample=Image.LANCZOS)
         return [mask for mask in ad_mask if has_intersection(img2img_mask, mask)]
 
     @staticmethod
@@ -663,14 +675,9 @@ class AfterDetailerScript(scripts.Script):
             mask = ImageChops.invert(mask)
         mask = create_binary_mask(mask)
 
-        if is_skip_img2img(p):
-            if hasattr(p, "init_images") and p.init_images:
-                width, height = p.init_images[0].size
-            else:
-                msg = "[-] ADetailer: no init_images."
-                raise RuntimeError(msg)
-        else:
-            width, height = p.width, p.height
+        width, height = p.width, p.height
+        if is_skip_img2img(p) and hasattr(p, "init_images") and p.init_images:
+            width, height = p.init_images[0].size
         return images.resize_image(p.resize_mode, mask, width, height)
 
     @staticmethod
@@ -969,18 +976,22 @@ def on_ui_settings():
 
     shared.opts.add_option(
         "ad_save_previews",
-        shared.OptionInfo(False, "Save mask previews", section=section),
+        shared.OptionInfo(default=False, label="Save mask previews", section=section),
     )
 
     shared.opts.add_option(
         "ad_save_images_before",
-        shared.OptionInfo(False, "Save images before ADetailer", section=section),
+        shared.OptionInfo(
+            default=False, label="Save images before ADetailer", section=section
+        ),
     )
 
     shared.opts.add_option(
         "ad_only_selected_scripts",
         shared.OptionInfo(
-            True, "Apply only selected scripts to ADetailer", section=section
+            default=True,
+            label="Apply only selected scripts to ADetailer",
+            section=section,
         ),
     )
 
@@ -1014,7 +1025,9 @@ def on_ui_settings():
     shared.opts.add_option(
         "ad_same_seed_for_each_tab",
         shared.OptionInfo(
-            False, "Use same seed for each tab in adetailer", section=section
+            default=False,
+            label="Use same seed for each tab in adetailer",
+            section=section,
         ),
     )
 
@@ -1080,7 +1093,8 @@ def make_axis_on_xyz_grid():
         return
 
     model_list = ["None", *model_mapping.keys()]
-    samplers = [sampler.name for sampler in all_samplers]
+    xyz_samplers = [sampler.name for sampler in all_samplers]
+    xyz_schedulers = [scheduler.label for scheduler in schedulers]
 
     axis = [
         xyz_grid.AxisOption(
@@ -1120,6 +1134,11 @@ def make_axis_on_xyz_grid():
             partial(set_value, field="ad_denoising_strength"),
         ),
         xyz_grid.AxisOption(
+            "[ADetailer] CFG scale 1st",
+            float,
+            partial(set_value, field="ad_cfg_scale"),
+        ),
+        xyz_grid.AxisOption(
             "[ADetailer] Inpaint only masked 1st",
             str,
             partial(set_value, field="ad_inpaint_only_masked"),
@@ -1134,7 +1153,18 @@ def make_axis_on_xyz_grid():
             "[ADetailer] ADetailer sampler 1st",
             str,
             partial(set_value, field="ad_sampler"),
-            choices=lambda: samplers,
+            choices=lambda: xyz_samplers,
+        ),
+        xyz_grid.AxisOption(
+            "[ADetailer] ADetailer scheduler 1st",
+            str,
+            partial(set_value, field="ad_scheduler"),
+            choices=lambda: xyz_schedulers,
+        ),
+        xyz_grid.AxisOption(
+            "[ADetailer] noise multiplier 1st",
+            float,
+            partial(set_value, field="ad_noise_multiplier"),
         ),
         xyz_grid.AxisOption(
             "[ADetailer] ControlNet model 1st",

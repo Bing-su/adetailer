@@ -1,5 +1,15 @@
 # Changelog
 
+## 2024-11-10
+
+- v24.11.0
+- `disable_controlnet_units` 함수가 `script_args`의 상태를 변경된 상태로 저장하는 문제 수정
+- XYZ Grid에 CFG Scale, scheduler, noise multiplier 추가
+- Area 또는 Confidence를 기준으로 마스크 최대 갯수를 지정할 수 있도록 함 (PR #720)
+
+- `ADetailer detector classes`의 element id를 `ad_classes`에서 `ad_model_classes`로 변경
+- `mediapipe` 최대 버전을 0.10.15로 제한
+
 ## 2024-09-02
 
 - v24.9.0
