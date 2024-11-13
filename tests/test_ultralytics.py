@@ -48,3 +48,6 @@ def test_yolo_world(sample_image2: Image.Image, klass: str):
     model_path = hf_hub_download("Bingsu/yolo-world-mirror", "yolov8x-worldv2.pt")
     result = ultralytics_predict(model_path, sample_image2, classes=klass)
     assert result.preview is not None
+    assert len(result.bboxes) > 0
+    assert len(result.masks) > 0
+    assert len(result.confidences) > 0
