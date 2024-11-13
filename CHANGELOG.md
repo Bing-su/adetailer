@@ -1,5 +1,10 @@
 # Changelog
 
+## 2024-11-13
+
+- v24.11.1
+- `mediapipe_face_mesh`, `mediapipe_face_mesh_eyes_only` 모델에 confidences가 없어 발생하는 에러 수정
+
 ## 2024-11-10
 
 - v24.11.0
