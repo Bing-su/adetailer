@@ -8,8 +8,8 @@ def preload(parser: argparse.ArgumentParser):
         help="Don't use adetailer models from huggingface",
     )
     parser.add_argument(
-        "--adetailer-dir", 
-        type=str, 
-        help="directory with adetailer models", 
-        default=None
+        "--adetailer-dir",
+        type=str,
+        help="directory with adetailer models",
+        default=None,
     )
