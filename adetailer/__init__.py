@@ -7,11 +7,11 @@ from .ultralytics import ultralytics_predict
 ADETAILER = "ADetailer"
 
 __all__ = [
-    "__version__",
-    "ADetailerArgs",
     "ADETAILER",
     "ALL_ARGS",
+    "ADetailerArgs",
     "PredictOutput",
+    "__version__",
     "get_models",
     "mediapipe_predict",
     "ultralytics_predict",

@@ -16,8 +16,8 @@ except ImportError:
 from .restore import CNHijackRestore, cn_allow_script_control
 
 __all__ = [
-    "ControlNetExt",
     "CNHijackRestore",
+    "ControlNetExt",
     "cn_allow_script_control",
     "controlnet_exists",
     "controlnet_type",
