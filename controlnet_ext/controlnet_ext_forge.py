@@ -4,7 +4,7 @@ import copy
 
 import numpy as np
 from lib_controlnet import external_code, global_state
-from lib_controlnet.external_code import ControlNetUnit, ControlMode
+from lib_controlnet.external_code import ControlMode, ControlNetUnit
 
 from modules import scripts
 from modules.processing import StableDiffusionProcessing

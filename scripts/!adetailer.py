@@ -174,7 +174,7 @@ class AfterDetailerScript(scripts.Script):
                 weight=args.ad_controlnet_weight,
                 guidance_start=args.ad_controlnet_guidance_start,
                 guidance_end=args.ad_controlnet_guidance_end,
-                control_mode=args.ad_controlnet_control_mode
+                control_mode=args.ad_controlnet_control_mode,
             )
 
     def is_ad_enabled(self, *args) -> bool:

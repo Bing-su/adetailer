@@ -7,12 +7,12 @@ from types import SimpleNamespace
 from typing import Any
 
 import gradio as gr
+from lib_controlnet.external_code import ControlMode
 
 from aaaaaa.conditional import InputAccordion
 from adetailer import ADETAILER, __version__
 from adetailer.args import ALL_ARGS, MASK_MERGE_INVERT
 from controlnet_ext import controlnet_exists, controlnet_type, get_cn_models
-from lib_controlnet.external_code import ControlMode
 
 if controlnet_type == "forge":
     from lib_controlnet import global_state

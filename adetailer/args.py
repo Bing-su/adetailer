@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from enum import Enum
 from functools import cached_property, partial
 from typing import Any, Literal, NamedTuple, Optional, Union
+
 from lib_controlnet.external_code import ControlMode
 
 try:
