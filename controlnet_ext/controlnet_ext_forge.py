@@ -4,7 +4,7 @@ import copy
 
 import numpy as np
 from lib_controlnet import external_code, global_state
-from lib_controlnet.external_code import ControlNetUnit
+from lib_controlnet.external_code import ControlNetUnit, ControlMode
 
 from modules import scripts
 from modules.processing import StableDiffusionProcessing
@@ -53,6 +53,7 @@ class ControlNetExt:
         weight: float,
         guidance_start: float,
         guidance_end: float,
+        control_mode: ControlMode,
     ):
         if (not self.cn_available) or model == "None":
             return
@@ -81,6 +82,7 @@ class ControlNetExt:
                     weight=weight,
                     guidance_start=guidance_start,
                     guidance_end=guidance_end,
+                    control_mode=control_mode,
                     processor_res=pres,
                 )
             ],
