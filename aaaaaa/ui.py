@@ -97,6 +97,11 @@ def on_ad_model_update(model: str):
             visible=True,
             placeholder="Comma separated class names to detect, ex: 'person,cat'. default: COCO 80 classes",
         )
+    elif "yolo" in model.lower():
+        return gr.update(
+            visible=True,
+            placeholder="Comma separated class numbers to detect or separated class names, ex: '0,1' for first 2 classes, or 'head, hip",
+        )
     return gr.update(visible=False, placeholder="")
 
 
@@ -203,7 +208,7 @@ def one_ui_group(n: int, is_img2img: bool, webui_info: WebuiInfo):
             w.ad_model_classes = gr.Textbox(
                 label="ADetailer detector classes" + suffix(n),
                 value="",
-                visible=False,
+                visible=True,
                 elem_id=eid("ad_model_classes"),
             )
 
