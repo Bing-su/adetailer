@@ -10,7 +10,7 @@ from typing import Any, Generic, Optional, TypeVar
 
 from huggingface_hub import hf_hub_download
 from PIL import Image, ImageDraw
-from rich import print
+from rich import print  # noqa: A004  Shadowing built-in 'print'
 from torchvision.transforms.functional import to_pil_image
 
 REPO_ID = "Bingsu/adetailer"
