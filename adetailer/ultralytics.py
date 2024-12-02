@@ -4,12 +4,13 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import cv2
+import numpy as np
 from PIL import Image
 from torchvision.transforms.functional import to_pil_image
 
 from adetailer import PredictOutput
 from adetailer.common import create_mask_from_bbox
-import numpy as np
+
 if TYPE_CHECKING:
     import torch
     from ultralytics import YOLO, YOLOWorld
@@ -23,6 +24,7 @@ def ultralytics_predict(
     classes: str = "",
 ) -> PredictOutput[float]:
     from ultralytics import YOLO
+
     model = YOLO(model_path)
     class_indices = []
     if classes:
@@ -38,11 +40,11 @@ def ultralytics_predict(
                         break
 
     pred = model(image, conf=confidence, device=device)
-    
+
     if class_indices and len(pred[0].boxes) > 0:
         cls = pred[0].boxes.cls.cpu().numpy()
         mask = np.isin(cls, class_indices)
-        
+
         # Apply mask to boxes
         pred[0].boxes.data = pred[0].boxes.data[mask]
         if pred[0].masks is not None:
@@ -72,11 +74,11 @@ def ultralytics_predict(
 def apply_classes(model: YOLO | YOLOWorld, model_path: str | Path, classes: str):
     if not classes:
         return
-    
+
     parsed = [c.strip() for c in classes.split(",") if c.strip()]
     if not parsed:
         return
-    
+
     try:
         class_indices = []
         for c in parsed:
@@ -87,7 +89,7 @@ def apply_classes(model: YOLO | YOLOWorld, model_path: str | Path, classes: str)
                     if name == c:
                         class_indices.append(idx)
                         break
-        
+
         model.classes = class_indices
     except Exception as e:
         print(f"Error setting classes: {e}")

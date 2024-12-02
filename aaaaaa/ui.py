@@ -97,7 +97,7 @@ def on_ad_model_update(model: str):
             visible=True,
             placeholder="Comma separated class names to detect, ex: 'person,cat'. default: COCO 80 classes",
         )
-    elif "yolo" in model.lower():
+    if "yolo" in model.lower():
         return gr.update(
             visible=True,
             placeholder="Comma separated class numbers to detect or separated class names, ex: '0,1' for first 2 classes, or 'head, hip",
