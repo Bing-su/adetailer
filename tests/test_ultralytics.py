@@ -25,12 +25,20 @@ def test_ultralytics_hf_models(sample_image: Image.Image, model_name: str):
     model_path = hf_hub_download("Bingsu/adetailer", model_name)
     result = ultralytics_predict(model_path, sample_image)
     assert result.preview is not None
+    assert len(result.bboxes) > 0
+    assert len(result.masks) > 0
+    assert len(result.confidences) > 0
+    assert len(result.bboxes) == len(result.masks) == len(result.confidences)
 
 
 def test_yolo_world_default(sample_image: Image.Image):
     model_path = hf_hub_download("Bingsu/yolo-world-mirror", "yolov8x-worldv2.pt")
     result = ultralytics_predict(model_path, sample_image)
     assert result.preview is not None
+    assert len(result.bboxes) > 0
+    assert len(result.masks) > 0
+    assert len(result.confidences) > 0
+    assert len(result.bboxes) == len(result.masks) == len(result.confidences)
 
 
 @pytest.mark.parametrize(
@@ -51,3 +59,4 @@ def test_yolo_world(sample_image2: Image.Image, klass: str):
     assert len(result.bboxes) > 0
     assert len(result.masks) > 0
     assert len(result.confidences) > 0
+    assert len(result.bboxes) == len(result.masks) == len(result.confidences)

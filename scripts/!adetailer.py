@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, Any, NamedTuple, cast
 
 import gradio as gr
 from PIL import Image, ImageChops
-from rich import print
+from rich import print  # noqa: A004  Shadowing built-in 'print'
 
 import modules
 from aaaaaa.conditional import create_binary_mask, schedulers

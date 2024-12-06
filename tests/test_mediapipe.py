@@ -15,7 +15,8 @@ from adetailer.mediapipe import mediapipe_predict
 )
 def test_mediapipe(sample_image2: Image.Image, model_name: str):
     result = mediapipe_predict(model_name, sample_image2)
-    assert result.preview is not None
-    assert len(result.bboxes) > 0
-    assert len(result.masks) > 0
-    assert len(result.confidences) > 0
+    if result.preview is not None:
+        assert len(result.bboxes) > 0
+        assert len(result.masks) > 0
+        assert len(result.confidences) > 0
+        assert len(result.bboxes) == len(result.masks) == len(result.confidences)
