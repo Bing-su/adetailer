@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import cv2
+import numpy as np
 from PIL import Image
 from torchvision.transforms.functional import to_pil_image
 
@@ -25,8 +26,29 @@ def ultralytics_predict(
     from ultralytics import YOLO
 
     model = YOLO(model_path)
-    apply_classes(model, model_path, classes)
+    class_indices = []
+    if classes:
+        parsed = [c.strip() for c in classes.split(",") if c.strip()]
+        for c in parsed:
+            if c.isdigit():
+                class_indices.append(int(c))
+            elif c in model.names.values():
+                # Find the index for the class name
+                for idx, name in model.names.items():
+                    if name == c:
+                        class_indices.append(idx)
+                        break
+
     pred = model(image, conf=confidence, device=device)
+
+    if class_indices and len(pred[0].boxes) > 0:
+        cls = pred[0].boxes.cls.cpu().numpy()
+        mask = np.isin(cls, class_indices)
+
+        # Apply mask to boxes
+        pred[0].boxes.data = pred[0].boxes.data[mask]
+        if pred[0].masks is not None:
+            pred[0].masks.data = pred[0].masks.data[mask]
 
     bboxes = pred[0].boxes.xyxy.cpu().numpy()
     if bboxes.size == 0:
@@ -50,11 +72,27 @@ def ultralytics_predict(
 
 
 def apply_classes(model: YOLO | YOLOWorld, model_path: str | Path, classes: str):
-    if not classes or "-world" not in Path(model_path).stem:
+    if not classes:
         return
+
     parsed = [c.strip() for c in classes.split(",") if c.strip()]
-    if parsed:
-        model.set_classes(parsed)
+    if not parsed:
+        return
+
+    try:
+        class_indices = []
+        for c in parsed:
+            if c.isdigit():
+                class_indices.append(int(c))
+            elif c in model.names.values():
+                for idx, name in model.names.items():
+                    if name == c:
+                        class_indices.append(idx)
+                        break
+
+        model.classes = class_indices
+    except Exception as e:
+        print(f"Error setting classes: {e}")
 
 
 def mask_to_pil(masks: torch.Tensor, shape: tuple[int, int]) -> list[Image.Image]:
