@@ -9,7 +9,7 @@ from packaging.version import parse
 
 import_name = {"py-cpuinfo": "cpuinfo", "protobuf": "google.protobuf"}
 custom_requirements = {
-    "ultralytics": "ultralytics>=8.3.0,!=8.3.41,!=8.3.42,!=8.3.45,!=8.3.46"
+    "ultralytics": "ultralytics>=8.3.0,<=8.3.40"
 }
 excluded_versions = {"ultralytics": ("8.3.41", "8.3.42", "8.3.45", "8.3.46")}
 
