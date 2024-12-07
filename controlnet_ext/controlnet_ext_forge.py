@@ -30,7 +30,7 @@ def add_forge_script_to_adetailer_run(
     p.scripts.alwayson_scripts = []
     p.script_args_value = []
 
-    script = copy.copy(find_script(p, script_title))
+    script = find_script(p, script_title)
     script.args_from = len(p.script_args_value)
     script.args_to = len(p.script_args_value) + len(script_args)
     p.scripts.alwayson_scripts.append(script)
@@ -60,8 +60,6 @@ class ControlNetExt:
         image = np.asarray(p.init_images[0])
         mask = np.full_like(image, fill_value=255)
 
-        cnet_image = {"image": image, "mask": mask}
-
         pres = external_code.pixel_perfect_resolution(
             image,
             target_H=p.height,
@@ -75,7 +73,8 @@ class ControlNetExt:
             [
                 ControlNetUnit(
                     enabled=True,
-                    image=cnet_image,
+                    image=image,
+                    mask_image=mask,
                     model=model,
                     module=module,
                     weight=weight,
