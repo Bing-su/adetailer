@@ -7,6 +7,7 @@ from types import SimpleNamespace
 from typing import Any
 
 import gradio as gr
+from lib_controlnet.external_code import ControlMode
 
 from aaaaaa.conditional import InputAccordion
 from adetailer import ADETAILER, __version__
@@ -717,4 +718,13 @@ def controlnet(w: Widgets, n: int, is_img2img: bool):
                 visible=True,
                 interactive=controlnet_exists,
                 elem_id=eid("ad_controlnet_guidance_end"),
+            )
+
+            w.ad_controlnet_control_mode = gr.Radio(
+                choices=[e.value for e in ControlMode],
+                value=ControlMode.BALANCED.value,
+                label="ControlNet control mode" + suffix(n),
+                visible=True,
+                interactive=controlnet_exists,
+                elem_id=eid("ad_controlnet_control_mode"),
             )
