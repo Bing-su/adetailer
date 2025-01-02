@@ -538,10 +538,16 @@ def inpainting(w: Widgets, n: int, is_img2img: bool, webui_info: WebuiInfo):  # 
                         elem_id=eid("ad_checkpoint"),
                     )
                     create_refresh_button(
-                        refresh_component=w.ad_checkpoint, 
-                        refresh_method=list_models, 
-                        refreshed_args=lambda: {"choices": ["Use same checkpoint", *checkpoint_tiles(use_short=True)]}, 
-                        elem_id="ad_checkpoint_refresh")
+                        refresh_component=w.ad_checkpoint,
+                        refresh_method=list_models,
+                        refreshed_args=lambda: {
+                            "choices": [
+                                "Use same checkpoint",
+                                *checkpoint_tiles(use_short=True),
+                            ]
+                        },
+                        elem_id="ad_checkpoint_refresh",
+                    )
 
             with gr.Column(variant="compact"):
                 w.ad_use_vae = gr.Checkbox(
@@ -562,10 +568,13 @@ def inpainting(w: Widgets, n: int, is_img2img: bool, webui_info: WebuiInfo):  # 
                         elem_id=eid("ad_vae"),
                     )
                     create_refresh_button(
-                        refresh_component=w.ad_vae, 
-                        refresh_method=refresh_vae_list, 
-                        refreshed_args=lambda: {"choices": ["Use same VAE", *sd_vae_items()]}, 
-                        elem_id="ad_vae_refresh")
+                        refresh_component=w.ad_vae,
+                        refresh_method=refresh_vae_list,
+                        refreshed_args=lambda: {
+                            "choices": ["Use same VAE", *sd_vae_items()]
+                        },
+                        elem_id="ad_vae_refresh",
+                    )
 
         with gr.Row(), gr.Column(variant="compact"):
             w.ad_use_sampler = gr.Checkbox(
