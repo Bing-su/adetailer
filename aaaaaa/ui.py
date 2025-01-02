@@ -18,7 +18,6 @@ from adetailer import ADETAILER, __version__
 from adetailer.args import ALL_ARGS, MASK_MERGE_INVERT
 from controlnet_ext import controlnet_exists, controlnet_type, get_cn_models
 
-
 if controlnet_type == "forge":
     from lib_controlnet import global_state
 
@@ -140,13 +139,6 @@ def adui(
         label=ADETAILER,
         visible=True,
     ) as ad_enable:
-        
-        ad_hires_only = gr.Checkbox(
-            value=False, 
-            label="Run on quick Hires Only", 
-            visible=not is_img2img, 
-            elem_id=eid("ad_hires_only"))
-
         with gr.Row():
             with gr.Column(scale=8):
                 ad_skip_img2img = gr.Checkbox(
@@ -177,8 +169,8 @@ def adui(
                 states.append(state)
                 infotext_fields.extend(infofields)
 
-    # components: [bool, bool, bool, dict, dict, ...]
-    components = [ad_enable, ad_hires_only, ad_skip_img2img, *states]
+    # components: [bool, bool, dict, dict, ...]
+    components = [ad_enable, ad_skip_img2img, *states]
     return components, infotext_fields
 
 
