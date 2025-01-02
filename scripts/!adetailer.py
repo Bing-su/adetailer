@@ -771,6 +771,14 @@ class AfterDetailerScript(scripts.Script):
     def process(self, p, *args_):
         if getattr(p, "_ad_disabled", False):
             return
+        
+        if not getattr(p, "enable_hr", False) and shared.opts.data.get("ad_use_only_for_hires_fix", False):
+            p._ad_disabled = True
+            msg = (
+                "[-] ADetailer: ADetailer is only enabled for high-res fix. You can change this behavior in the settings."
+            )
+            print(msg)
+            return        
 
         if is_img2img_inpaint(p) and is_all_black(self.get_image_mask(p)):
             p._ad_disabled = True
@@ -779,7 +787,7 @@ class AfterDetailerScript(scripts.Script):
             )
             print(msg)
             return
-
+        
         if not self.is_ad_enabled(*args_):
             p._ad_disabled = True
             return
@@ -1055,6 +1063,17 @@ def on_ui_settings():
         ).info(
             "Strict is for SDXL only, and matches exactly to trained SDXL resolutions. Free works with any model, but will use potentially unsupported dimensions."
         ),
+    )
+
+    shared.opts.add_option(
+        "ad_use_only_for_hires_fix",
+        shared.OptionInfo(
+            default=False,
+            label="Use ADetailer only for hires-fix",
+            section=section,
+        ).info(
+            "If enabled, ADetailer will be used only for the 'hires-fix'."
+        )
     )
 
 
