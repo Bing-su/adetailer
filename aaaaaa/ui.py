@@ -8,14 +8,13 @@ from typing import Any
 
 import gradio as gr
 
-from modules.sd_models import checkpoint_tiles, list_models
-from modules.shared_items import sd_vae_items, refresh_vae_list
-from modules.ui_common import create_refresh_button
-
 from aaaaaa.conditional import InputAccordion
 from adetailer import ADETAILER, __version__
 from adetailer.args import ALL_ARGS, MASK_MERGE_INVERT
 from controlnet_ext import controlnet_exists, controlnet_type, get_cn_models
+from modules.sd_models import checkpoint_tiles, list_models
+from modules.shared_items import refresh_vae_list, sd_vae_items
+from modules.ui_common import create_refresh_button
 
 if controlnet_type == "forge":
     from lib_controlnet import global_state
