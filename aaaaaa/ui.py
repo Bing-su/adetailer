@@ -9,8 +9,7 @@ from typing import Any
 import gradio as gr
 
 from modules.sd_models import checkpoint_tiles, list_models
-from modules.sd_vae import refresh_vae_list
-from modules.shared_items import sd_vae_items
+from modules.shared_items import sd_vae_items, refresh_vae_list
 from modules import ui_common
 
 from aaaaaa.conditional import InputAccordion
