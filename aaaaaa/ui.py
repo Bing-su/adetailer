@@ -10,7 +10,7 @@ import gradio as gr
 
 from modules.sd_models import checkpoint_tiles, list_models
 from modules.shared_items import sd_vae_items, refresh_vae_list
-from modules import ui_common
+from modules.ui_common import create_refresh_button
 
 from aaaaaa.conditional import InputAccordion
 from adetailer import ADETAILER, __version__
@@ -538,7 +538,7 @@ def inpainting(w: Widgets, n: int, is_img2img: bool, webui_info: WebuiInfo):  # 
                         visible=True,
                         elem_id=eid("ad_checkpoint"),
                     )
-                    ui_common.create_refresh_button(
+                    create_refresh_button(
                         refresh_component=w.ad_checkpoint, 
                         refresh_method=list_models, 
                         refreshed_args=lambda: {"choices": ["Use same checkpoint"] + checkpoint_tiles(use_short=True)}, 
@@ -562,7 +562,7 @@ def inpainting(w: Widgets, n: int, is_img2img: bool, webui_info: WebuiInfo):  # 
                         visible=True,
                         elem_id=eid("ad_vae"),
                     )
-                    ui_common.create_refresh_button(
+                    create_refresh_button(
                         refresh_component=w.ad_vae, 
                         refresh_method=refresh_vae_list, 
                         refreshed_args=lambda: {"choices": ["Use same VAE"] + sd_vae_items()}, 
