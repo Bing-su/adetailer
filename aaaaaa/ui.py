@@ -541,7 +541,7 @@ def inpainting(w: Widgets, n: int, is_img2img: bool, webui_info: WebuiInfo):  # 
                     create_refresh_button(
                         refresh_component=w.ad_checkpoint, 
                         refresh_method=list_models, 
-                        refreshed_args=lambda: {"choices": ["Use same checkpoint"] + checkpoint_tiles(use_short=True)}, 
+                        refreshed_args=lambda: {"choices": ["Use same checkpoint", *checkpoint_tiles(use_short=True)]}, 
                         elem_id="ad_checkpoint_refresh")
 
             with gr.Column(variant="compact"):
@@ -565,7 +565,7 @@ def inpainting(w: Widgets, n: int, is_img2img: bool, webui_info: WebuiInfo):  # 
                     create_refresh_button(
                         refresh_component=w.ad_vae, 
                         refresh_method=refresh_vae_list, 
-                        refreshed_args=lambda: {"choices": ["Use same VAE"] + sd_vae_items()}, 
+                        refreshed_args=lambda: {"choices": ["Use same VAE", *sd_vae_items()]}, 
                         elem_id="ad_vae_refresh")
 
         with gr.Row(), gr.Column(variant="compact"):
