@@ -84,7 +84,7 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
     ad_use_vae: bool = False
     ad_vae: Optional[str] = None
     ad_use_sampler: bool = False
-    ad_sampler: str = "DPM++ 2M Karras"
+    ad_sampler: str = "Use same sampler"
     ad_scheduler: str = "Use same scheduler"
     ad_use_noise_multiplier: bool = False
     ad_noise_multiplier: confloat(ge=0.5, le=1.5) = 1.0

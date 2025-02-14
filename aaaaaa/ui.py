@@ -569,7 +569,7 @@ def inpainting(w: Widgets, n: int, is_img2img: bool, webui_info: WebuiInfo):  # 
                 w.ad_sampler = gr.Dropdown(
                     label="ADetailer sampler" + suffix(n),
                     choices=sampler_names,
-                    value=sampler_names[1],
+                    value=sampler_names[0],
                     visible=True,
                     elem_id=eid("ad_sampler"),
                 )
