@@ -49,12 +49,8 @@ def disable_safe_unpickle():
 
 @contextmanager
 def pause_total_tqdm():
-    orig = opts.data.get("multiple_tqdm", True)
-    try:
-        opts.data["multiple_tqdm"] = False
+    with patch.dict(opts.data, {"multiple_tqdm": False}, clear=False):
         yield
-    finally:
-        opts.data["multiple_tqdm"] = orig
 
 
 @contextmanager
