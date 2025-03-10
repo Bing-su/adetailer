@@ -10,13 +10,12 @@ tasks:
     cmds:
       - echo "$PYTHON"
       - echo "$WEBUI"
-      - echo "$UV_PYTHON"
     silent: true
 
   launch:
     dir: "{{.WEBUI}}"
     cmds:
-      - "{{.PYTHON}} launch.py --xformers --api"
+      - "{{.PYTHON}} launch.py --xformers --api {{ .CLI_ARGS }}"
     silent: true
 
   lint:
@@ -29,4 +28,4 @@ tasks:
 
   update-torch:
     cmds:
-      - "{{.PYTHON}} -m uv pip install -U torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu124"
+      - "{{.PYTHON}} -m uv pip install -U torch torchvision torchaudio xformers --extra-index-url https://download.pytorch.org/whl/cu126"

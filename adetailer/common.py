@@ -39,8 +39,9 @@ def hf_download(file: str, repo_id: str = REPO_ID, check_remote: bool = True) ->
     with suppress(Exception):
         return hf_hub_download(repo_id, file, local_files_only=True)
 
-    msg = f"[-] ADetailer: Failed to load model {file!r} from huggingface"
-    print(msg)
+    if check_remote:
+        msg = f"[-] ADetailer: Failed to load model {file!r} from huggingface"
+        print(msg)
     return "INVALID"
 
 
