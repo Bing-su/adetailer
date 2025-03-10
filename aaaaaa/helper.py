@@ -1,15 +1,17 @@
 from __future__ import annotations
 
+import os
 from contextlib import contextmanager
 from copy import copy
 from typing import TYPE_CHECKING, Any, Union
+from unittest.mock import patch
 
 import torch
 from PIL import Image
 from typing_extensions import Protocol
 
 from modules import safe
-from modules.shared import opts
+from modules.shared import cmd_opts, opts
 
 if TYPE_CHECKING:
     # 타입 체커가 빨간 줄을 긋지 않게 하는 편법
@@ -37,13 +39,18 @@ def change_torch_load():
 
 
 @contextmanager
-def pause_total_tqdm():
-    orig = opts.data.get("multiple_tqdm", True)
-    try:
-        opts.data["multiple_tqdm"] = False
+def disable_safe_unpickle():
+    with (
+        patch.dict(os.environ, {"TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD": "1"}, clear=False),
+        patch.object(cmd_opts, "disable_safe_unpickle", True),
+    ):
         yield
-    finally:
-        opts.data["multiple_tqdm"] = orig
+
+
+@contextmanager
+def pause_total_tqdm():
+    with patch.dict(opts.data, {"multiple_tqdm": False}, clear=False):
+        yield
 
 
 @contextmanager

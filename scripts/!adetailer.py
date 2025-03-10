@@ -18,8 +18,8 @@ import modules
 from aaaaaa.conditional import create_binary_mask, schedulers
 from aaaaaa.helper import (
     PPImage,
-    change_torch_load,
     copy_extra_params,
+    disable_safe_unpickle,
     pause_total_tqdm,
     preserve_prompts,
 )
@@ -825,8 +825,8 @@ class AfterDetailerScript(scripts.Script):
             pred = mediapipe_predict(args.ad_model, pp.image, args.ad_confidence)
 
         else:
-            with change_torch_load():
-                ad_model = self.get_ad_model(args.ad_model)
+            ad_model = self.get_ad_model(args.ad_model)
+            with disable_safe_unpickle():
                 pred = ultralytics_predict(
                     ad_model,
                     image=pp.image,

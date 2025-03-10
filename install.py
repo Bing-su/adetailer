@@ -8,10 +8,6 @@ from importlib.metadata import version  # python >= 3.8
 from packaging.version import parse
 
 import_name = {"py-cpuinfo": "cpuinfo", "protobuf": "google.protobuf"}
-custom_requirements = {
-    "ultralytics": "ultralytics>=8.3.0,!=8.3.41,!=8.3.42,!=8.3.45,!=8.3.46"
-}
-excluded_versions = {"ultralytics": ("8.3.41", "8.3.42", "8.3.45", "8.3.46")}
 
 
 def is_installed(
@@ -20,7 +16,6 @@ def is_installed(
     max_version: str | None = None,
 ):
     name = import_name.get(package, package)
-    excluded = excluded_versions.get(package, ())
     try:
         spec = importlib.util.find_spec(name)
     except ModuleNotFoundError:
@@ -39,10 +34,7 @@ def is_installed(
 
     try:
         pkg_version = version(package)
-        return (
-            parse(min_version) <= parse(pkg_version) <= parse(max_version)
-            and pkg_version not in excluded
-        )
+        return parse(min_version) <= parse(pkg_version) <= parse(max_version)
     except Exception:
         return False
 
@@ -54,7 +46,7 @@ def run_pip(*args):
 def install():
     deps = [
         # requirements
-        ("ultralytics", "8.3.0", None),
+        ("ultralytics", "8.3.75", None),
         ("mediapipe", "0.10.13", "0.10.15"),
         ("rich", "13.0.0", None),
     ]
@@ -62,9 +54,7 @@ def install():
     pkgs = []
     for pkg, low, high in deps:
         if not is_installed(pkg, low, high):
-            if pkg in custom_requirements:
-                cmd = custom_requirements[pkg]
-            elif low and high:
+            if low and high:
                 cmd = f"{pkg}>={low},<={high}"
             elif low:
                 cmd = f"{pkg}>={low}"
