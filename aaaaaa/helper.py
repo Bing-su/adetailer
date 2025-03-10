@@ -32,7 +32,12 @@ PT = Union[StableDiffusionProcessingTxt2Img, StableDiffusionProcessingImg2Img]
 def change_torch_load():
     orig = torch.load
     try:
-        torch.load = safe.unsafe_torch_load
+        # Force weights_only=False (True by default in pytorch>=2.6)
+        def custom_load(*args, **kwargs):
+            kwargs["weights_only"] = False
+            return safe.unsafe_torch_load(*args, **kwargs)
+
+        torch.load = custom_load
         yield
     finally:
         torch.load = orig
