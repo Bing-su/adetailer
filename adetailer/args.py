@@ -282,7 +282,12 @@ _script_default = (
 )
 SCRIPT_DEFAULT = ",".join(sorted(_script_default))
 
-_builtin_script = ("soft_inpainting", "hypertile_script")
+_builtin_script = (
+    "advanced_model_sampling_script",
+    "advanced_model_sampling_script_backported",
+    "hypertile_script",
+    "soft_inpainting",
+)
 BUILTIN_SCRIPT = ",".join(sorted(_builtin_script))
 
 
