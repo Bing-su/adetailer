@@ -121,7 +121,6 @@
 - YOLO World 모델 추가: 가장 큰 yolov8x-world.pt 모델만 기본적으로 선택할 수 있게 함.
 - lllyasviel/stable-diffusion-webui-forge에서 컨트롤넷을 사용가능하게 함 (PR #517)
 - 기본 스크립트 목록에 soft_inpainting 추가 (https://github.com/AUTOMATIC1111/stable-diffusion-webui/pull/14208)
-
   - 기존에 설치한 사람에게 소급적용되지는 않음
 
 - 감지모델에 대한 간단한 pytest 추가함
@@ -348,7 +347,6 @@
   - `ad_inpaint_full_res` → `ad_inpaint_only_masked`
   - `ad_inpaint_full_res_padding` → `ad_inpaint_only_masked_padding`
 - mediapipe face mesh 모델 추가
-
   - mediapipe 최소 버전 `0.10.0`
 
 - rich traceback 제거함
