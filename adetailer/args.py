@@ -57,6 +57,7 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
     ad_model: str = "None"
     ad_model_classes: str = ""
     ad_tab_enable: bool = True
+    ad_tab_enable_styles: bool = True
     ad_prompt: str = ""
     ad_negative_prompt: str = ""
     ad_confidence: confloat(ge=0.0, le=1.0) = 0.3
@@ -219,6 +220,7 @@ _all_args = [
     ("ad_model", "ADetailer model"),
     ("ad_model_classes", "ADetailer model classes"),
     ("ad_tab_enable", "ADetailer tab enable"),
+    ("ad_tab_enable_styles", "ADetailer tab enable styles"),
     ("ad_prompt", "ADetailer prompt"),
     ("ad_negative_prompt", "ADetailer negative prompt"),
     ("ad_confidence", "ADetailer confidence"),

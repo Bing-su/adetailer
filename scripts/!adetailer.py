@@ -510,6 +510,13 @@ class AfterDetailerScript(scripts.Script):
         if schedulers:
             version_args.update(self.get_scheduler(p, args))
 
+        # clear common styles if disabled
+        temp_styles = p.styles
+        if not args.ad_tab_enable_styles:
+            msg = "[-] ADetailer: common styles disabled."
+            temp_styles = []
+            print(msg)
+
         i2i = StableDiffusionProcessingImg2Img(
             init_images=[image],
             resize_mode=0,
@@ -526,7 +533,7 @@ class AfterDetailerScript(scripts.Script):
             outpath_grids=p.outpath_grids,
             prompt="",  # replace later
             negative_prompt="",
-            styles=p.styles,
+            styles=temp_styles,
             seed=seed,
             subseed=subseed,
             subseed_strength=p.subseed_strength,

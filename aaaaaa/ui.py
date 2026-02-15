@@ -187,6 +187,12 @@ def one_ui_group(n: int, is_img2img: bool, webui_info: WebuiInfo):
                 visible=True,
                 elem_id=eid("ad_tab_enable"),
             )
+            w.ad_tab_enable_styles = gr.Checkbox(
+                label=f"Enable styles ({ordinal(n + 1)})",
+                value=True,
+                visible=True,
+                elem_id=eid("ad_tab_enable_styles"),
+            )
 
         with gr.Row():
             w.ad_model = gr.Dropdown(
