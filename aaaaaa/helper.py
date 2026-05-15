@@ -42,7 +42,7 @@ def change_torch_load():
 def disable_safe_unpickle():
     with (
         patch.dict(os.environ, {"TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD": "1"}, clear=False),
-        patch.object(cmd_opts, "disable_safe_unpickle", True),
+        patch.object(cmd_opts, "disable_safe_unpickle", True, create=True),
     ):
         yield
 
