@@ -25,7 +25,7 @@ Or
 | Model, Prompts                    |                                                                                    |                                                                                                                                                        |
 | --------------------------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | ADetailer model                   | Determine what to detect.                                                          | `None` = disable                                                                                                                                       |
-| ADetailer model classes           | Comma separated class names to detect. only available when using YOLO World models | If blank, use default values.<br/>default = [COCO 80 classes](https://github.com/ultralytics/ultralytics/blob/main/ultralytics/cfg/datasets/coco.yaml) |
+| ADetailer model classes           | Filter which classes to inpaint when the detector exposes multiple classes (e.g. a model trained on `face,hand,eye`). For YOLO-World models this is a free-text comma-separated list. For other multiclass YOLO models a multi-select dropdown is shown, auto-populated from `model.names`. See [Class Filtering](#class-filtering) below. | If blank, every detected class is inpainted (no filter — original behavior). For YOLO-World: default = [COCO 80 classes](https://github.com/ultralytics/ultralytics/blob/main/ultralytics/cfg/datasets/coco.yaml). |
 | ADetailer prompt, negative prompt | Prompts and negative prompts to apply                                              | If left blank, it will use the same as the input.                                                                                                      |
 | Skip img2img                      | Skip img2img. In practice, this works by changing the step count of img2img to 1.  | img2img only                                                                                                                                           |
 
@@ -48,6 +48,34 @@ Applied in this order: x, y offset → erosion/dilation → merge/invert.
 #### Inpainting
 
 Each option corresponds to a corresponding option on the inpaint tab. Therefore, please refer to the inpaint tab for usage details on how to use each option.
+
+## Class Filtering
+
+When a multiclass YOLO detector is selected — i.e. a model that produces more than one class of detection, such as a custom YOLO model trained on `face,hand,eye` — the **ADetailer detector classes** row turns into a multi-select dropdown auto-populated from `model.names`. Pick one or more classes to restrict inpainting to those; leave the dropdown empty to keep the original behavior (inpaint everything the detector finds).
+
+Tick **Exclude selected (NOT)** to invert the filter: detections matching the selected classes are skipped, everything else is inpainted.
+
+For YOLO-World models the original text-based input is preserved (open-vocabulary class names cannot be enumerated up-front). For MediaPipe and single-class models no class-filter widget is shown — they have nothing to filter.
+
+#### Sidecar JSON for class names
+
+If your `.pt` does not embed class names in `model.names`, you can place a JSON file with the same basename next to it in `models/adetailer/` to provide them. Three shapes are accepted:
+
+```json
+["face", "hand", "eye"]
+```
+```json
+{"names": ["face", "hand", "eye"]}
+```
+```json
+{"0": "face", "1": "hand", "2": "eye"}
+```
+
+Unrelated JSON files written by other tools (e.g. civitai metadata helpers) are ignored — class-name resolution falls back to `model.names` from the `.pt` in that case.
+
+#### Backwards compatibility
+
+The existing `ad_model_classes` field keeps its CSV wire format and YOLO-World semantics. Two new defaulted fields are added to the API/infotext (`ad_model_classes_exclude: bool`, `ad_model_classes_excluded: str`) and are stripped from infotext output when at their defaults, so PNG metadata for workflows that don't use the filter remains byte-identical to before.
 
 ## ControlNet Inpainting
 

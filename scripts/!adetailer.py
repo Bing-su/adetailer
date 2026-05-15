@@ -136,6 +136,7 @@ class AfterDetailerScript(scripts.Script):
             i2i_button=img2img_submit_button,
             checkpoints_list=checkpoint_list,
             vae_list=vae_list,
+            model_mapping=model_mapping,
         )
 
         components, infotext_fields = adui(num_models, is_img2img, webui_info)
@@ -833,6 +834,11 @@ class AfterDetailerScript(scripts.Script):
                     confidence=args.ad_confidence,
                     device=self.ultralytics_device,
                     classes=args.ad_model_classes,
+                    exclude_classes=(
+                        args.ad_model_classes_excluded
+                        if args.ad_model_classes_exclude
+                        else ""
+                    ),
                 )
 
         if pred.preview is None:

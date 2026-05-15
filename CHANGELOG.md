@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- Per-class filtering for multiclass YOLO detectors: auto-populated dropdown
+  reads class names from `model.names` (or a sidecar `.json`) and lets the user
+  restrict inpainting to selected classes, with an "Exclude selected (NOT)"
+  inverse-filter checkbox. Include uses Ultralytics' native `model(classes=[ids])`;
+  exclude post-filters on `boxes.cls`. YOLO-World text input and MediaPipe paths
+  are unchanged.
+
 ## 2026-02-05
 
 - v26.2.0

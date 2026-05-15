@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from functools import partial
 from itertools import chain
 from types import SimpleNamespace
@@ -11,6 +11,7 @@ import gradio as gr
 from aaaaaa.conditional import InputAccordion
 from adetailer import ADETAILER, __version__
 from adetailer.args import ALL_ARGS, MASK_MERGE_INVERT
+from adetailer.classes import get_model_class_names
 from controlnet_ext import controlnet_exists, controlnet_type, get_cn_models
 
 if controlnet_type == "forge":
@@ -61,6 +62,7 @@ class WebuiInfo:
     i2i_button: gr.Button
     checkpoints_list: list[str]
     vae_list: list[str]
+    model_mapping: dict[str, str] = field(default_factory=dict)
 
 
 def gr_interactive(value: bool = True):
@@ -91,13 +93,44 @@ def on_generate_click(state: dict, *values: Any):
     return state
 
 
-def on_ad_model_update(model: str):
-    if "-world" in model:
-        return gr.update(
-            visible=True,
-            placeholder="Comma separated class names to detect, ex: 'person,cat'. default: COCO 80 classes",
+def on_ad_model_update(model: str, model_mapping: dict[str, str] | None = None):
+    """Return updates for (textbox, dropdown, exclude-checkbox, excluded-textbox).
+
+    - YOLO-World models: free-text textbox (open vocabulary).
+    - Other multiclass YOLO models with embedded class names: auto-populated
+      multi-select dropdown + 'Exclude selected (NOT)' checkbox.
+    - MediaPipe / single-class / None: all class-filter widgets hidden.
+    """
+    if not model or model == "None" or model.lower().startswith("mediapipe"):
+        return (
+            gr.update(visible=False, value=""),
+            gr.update(visible=False, choices=[], value=[]),
+            gr.update(visible=False, value=False),
+            gr.update(value=""),
         )
-    return gr.update(visible=False, placeholder="")
+
+    if "-world" in model:
+        return (
+            gr.update(
+                visible=True,
+                value="",
+                placeholder="Comma separated class names to detect, ex: 'person,cat'. default: COCO 80 classes",
+            ),
+            gr.update(visible=False, choices=[], value=[]),
+            gr.update(visible=False, value=False),
+            gr.update(value=""),
+        )
+
+    mapping = model_mapping or {}
+    path = mapping.get(model, "")
+    names = get_model_class_names(path) if path else []
+    multiclass = len(names) > 1
+    return (
+        gr.update(visible=False, value=""),
+        gr.update(visible=multiclass, choices=names, value=[]),
+        gr.update(visible=multiclass, value=False),
+        gr.update(value=""),
+    )
 
 
 def on_cn_model_update(cn_model_name: str):
@@ -201,18 +234,68 @@ def one_ui_group(n: int, is_img2img: bool, webui_info: WebuiInfo):
 
         with gr.Row():
             w.ad_model_classes = gr.Textbox(
-                label="ADetailer detector classes" + suffix(n),
+                label="ADetailer detector classes (YOLO-World)" + suffix(n),
                 value="",
                 visible=False,
                 elem_id=eid("ad_model_classes"),
             )
-
-            w.ad_model.change(
-                on_ad_model_update,
-                inputs=w.ad_model,
-                outputs=w.ad_model_classes,
-                queue=False,
+            # UI-only multi-select dropdown for non-YOLO-World multiclass models.
+            # Not registered in ALL_ARGS; it mirrors into ad_model_classes (CSV)
+            # for include or into ad_model_classes_excluded for exclude/NOT.
+            w.ad_model_classes_dropdown = gr.Dropdown(
+                label="ADetailer detector classes" + suffix(n),
+                choices=[],
+                value=[],
+                multiselect=True,
+                visible=False,
+                elem_id=eid("ad_model_classes_dropdown"),
             )
+
+        with gr.Row():
+            w.ad_model_classes_exclude = gr.Checkbox(
+                label="Exclude selected (NOT)" + suffix(n),
+                value=False,
+                visible=False,
+                elem_id=eid("ad_model_classes_exclude"),
+            )
+            # Backing arg for exclude mode (hidden mirror of the dropdown).
+            w.ad_model_classes_excluded = gr.Textbox(
+                value="",
+                visible=False,
+                elem_id=eid("ad_model_classes_excluded"),
+            )
+
+        _on_ad_model_update = partial(
+            on_ad_model_update, model_mapping=webui_info.model_mapping
+        )
+        w.ad_model.change(
+            _on_ad_model_update,
+            inputs=w.ad_model,
+            outputs=[
+                w.ad_model_classes,
+                w.ad_model_classes_dropdown,
+                w.ad_model_classes_exclude,
+                w.ad_model_classes_excluded,
+            ],
+            queue=False,
+        )
+
+        def _sync_dropdown(selected: list[str] | None, exclude: bool):
+            csv = ",".join(selected or [])
+            return ("" if exclude else csv), (csv if exclude else "")
+
+        w.ad_model_classes_dropdown.change(
+            _sync_dropdown,
+            inputs=[w.ad_model_classes_dropdown, w.ad_model_classes_exclude],
+            outputs=[w.ad_model_classes, w.ad_model_classes_excluded],
+            queue=False,
+        )
+        w.ad_model_classes_exclude.change(
+            _sync_dropdown,
+            inputs=[w.ad_model_classes_dropdown, w.ad_model_classes_exclude],
+            outputs=[w.ad_model_classes, w.ad_model_classes_excluded],
+            queue=False,
+        )
 
     gr.HTML("<br>")
 
