@@ -79,7 +79,14 @@ def _apply_exclude_filter(pred, model_path: str | Path, excluded: list[str]):
     return pred
 
 
-def ultralytics_predict(
+def ultralytics_predict(  # noqa: PLR0913
+    # PLR0913 (max 5 args): six are necessary here. The upstream signature
+    # already had five (model_path, image, confidence, device, classes); the
+    # class-filter feature adds `exclude_classes` as a separate string so it
+    # can be wired through a dedicated UI checkbox + textbox without changing
+    # the long-stable `classes` semantics. Bundling both into one composite
+    # parameter would either break call sites or hide intent at the call
+    # site (kwargs are clearer here than a tuple/dict).
     model_path: str | Path,
     image: Image.Image,
     confidence: float = 0.3,
