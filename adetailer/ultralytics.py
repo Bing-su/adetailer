@@ -21,6 +21,56 @@ if TYPE_CHECKING:
     from ultralytics import YOLO, YOLOWorld
 
 
+def _predict_world(model, image, requested: list[str], conf: float, device: str):
+    """YOLO-World open-vocab inference (unchanged behavior)."""
+    if requested:
+        model.set_classes(requested)
+    return model(image, conf=conf, device=device)
+
+
+def _predict_multiclass(
+    model, model_path: str | Path, image, requested: list[str], conf: float, device: str
+):
+    """Regular multiclass YOLO with include-by-id at inference time."""
+    kw: dict = {"conf": conf, "device": device}
+    if requested:
+        ids = resolve_class_ids(str(model_path), requested)
+        if ids:
+            kw["classes"] = ids
+    try:
+        return model(image, **kw)
+    except TypeError:
+        # Older ultralytics may not accept the `classes=` kwarg — fall back.
+        kw.pop("classes", None)
+        return model(image, **kw)
+
+
+def _apply_exclude_filter(pred, model_path: str | Path, excluded: list[str]):
+    """Post-filter `pred` to drop boxes whose class is in `excluded`. Returns
+    the (possibly wrapped) prediction object, or None when nothing remains.
+    """
+    if not excluded or pred[0].boxes is None or pred[0].boxes.cls is None:
+        return pred
+    if len(pred[0].boxes) == 0:
+        return pred
+    names = get_model_class_names(str(model_path))
+    cls_ids = pred[0].boxes.cls.cpu().numpy().astype(int).tolist()
+    keep = [
+        i
+        for i, cid in enumerate(cls_ids)
+        if (names[cid] if 0 <= cid < len(names) else str(cid)) not in excluded
+        and str(cid) not in excluded
+    ]
+    if not keep:
+        return None
+    try:
+        pred[0] = pred[0][keep]
+    except (TypeError, IndexError):
+        # Older ultralytics Results may not support list indexing.
+        pred = _SubsetWrapper(pred, keep)
+    return pred
+
+
 def ultralytics_predict(
     model_path: str | Path,
     image: Image.Image,
@@ -32,51 +82,18 @@ def ultralytics_predict(
     from ultralytics import YOLO
 
     model = YOLO(model_path)
-
     requested = parse_csv(classes)
     excluded = parse_csv(exclude_classes)
 
     if is_world_model(model_path):
-        # YOLO-World open-vocab path (unchanged behavior).
-        if requested:
-            model.set_classes(requested)
-        pred = model(image, conf=confidence, device=device)
+        pred = _predict_world(model, image, requested, confidence, device)
     else:
-        # Multiclass YOLO: include-by-id at inference time, exclude post-hoc.
-        kw: dict = {"conf": confidence, "device": device}
-        if requested:
-            ids = resolve_class_ids(str(model_path), requested)
-            if ids:
-                kw["classes"] = ids
-        try:
-            pred = model(image, **kw)
-        except TypeError:
-            # Older ultralytics may not accept the `classes=` kwarg — fall back.
-            kw.pop("classes", None)
-            pred = model(image, **kw)
-
-        if (
-            excluded
-            and pred[0].boxes is not None
-            and pred[0].boxes.cls is not None
-            and len(pred[0].boxes) > 0
-        ):
-            names = get_model_class_names(str(model_path))
-            cls_ids = pred[0].boxes.cls.cpu().numpy().astype(int).tolist()
-            keep = [
-                i
-                for i, cid in enumerate(cls_ids)
-                if (names[cid] if 0 <= cid < len(names) else str(cid)) not in excluded
-                and str(cid) not in excluded
-            ]
-            if not keep:
-                return PredictOutput()
-            try:
-                pred[0] = pred[0][keep]
-            except (TypeError, IndexError):
-                # Older ultralytics Results may not support list indexing.
-                # Subset manually after extraction below by reusing `keep`.
-                pred = _SubsetWrapper(pred, keep)
+        pred = _predict_multiclass(
+            model, model_path, image, requested, confidence, device
+        )
+        pred = _apply_exclude_filter(pred, model_path, excluded)
+        if pred is None:
+            return PredictOutput()
 
     bboxes = pred[0].boxes.xyxy.cpu().numpy()
     if bboxes.size == 0:
