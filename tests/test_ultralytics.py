@@ -78,7 +78,9 @@ def test_class_filter_include_unknown_falls_back(sample_image: Image.Image):
     """Unknown class names are dropped; if no valid id remains, falls back to no filter."""
     model_path = hf_hub_download("Bingsu/adetailer", "person_yolov8n-seg.pt")
     full = ultralytics_predict(model_path, sample_image)
-    filtered = ultralytics_predict(model_path, sample_image, classes="nonexistent_class")
+    filtered = ultralytics_predict(
+        model_path, sample_image, classes="nonexistent_class"
+    )
     assert len(filtered.bboxes) == len(full.bboxes)
 
 
@@ -106,7 +108,10 @@ class TestNamesFromJson:
         assert _names_from_json({"names": ["face", "hand"]}) == ["face", "hand"]
 
     def test_names_dict(self):
-        assert _names_from_json({"names": {"0": "face", "1": "hand"}}) == ["face", "hand"]
+        assert _names_from_json({"names": {"0": "face", "1": "hand"}}) == [
+            "face",
+            "hand",
+        ]
 
     def test_bare_int_keys(self):
         assert _names_from_json({"0": "face", "1": "hand", "2": "eye"}) == [

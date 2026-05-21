@@ -22,12 +22,12 @@ Or
 
 ## Options
 
-| Model, Prompts                    |                                                                                    |                                                                                                                                                        |
-| --------------------------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| ADetailer model                   | Determine what to detect.                                                          | `None` = disable                                                                                                                                       |
+| Model, Prompts                    |                                                                                                                                                                                                                                                                                                                                            |                                                                                                                                                                                                                    |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| ADetailer model                   | Determine what to detect.                                                                                                                                                                                                                                                                                                                  | `None` = disable                                                                                                                                                                                                   |
 | ADetailer model classes           | Filter which classes to inpaint when the detector exposes multiple classes (e.g. a model trained on `face,hand,eye`). For YOLO-World models this is a free-text comma-separated list. For other multiclass YOLO models a multi-select dropdown is shown, auto-populated from `model.names`. See [Class Filtering](#class-filtering) below. | If blank, every detected class is inpainted (no filter — original behavior). For YOLO-World: default = [COCO 80 classes](https://github.com/ultralytics/ultralytics/blob/main/ultralytics/cfg/datasets/coco.yaml). |
-| ADetailer prompt, negative prompt | Prompts and negative prompts to apply                                              | If left blank, it will use the same as the input.                                                                                                      |
-| Skip img2img                      | Skip img2img. In practice, this works by changing the step count of img2img to 1.  | img2img only                                                                                                                                           |
+| ADetailer prompt, negative prompt | Prompts and negative prompts to apply                                                                                                                                                                                                                                                                                                      | If left blank, it will use the same as the input.                                                                                                                                                                  |
+| Skip img2img                      | Skip img2img. In practice, this works by changing the step count of img2img to 1.                                                                                                                                                                                                                                                          | img2img only                                                                                                                                                                                                       |
 
 | Detection                            |                                                                                              |              |
 | ------------------------------------ | -------------------------------------------------------------------------------------------- | ------------ |
@@ -64,11 +64,13 @@ If your `.pt` does not embed class names in `model.names`, you can place a JSON 
 ```json
 ["face", "hand", "eye"]
 ```
+
 ```json
-{"names": ["face", "hand", "eye"]}
+{ "names": ["face", "hand", "eye"] }
 ```
+
 ```json
-{"0": "face", "1": "hand", "2": "eye"}
+{ "0": "face", "1": "hand", "2": "eye" }
 ```
 
 Unrelated JSON files written by other tools (e.g. civitai metadata helpers) are ignored — class-name resolution falls back to `model.names` from the `.pt` in that case.

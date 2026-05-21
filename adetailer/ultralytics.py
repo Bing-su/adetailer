@@ -120,11 +120,19 @@ class _SubsetResults:
 
     @property
     def boxes(self):
-        return _SubsetBoxes(self._r.boxes, self._keep) if self._r.boxes is not None else None
+        return (
+            _SubsetBoxes(self._r.boxes, self._keep)
+            if self._r.boxes is not None
+            else None
+        )
 
     @property
     def masks(self):
-        return _SubsetMasks(self._r.masks, self._keep) if self._r.masks is not None else None
+        return (
+            _SubsetMasks(self._r.masks, self._keep)
+            if self._r.masks is not None
+            else None
+        )
 
     def plot(self, *a, **kw):
         return self._r.plot(*a, **kw)
