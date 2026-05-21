@@ -14,6 +14,34 @@ def parse_csv(csv: str) -> list[str]:
     return [c.strip() for c in (csv or "").split(",") if c.strip()]
 
 
+def _scalar_list(seq: Any) -> list[str]:
+    """Filter a list-like to scalars, stringified. Non-list input → []."""
+    if not isinstance(seq, list):
+        return []
+    return [str(x) for x in seq if isinstance(x, (str, int, float))]
+
+
+def _names_from_int_keyed_dict(d: Any) -> list[str]:
+    """Treat `d` as `{"0": "face", "1": "hand", ...}`. Return [] if the shape
+    doesn't match: requires ALL keys int-parseable AND all values scalar.
+    """
+    if not isinstance(d, dict):
+        return []
+    try:
+        int_keys = [int(k) for k in d]
+    except (TypeError, ValueError):
+        return []
+    if not int_keys or len(int_keys) != len(d):
+        return []
+    out: list[str] = []
+    for i in sorted(int_keys):
+        v = d.get(str(i))
+        if not isinstance(v, (str, int, float)):
+            return []
+        out.append(str(v))
+    return out
+
+
 def _names_from_json(data: Any) -> list[str]:
     """Try to extract a class-names list from a parsed JSON blob.
 
@@ -27,42 +55,19 @@ def _names_from_json(data: Any) -> list[str]:
     Anything else (e.g. civitai_helper sidecar JSONs) returns [].
     """
     if isinstance(data, list):
-        return [str(x) for x in data if isinstance(x, (str, int, float))]
-
+        return _scalar_list(data)
     if not isinstance(data, dict):
         return []
 
+    # `{"names": ...}` — Ultralytics export shapes.
     if "names" in data:
         inner = data["names"]
         if isinstance(inner, list):
-            return [str(x) for x in inner if isinstance(x, (str, int, float))]
-        if isinstance(inner, dict):
-            try:
-                keys = sorted(int(k) for k in inner)
-            except (TypeError, ValueError):
-                return []
-            return [
-                str(inner[str(i)])
-                for i in keys
-                if str(i) in inner and isinstance(inner[str(i)], (str, int, float))
-            ]
+            return _scalar_list(inner)
+        return _names_from_int_keyed_dict(inner)
 
-    # Bare {"0": "face", "1": "hand"}. Require ALL top-level keys to be ints
-    # AND all values to be scalars — otherwise treat as unrelated metadata.
-    try:
-        int_keys = [int(k) for k in data]
-    except (TypeError, ValueError):
-        return []
-    if not int_keys or len(int_keys) != len(data):
-        return []
-    keys = sorted(int_keys)
-    result: list[str] = []
-    for i in keys:
-        v = data.get(str(i))
-        if not isinstance(v, (str, int, float)):
-            return []
-        result.append(str(v))
-    return result
+    # Bare `{"0": "face", ...}` map. Anything else is unrelated metadata.
+    return _names_from_int_keyed_dict(data)
 
 
 @lru_cache(maxsize=32)
