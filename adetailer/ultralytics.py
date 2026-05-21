@@ -21,18 +21,27 @@ if TYPE_CHECKING:
     from ultralytics import YOLO, YOLOWorld
 
 
-def _predict_world(model, image, requested: list[str], conf: float, device: str):
-    """YOLO-World open-vocab inference (unchanged behavior)."""
+def _predict_world(model, image, requested: list[str], runtime: dict):
+    """YOLO-World open-vocab inference (unchanged behavior).
+
+    `runtime` is a dict containing `conf` and `device` — bundled together to
+    keep the parameter count under ruff's PLR0913 ceiling.
+    """
     if requested:
         model.set_classes(requested)
-    return model(image, conf=conf, device=device)
+    return model(image, **runtime)
 
 
 def _predict_multiclass(
-    model, model_path: str | Path, image, requested: list[str], conf: float, device: str
+    model, model_path: str | Path, image, requested: list[str], runtime: dict
 ):
-    """Regular multiclass YOLO with include-by-id at inference time."""
-    kw: dict = {"conf": conf, "device": device}
+    """Regular multiclass YOLO with optional include-by-id at inference time.
+
+    `runtime` carries `conf` + `device`; we add `classes=` to it when there's
+    an include filter, falling back to no-`classes` on older ultralytics that
+    don't accept the kwarg.
+    """
+    kw = dict(runtime)
     if requested:
         ids = resolve_class_ids(str(model_path), requested)
         if ids:
@@ -40,7 +49,6 @@ def _predict_multiclass(
     try:
         return model(image, **kw)
     except TypeError:
-        # Older ultralytics may not accept the `classes=` kwarg — fall back.
         kw.pop("classes", None)
         return model(image, **kw)
 
@@ -84,13 +92,12 @@ def ultralytics_predict(
     model = YOLO(model_path)
     requested = parse_csv(classes)
     excluded = parse_csv(exclude_classes)
+    runtime = {"conf": confidence, "device": device}
 
     if is_world_model(model_path):
-        pred = _predict_world(model, image, requested, confidence, device)
+        pred = _predict_world(model, image, requested, runtime)
     else:
-        pred = _predict_multiclass(
-            model, model_path, image, requested, confidence, device
-        )
+        pred = _predict_multiclass(model, model_path, image, requested, runtime)
         pred = _apply_exclude_filter(pred, model_path, excluded)
         if pred is None:
             return PredictOutput()
