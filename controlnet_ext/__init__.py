@@ -5,7 +5,7 @@ try:
         controlnet_type,
         get_cn_models,
     )
-except Exception:  # noqa: BLE001
+except Exception:
     # Not just ImportError: a broken/drifted Forge lib_controlnet can raise
     # NameError/AttributeError at import time (e.g. reForge). Degrade to the
     # A1111 standard ControlNet backend instead of crashing the whole
