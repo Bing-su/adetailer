@@ -43,6 +43,26 @@ def run_pip(*args):
     subprocess.run([sys.executable, "-m", "pip", "install", *args], check=True)
 
 
+def numpy_pin() -> list[str]:
+    """Keep the host's NumPy major version when installing our deps.
+
+    On WebUIs pinned to NumPy 1.x (e.g. AUTOMATIC1111 — its gradio 3 / skimage /
+    blendmodes stack requires numpy<2) a fresh install of recent
+    ultralytics/mediapipe drags NumPy up to 2.x, which breaks the whole WebUI
+    with a binary-incompatibility crash. Passing this constraint tells pip's
+    resolver to pick dependency versions compatible with the existing NumPy.
+    No constraint on NumPy 2.x hosts (Forge Neo) or when NumPy isn't importable.
+    """
+    try:
+        import numpy
+
+        if int(numpy.__version__.split(".")[0]) < 2:
+            return ["numpy<2"]
+    except Exception:
+        pass
+    return []
+
+
 def install():
     deps = [
         # requirements
@@ -65,7 +85,7 @@ def install():
             pkgs.append(cmd)
 
     if pkgs:
-        run_pip(*pkgs)
+        run_pip(*pkgs, *numpy_pin())
 
 
 try:
