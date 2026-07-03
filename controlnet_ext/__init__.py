@@ -5,7 +5,11 @@ try:
         controlnet_type,
         get_cn_models,
     )
-except ImportError:
+except Exception:  # noqa: BLE001
+    # Not just ImportError: a broken/drifted Forge lib_controlnet can raise
+    # NameError/AttributeError at import time (e.g. reForge). Degrade to the
+    # A1111 standard ControlNet backend instead of crashing the whole
+    # extension at load (universal-WebUI-compat guard).
     from .controlnet_ext import (
         ControlNetExt,
         controlnet_exists,
