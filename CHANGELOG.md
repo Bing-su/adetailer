@@ -348,7 +348,7 @@
 - 스크립트의 이름을 `After Detailer`에서 `ADetailer`로 변경
   - API 사용자는 변경 필요함
 - 몇몇 설정 변경
-  - `ad_conf` → `ad_confidence`. 0~100 사이의 int → 0.0~1.0 사이의 float
+  - `ad_conf` → `ad_confidence`. 0~~100 사이의 int → 0.0~~1.0 사이의 float
   - `ad_inpaint_full_res` → `ad_inpaint_only_masked`
   - `ad_inpaint_full_res_padding` → `ad_inpaint_only_masked_padding`
 - mediapipe face mesh 모델 추가
